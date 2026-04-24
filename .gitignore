@@ -1,0 +1,22 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Memory / log dosyaları
+memory/*.log
+memory/*.json
+memory/seen_reply_uids.txt
+
+# IDE
+.vscode/
+.idea/
+*.swp

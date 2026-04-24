@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lezzet Durağı Restoranı</title>
+  <meta name="description" content="Lezzet Durağı Restoranı, Türkiye'nin en iyi restoranlarından biridir. Yemeklerimizin kalitesi ve hizmet kalitemizle fark yaratmaktayız.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { brand: '#8BC34A' } } }
+    }
+  </script>
+</head>
+<body class="font-sans text-gray-800">
+
+  <!-- NAV -->
+  <nav class="fixed w-full bg-white/95 backdrop-blur shadow-sm z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <span class="text-2xl font-bold text-brand">Lezzet Durağı Restoranı</span>
+      <div class="hidden md:flex gap-8 text-sm font-medium">
+        <a href="#menu" class="hover:text-brand transition">Menü</a>
+        <a href="#hakkinda" class="hover:text-brand transition">Hakkımızda</a>
+        <a href="#rezervasyon" class="hover:text-brand transition">Rezervasyon</a>
+        <a href="#iletisim" class="hover:text-brand transition">İletişim</a>
+      </div>
+      <a href="#rezervasyon" class="bg-brand text-white px-4 py-2 rounded-lg text-sm hover:bg-#5c7161 transition">
+        Rezervasyon Yap
+      </a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-100 pt-16">
+    <div class="text-center px-4">
+      <h1 class="text-5xl md:text-7xl font-bold text-brand mb-6">Neredeyse lezzet dolu bir yemek deneyimi</h1>
+      <p class="text-xl text-brand mb-10 max-w-2xl mx-auto">Deneyiminizi geliştirmek için yemeklerimizin kalitesinden ödün vermeyen Lezzet Durağı Restoranı, Türkiye'nin en iyi restoranlarından biridir.</p>
+      <div class="flex gap-4 justify-center flex-wrap">
+        <a href="#menu" class="bg-brand text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-#5c7161 transition shadow-lg">
+          Menüyü Gör
+        </a>
+        <a href="#rezervasyon" class="border-2 border-brand text-brand px-8 py-4 rounded-xl text-lg font-semibold hover:bg-#F7DC6F transition">
+          Rezervasyon Yap
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ANASAYFA -->
+  <section class="py-16">
+    <div class="max-w-6xl mx-auto px-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div class="col-span-1 bg-white shadow-md p-8">
+          <h2 class="text-2xl font-bold text-brand mb-4">Menü</h2>
+          <p class="text-lg text-gray-600 mb-8">Burada menümüze ulaşabilirsiniz.</p>
+          <a href="#menu" class="bg-brand text-white px-4 py-2 rounded-lg text-sm hover:bg-#5c7161 transition">
+            Menüyü Gör
+          </a>
+        </div>
+        <div class="col-span-1 bg-white shadow-md p-8">
+          <h2 class="text-2xl font-bold text-brand mb-4">Hakkımızda</h2>
+          <p class="text-lg text-gray-600 mb-8">Burada hakkımızda bilgilere ulaşabilirsiniz.</p>
+          <a href="#hakkinda" class="bg-brand text-white px-4 py-2 rounded-lg text-sm hover:bg-#5c7161 transition">
+            Hakkımızda Bilgileri
+          </a>
+        </div>
+        <div class="col-span-1 bg-white shadow-md p-8">
+          <h2 class="text-2xl font-bold text-brand mb-4">Rezervasyon</h2>
+          <p class="text-lg text-gray-600 mb-8">Burada rezervasyon yapabilirsiniz.</p>
+          <a href="#rezervasyon" class="bg-brand text-white px-4 py-2 rounded-lg text-sm hover:bg-#5c7161 transition">
+            Rezervasyon Yap
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FARKIMIZ -->
+  <section class="py-16">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-2xl font-bold text-brand mb-4">Farkımız Nedir?</h2>
+      <p class="text-lg text-gray-600 mb-8">Burada neden Lezzet Durağı Restoranı tercih etmelisiniz bunları görebilirsiniz.</p>
+      <ul class="list-disc list-inside">
+        <li><p class="text-lg text-gray-600 mb-4">Yemeklerimiz için özel olarak seçilen malzemeler</p></li>
+        <li><p class="text-lg text-gray-600 mb-4">Sırtınızdan dönecek kadar lezzetli yemekler</p></li>
+        <li><p class="text-lg text-gray-600 mb-4">Özel olarak hazırlanan ve sunduğumuz hizmetler</p></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- RESIMLER -->
+  <section class="py-16">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-2xl font-bold text-brand mb-4">Galeri</h2>
+      <p class="text-lg text-gray-600 mb-8">Burada galerimize ulaşabilirsiniz.</p>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white shadow-md rounded-lg p-8">
+          <img src="https://picsum.photos/200/300" alt="" class="w-full h-full object-cover">
+          <p class="text-lg text-gray-600 mb-4">Burada bir resimimiz yer almaktadır.</p>
+        </div>
+        <div class="bg-white shadow-md rounded-lg p-8">
+          <img src="https://picsum.photos/200/301" alt="" class="w-full h-full object-cover">
+          <p class="text-lg text-gray-600 mb-4">Burada ikinci bir resimimiz yer almaktadır.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- İLETİŞİM -->
+  <section class="py-16">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-2xl font-bold text-brand mb-4">İletişim</h2>
+      <p class="text-lg text-gray-600 mb-8">Burada iletişim formumuzu görüntüleyebilirsiniz.</p>
+      <div class="bg-white shadow-md rounded-lg p-8">
+        <form>
+          <div class="mb-4">
+            <label for="ad" class="block text-lg text-gray-600">Ad</label>
+            <input type="text" id="ad" placeholder="Adınız" class="block w-full py-2 px-4 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-brand focus:border-brand">
+          </div>
+          <div class="mb-4">
+            <label for="email" class="block text-lg text-gray-600">E-Posta</label>
+            <input type="email" id="email" placeholder="E-Postanız" class="block w-full py-2 px-4 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-brand focus:border-brand">
+          </div>
+          <div class="mb-4">
+            <label for="mesaj" class="block text-lg text-gray-600">Mesaj</label>
+            <textarea id="mesaj" rows="4" cols="50" placeholder="Mesajınız..." class="block w-full py-2 px-4 rounded-lg shadow-sm focus:outline-none focus:ring focus:ring-brand focus:border-brand"></textarea>
+          </div>
+          <div class="text-right">
+            <button type="submit" class="bg-brand hover:bg-#5c7161 text-white py-2 px-4 rounded-lg hover:shadow-lg">Gönder</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </section>
+
+  <!-- SON -->
+  <footer class="py-16">
+    <div class="max-w-6xl mx-auto px-4">
+      <p class="text-lg text-gray-600 mb-8">Lezzet Durağı Restoranı 2024 Bütün Hakları Saklıdır.</p>
+      <p class="text-lg text-gray-600 mb-8">Sitemizde yer alan görüntüler ve metinler mülkiyeti tüm hak sahiplerine aittir.</p>
+    </div>
+  </footer>
+
+</body>
+</html>

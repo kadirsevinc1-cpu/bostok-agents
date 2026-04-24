@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lezzet Durağı Restoranı</title>
+  <meta name="description" content="Lezzet Durağı Restoranı, leziz yemekler ve iyi hizmet için tercih edilen restoranlardan biridir.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { brand: '#8BC34A' } } }
+    }
+  </script>
+</head>
+<body class="font-sans text-gray-800">
+
+  <!-- NAV -->
+  <nav class="fixed w-full bg-white/95 backdrop-blur shadow-sm z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <span class="text-2xl font-bold text-brand">{{RESTORAN_ADI}}</span>
+      <div class="hidden md:flex gap-8 text-sm font-medium">
+        <a href="#menu" class="hover:text-brand transition">Menü</a>
+        <a href="#hakkinda" class="hover:text-brand transition">Hakkımızda</a>
+        <a href="#rezervasyon" class="hover:text-brand transition">Rezervasyon</a>
+        <a href="#iletisim" class="hover:text-brand transition">İletişim</a>
+      </div>
+      <a href="#rezervasyon" class="bg-brand text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-800 transition">
+        Rezervasyon Yap
+      </a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand to-orange-100 pt-16">
+    <div class="text-center px-4">
+      <h1 class="text-5xl md:text-7xl font-bold text-brand mb-6">
+        Tatlı Tadıyla Hizmetinizdeyiz
+      </h1>
+      <p class="text-xl text-brand mb-10 max-w-2xl mx-auto">
+        Lezzet Durağı Restoranı, leziz yemekler ve iyi hizmet için tercih edilen restoranlardan biridir.
+      </p>
+      <div class="flex gap-4 justify-center flex-wrap">
+        <a href="#menu" class="bg-brand text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-orange-800 transition shadow-lg">
+          Menüyü Gör
+        </a>
+        <a href="#rezervasyon" class="border-2 border-brand text-brand px-8 py-4 rounded-xl text-lg font-semibold hover:bg-brand transition">
+          Rezervasyon Yap
+        </a>
+        <a href="#iletisim" class="border-2 border-brand text-brand px-8 py-4 rounded-xl text-lg font-semibold hover:bg-brand transition">
+          İletişim
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- MENU -->
+  <section class="bg-white pt-12 pb-16">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-3xl font-bold text-brand mb-6">
+        Ana Menü
+      </h2>
+      <div class="hidden md:flex gap-4 justify-center flex-wrap">
+        <div class="flex flex-col items-center">
+          <h3 class="text-lg font-bold text-brand mb-2">
+            Dondurma
+          </h3>
+          <p class="text-sm text-brand mb-8">
+            Lezzetli ve doyurucu bir dondurma deneyimi.
+          </p>
+          <button class="bg-brand text-white px-8 py-2 rounded-xl text-lg font-semibold hover:bg-orange-800 transition shadow-lg">
+            Dondurma Menü
+          </button>
+        </div>
+        <div class="flex flex-col items-center">
+          <h3 class="text-lg font-bold text-brand mb-2">
+            İkili Tabağı
+          </h3>
+          <p class="text-sm text-brand mb-8">
+            İki farklı lezzetten oluşan bir tabak deneyimi.
+          </p>
+          <button class="bg-brand text-white px-8 py-2 rounded-xl text-lg font-semibold hover:bg-orange-800 transition shadow-lg">
+            İkili Tabağı
+          </button>
+        </div>
+        <div class="flex flex-col items-center">
+          <h3 class="text-lg font-bold text-brand mb-2">
+            Borsa Dürümleri
+          </h3>
+          <p class="text-sm text-brand mb-8">
+            Lezzetli ve doyurucu bir durum deneyimi.
+          </p>
+          <button class="bg-brand text-white px-8 py-2 rounded-xl text-lg font-semibold hover:bg-orange-800 transition shadow-lg">
+            Borsa Dürümleri
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hakkımızda -->
+  <section class="bg-white pt-12 pb-16">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-3xl font-bold text-brand mb-6">
+        Hakkımızda
+      </h2>
+      <p class="text-lg text-brand mb-8">
+        Lezzet Durağı Restoranı, leziz yemekler ve iyi hizmet için tercih edilen restoranlardan biridir.
+      </p>
+      <div class="flex gap-4 justify-center flex-wrap">
+        <button class="bg-brand text-white px-8 py-2 rounded-xl text-lg font-semibold hover:bg-orange-800 transition shadow-lg">
+          Daha Fazla Bilgi
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Rezervasyon -->
+  <section class="bg-white pt-12 pb-16">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-3xl font-bold text-brand mb-6">
+        Rezervasyon
+      </h2>
+      <form class="flex gap-4 justify-center flex-wrap">
+        <input type="date" class="bg-white text-black p-2 w-full md:w-1/2 transition" placeholder="Tarih">
+        <input type="time" class="bg-white text-black p-2 w-full md:w-1/2 transition" placeholder="Saat">
+        <select class="bg-white text-black p-2 w-full transition">
+          <option selected>Maksimum 5 kişi</option>
+          <option>6-10 kişi</option>
+          <option>10-20 kişi</option>
+        </select>
+        <button class="bg-brand text-white px-8 py-2 rounded-xl text-lg font-semibold hover:bg-orange-800 transition shadow-lg">
+          Rezervasyon Yap
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- İletişim -->
+  <section class="bg-white pt-12 pb-16">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-3xl font-bold text-brand mb-6">
+        İletişim
+      </h2>
+      <p class="text-lg text-brand mb-8">
+        Lezzet Durağı Restoranı, leziz yemekler ve iyi hizmet için tercih edilen restoranlardan biridir.
+      </p>
+      <div class="flex gap-4 justify-center flex-wrap">
+        <button class="bg-brand text-white px-8 py-2 rounded-xl text-lg font-semibold hover:bg-orange-800 transition shadow-lg">
+          İletişim Bilgileri
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="bg-white pt-6 pb-12">
+    <div class="max-w-6xl mx-auto px-4 text-center">
+      <p class="text-lg text-brand mb-8">
+        2024 Lezzet Durağı Restoranı. Tüm hakları saklıdır.
+      </p>
+      <div class="flex gap-4 justify-center flex-wrap">
+        <a href="#" class="text-lg text-brand hover:text-orange-700 transition">
+          Instagram
+        </a>
+        <a href="#" class="text-lg text-brand hover:text-orange-700 transition">
+          Facebook
+        </a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

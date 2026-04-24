@@ -1,0 +1,394 @@
+"""
+Bostok Agent Köyü — Ana başlatıcı.
+Kullanım:
+  python main.py                          # demo görevi
+  python main.py "Müşteri talebi buraya" # özel görev
+"""
+import asyncio
+import sys
+from loguru import logger
+from core.message_bus import bus, AgentName, MessageType, Message
+from core.budget import budget
+from agents.manager import ManagerAgent
+from agents.analyst import AnalystAgent
+from agents.marketing import MarketingAgent
+from agents.quote import QuoteAgent
+from agents.content import ContentAgent
+from agents.designer import DesignerAgent
+from agents.developer import DeveloperAgent
+from agents.qa import QAAgent
+from agents.deploy import DeployAgent
+from agents.inbox_watcher import InboxWatcherAgent
+from agents.followup import FollowupAgent
+from integrations.telegram import init_bot, get_bot
+from integrations.gmail import init_gmail
+from integrations.gmail_reader import init_reader
+from integrations.netlify import init_netlify
+
+
+def setup_logging():
+    logger.remove()
+    logger.add(sys.stderr, level="INFO",
+               format="<green>{time:HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{message}</cyan>")
+    logger.add("memory/bostok.log", rotation="10 MB", level="DEBUG")
+
+
+async def budget_monitor():
+    while True:
+        await asyncio.sleep(300)
+        report = budget.report()
+        logger.info(f"\n{report}")
+        if budget.is_blocked():
+            logger.error("BUTCE LIMITI ASILDI!")
+            bot = get_bot()
+            if bot:
+                await bot.send("Gunluk token limiti asildi. Sistem durduruldu.")
+            await bus.send(Message(
+                sender=AgentName.SYSTEM, receiver=AgentName.MANAGER,
+                type=MessageType.BUDGET_ALERT,
+                content="Gunluk token limiti asildi.",
+            ))
+
+
+CAMPAIGNS = [
+    # ── Türkiye — Yeme & İçme ─────────────────────────────────────
+    {"sector": "restoran",         "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Gaziantep"], "langs": ["tr"]},
+    {"sector": "kafe",             "locations": ["Istanbul", "Ankara", "Izmir", "Eskisehir"],                     "langs": ["tr"]},
+    {"sector": "pastane",          "locations": ["Istanbul", "Ankara", "Bursa", "Konya"],                         "langs": ["tr"]},
+    {"sector": "catering",         "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+
+    # ── Türkiye — Sağlık ──────────────────────────────────────────
+    {"sector": "dis hekimi",       "locations": ["Istanbul", "Ankara", "Izmir", "Konya", "Antalya"],              "langs": ["tr"]},
+    {"sector": "eczane",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
+    {"sector": "veteriner",        "locations": ["Istanbul", "Ankara", "Izmir", "Antalya"],                       "langs": ["tr"]},
+    {"sector": "spor salonu",      "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Antalya"],              "langs": ["tr"]},
+    {"sector": "psikolog",         "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "fizyoterapist",    "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+
+    # ── Türkiye — Hukuk & Finans ──────────────────────────────────
+    {"sector": "avukat",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
+    {"sector": "muhasebe",         "locations": ["Istanbul", "Ankara", "Izmir", "Kocaeli"],                       "langs": ["tr"]},
+    {"sector": "sigorta",          "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "mali musavir",     "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+
+    # ── Türkiye — Güzellik & Bakım ────────────────────────────────
+    {"sector": "guzellik salonu",  "locations": ["Istanbul", "Ankara", "Antalya", "Bursa", "Izmir"],              "langs": ["tr"]},
+    {"sector": "berber",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
+    {"sector": "tirnak salonu",    "locations": ["Istanbul", "Ankara", "Izmir"],                                   "langs": ["tr"]},
+    {"sector": "spa",              "locations": ["Istanbul", "Antalya", "Bodrum", "Alanya"],                      "langs": ["tr", "en"]},
+
+    # ── Türkiye — Emlak & İnşaat ──────────────────────────────────
+    {"sector": "emlakci",          "locations": ["Istanbul", "Ankara", "Alanya", "Bodrum", "Izmir"],              "langs": ["tr"]},
+    {"sector": "insaat",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
+    {"sector": "tadilat",          "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "temizlik sirketi", "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
+    {"sector": "nakliyat",         "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
+    {"sector": "elektrikci",       "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+
+    # ── Türkiye — Otomotiv ────────────────────────────────────────
+    {"sector": "oto servis",       "locations": ["Istanbul", "Ankara", "Bursa", "Kocaeli", "Izmir"],              "langs": ["tr"]},
+    {"sector": "oto yikama",       "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
+    {"sector": "lastikci",         "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "oto kiralama",     "locations": ["Istanbul", "Antalya", "Izmir", "Bodrum"],                       "langs": ["tr", "en"]},
+
+    # ── Türkiye — Eğitim ──────────────────────────────────────────
+    {"sector": "ozel okul",        "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "dil kursu",        "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
+    {"sector": "etut merkezi",     "locations": ["Istanbul", "Ankara", "Izmir", "Konya", "Bursa"],                "langs": ["tr"]},
+    {"sector": "surucu kursu",     "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
+    {"sector": "dans okulu",       "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "kres",             "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
+
+    # ── Türkiye — Konaklama ───────────────────────────────────────
+    {"sector": "otel",             "locations": ["Antalya", "Cappadocia", "Bodrum", "Alanya", "Kusadasi"],        "langs": ["tr", "en"]},
+    {"sector": "pansiyon",         "locations": ["Cappadocia", "Bodrum", "Alanya", "Safranbolu"],                 "langs": ["tr", "en"]},
+    {"sector": "apart otel",       "locations": ["Istanbul", "Ankara", "Antalya", "Izmir"],                       "langs": ["tr"]},
+
+    # ── Türkiye — Mağaza & Hizmet ─────────────────────────────────
+    {"sector": "cicekci",          "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
+    {"sector": "optik",            "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "pet shop",         "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "kuru temizleme",   "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "fotograf",         "locations": ["Istanbul", "Ankara", "Izmir", "Antalya"],                       "langs": ["tr"]},
+
+    # ── Türkiye — Sanayi ──────────────────────────────────────────
+    {"sector": "sanayi",           "locations": ["Istanbul", "Bursa", "Kocaeli", "Ankara", "Izmir", "Konya"],    "langs": ["tr"]},
+    {"sector": "imalat",           "locations": ["Bursa", "Kocaeli", "Gaziantep", "Konya", "Eskisehir"],         "langs": ["tr"]},
+    {"sector": "tekstil",          "locations": ["Istanbul", "Bursa", "Denizli", "Gaziantep"],                    "langs": ["tr", "en"]},
+    {"sector": "depo ve lojistik", "locations": ["Istanbul", "Ankara", "Izmir", "Kocaeli"],                       "langs": ["tr"]},
+
+    # ── Almanya & Avusturya & İsviçre ─────────────────────────────
+    {"sector": "restaurant",       "locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart"], "langs": ["tr", "de"]},
+    {"sector": "friseur",          "locations": ["Berlin", "Hamburg", "Dusseldorf", "Frankfurt", "Stuttgart"],    "langs": ["tr", "de"]},
+    {"sector": "autohaus",         "locations": ["Frankfurt", "Stuttgart", "Munich", "Cologne"],                  "langs": ["de"]},
+    {"sector": "immobilienmakler", "locations": ["Berlin", "Hamburg", "Munich", "Frankfurt"],                     "langs": ["de"]},
+    {"sector": "zahnarzt",         "locations": ["Vienna", "Zurich", "Bern", "Graz", "Berlin"],                  "langs": ["de"]},
+    {"sector": "rechtsanwalt",     "locations": ["Berlin", "Hamburg", "Munich", "Frankfurt"],                     "langs": ["de"]},
+    {"sector": "steuerberater",    "locations": ["Berlin", "Hamburg", "Munich", "Cologne"],                       "langs": ["de"]},
+    {"sector": "fitnessstudio",    "locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt"],          "langs": ["de"]},
+    {"sector": "fahrschule",       "locations": ["Berlin", "Hamburg", "Munich", "Frankfurt"],                     "langs": ["de"]},
+    {"sector": "tierarzt",         "locations": ["Berlin", "Hamburg", "Munich", "Vienna"],                        "langs": ["de"]},
+    {"sector": "manufacturing",    "locations": ["Stuttgart", "Munich", "Frankfurt", "Dusseldorf"],               "langs": ["de"]},
+
+    # ── Hollanda & Belçika ────────────────────────────────────────
+    {"sector": "restaurant",       "locations": ["Amsterdam", "Rotterdam", "The Hague", "Brussels", "Antwerp"],   "langs": ["en", "nl"]},
+    {"sector": "beauty salon",     "locations": ["Amsterdam", "Rotterdam", "Ghent", "Brussels"],                  "langs": ["en"]},
+    {"sector": "dental clinic",    "locations": ["Amsterdam", "Rotterdam", "Brussels"],                           "langs": ["en"]},
+    {"sector": "real estate",      "locations": ["Amsterdam", "Rotterdam", "Brussels"],                           "langs": ["en", "nl"]},
+
+    # ── İngiltere ─────────────────────────────────────────────────
+    {"sector": "restaurant",       "locations": ["London", "Manchester", "Birmingham", "Leeds", "Glasgow"],       "langs": ["en"]},
+    {"sector": "solicitor",        "locations": ["London", "Birmingham", "Manchester", "Leeds"],                  "langs": ["en"]},
+    {"sector": "estate agent",     "locations": ["London", "Manchester", "Bristol", "Edinburgh"],                 "langs": ["en"]},
+    {"sector": "dental clinic",    "locations": ["London", "Birmingham", "Leeds", "Manchester"],                  "langs": ["en"]},
+    {"sector": "gym",              "locations": ["London", "Manchester", "Birmingham", "Leeds"],                  "langs": ["en"]},
+    {"sector": "accountant",       "locations": ["London", "Manchester", "Birmingham"],                           "langs": ["en"]},
+    {"sector": "cleaning service", "locations": ["London", "Manchester", "Birmingham", "Leeds"],                  "langs": ["en"]},
+    {"sector": "driving school",   "locations": ["London", "Birmingham", "Manchester"],                           "langs": ["en"]},
+    {"sector": "barber shop",      "locations": ["London", "Manchester", "Birmingham"],                           "langs": ["en"]},
+    {"sector": "florist",          "locations": ["London", "Manchester", "Edinburgh"],                            "langs": ["en"]},
+
+    # ── Amerika (USA) ─────────────────────────────────────────────
+    {"sector": "restaurant",       "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Miami", "Phoenix", "Dallas", "San Diego", "San Antonio", "San Jose"], "langs": ["en"]},
+    {"sector": "law firm",         "locations": ["New York", "Los Angeles", "Miami", "Chicago", "Houston", "Atlanta", "Washington DC", "Boston", "Seattle"],             "langs": ["en"]},
+    {"sector": "real estate",      "locations": ["Miami", "Dallas", "Phoenix", "Las Vegas", "Austin", "Denver", "Nashville", "Orlando", "Tampa", "Charlotte"],          "langs": ["en"]},
+    {"sector": "dental office",    "locations": ["New York", "Chicago", "Houston", "Phoenix", "Los Angeles", "San Diego", "Atlanta", "Miami"],                          "langs": ["en"]},
+    {"sector": "beauty salon",     "locations": ["New York", "Los Angeles", "Atlanta", "Dallas", "Houston", "Chicago", "Miami", "Las Vegas"],                           "langs": ["en"]},
+    {"sector": "auto repair shop", "locations": ["Houston", "Dallas", "Phoenix", "Los Angeles", "Chicago", "San Antonio"],                                              "langs": ["en"]},
+    {"sector": "accounting firm",  "locations": ["New York", "Chicago", "Los Angeles", "Miami", "Houston", "Boston"],                                                   "langs": ["en"]},
+    {"sector": "hotel",            "locations": ["Las Vegas", "Miami", "New York", "Orlando", "Los Angeles", "New Orleans", "Nashville"],                               "langs": ["en"]},
+    {"sector": "gym",              "locations": ["New York", "Los Angeles", "Chicago", "Miami", "Houston", "Dallas"],                                                   "langs": ["en"]},
+    {"sector": "pharmacy",         "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"],                                                           "langs": ["en"]},
+    {"sector": "vet clinic",       "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Dallas"],                                                            "langs": ["en"]},
+    {"sector": "insurance agency", "locations": ["New York", "Los Angeles", "Miami", "Chicago", "Houston"],                                                             "langs": ["en"]},
+    {"sector": "tutoring center",  "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Atlanta"],                                                           "langs": ["en"]},
+    {"sector": "cleaning service", "locations": ["New York", "Los Angeles", "Miami", "Chicago", "Houston", "Dallas"],                                                   "langs": ["en"]},
+    {"sector": "barber shop",      "locations": ["New York", "Los Angeles", "Atlanta", "Miami", "Chicago"],                                                             "langs": ["en"]},
+    {"sector": "florist",          "locations": ["New York", "Los Angeles", "Chicago", "Miami"],                                                                        "langs": ["en"]},
+    {"sector": "pet shop",         "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Miami"],                                                             "langs": ["en"]},
+    {"sector": "manufacturing",    "locations": ["Detroit", "Chicago", "Houston", "Dallas", "Los Angeles"],                                                             "langs": ["en"]},
+
+    # ── Kanada ────────────────────────────────────────────────────
+    {"sector": "restaurant",       "locations": ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa", "Edmonton"], "langs": ["en"]},
+    {"sector": "real estate",      "locations": ["Toronto", "Vancouver", "Calgary", "Montreal"],                  "langs": ["en"]},
+    {"sector": "dental clinic",    "locations": ["Toronto", "Vancouver", "Calgary"],                              "langs": ["en"]},
+    {"sector": "gym",              "locations": ["Toronto", "Vancouver", "Calgary", "Montreal"],                  "langs": ["en"]},
+    {"sector": "cleaning service", "locations": ["Toronto", "Vancouver", "Calgary"],                              "langs": ["en"]},
+
+    # ── Avustralya & Yeni Zelanda ─────────────────────────────────
+    {"sector": "restaurant",       "locations": ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Auckland"], "langs": ["en"]},
+    {"sector": "real estate",      "locations": ["Sydney", "Melbourne", "Brisbane", "Gold Coast"],                "langs": ["en"]},
+    {"sector": "dental clinic",    "locations": ["Sydney", "Melbourne", "Brisbane"],                              "langs": ["en"]},
+    {"sector": "gym",              "locations": ["Sydney", "Melbourne", "Brisbane"],                              "langs": ["en"]},
+    {"sector": "beauty salon",     "locations": ["Sydney", "Melbourne", "Brisbane", "Gold Coast"],                "langs": ["en"]},
+
+    # ── Orta Doğu — BAE ───────────────────────────────────────────
+    {"sector": "restaurant",       "locations": ["Dubai", "Abu Dhabi", "Sharjah", "Ajman"],                      "langs": ["en"]},
+    {"sector": "real estate",      "locations": ["Dubai", "Abu Dhabi", "Sharjah"],                               "langs": ["en"]},
+    {"sector": "beauty salon",     "locations": ["Dubai", "Abu Dhabi", "Sharjah"],                               "langs": ["en"]},
+    {"sector": "dental clinic",    "locations": ["Dubai", "Abu Dhabi"],                                          "langs": ["en"]},
+    {"sector": "law firm",         "locations": ["Dubai", "Abu Dhabi"],                                          "langs": ["en"]},
+    {"sector": "gym",              "locations": ["Dubai", "Abu Dhabi", "Sharjah"],                               "langs": ["en"]},
+    {"sector": "hotel",            "locations": ["Dubai", "Abu Dhabi"],                                          "langs": ["en"]},
+    {"sector": "manufacturing",    "locations": ["Dubai", "Abu Dhabi", "Sharjah"],                               "langs": ["en"]},
+
+    # ── Orta Doğu — Suudi Arabistan ───────────────────────────────
+    {"sector": "restaurant",       "locations": ["Riyadh", "Jeddah", "Mecca", "Medina", "Dammam"],               "langs": ["en"]},
+    {"sector": "real estate",      "locations": ["Riyadh", "Jeddah", "Dammam"],                                  "langs": ["en"]},
+    {"sector": "beauty salon",     "locations": ["Riyadh", "Jeddah"],                                            "langs": ["en"]},
+    {"sector": "hotel",            "locations": ["Riyadh", "Jeddah", "Mecca"],                                   "langs": ["en"]},
+    {"sector": "dental clinic",    "locations": ["Riyadh", "Jeddah", "Dammam"],                                  "langs": ["en"]},
+    {"sector": "gym",              "locations": ["Riyadh", "Jeddah"],                                            "langs": ["en"]},
+
+    # ── Orta Doğu — Diğer ────────────────────────────────────────
+    {"sector": "restaurant",       "locations": ["Doha", "Kuwait City", "Manama", "Muscat", "Amman", "Beirut"],  "langs": ["en"]},
+    {"sector": "real estate",      "locations": ["Doha", "Kuwait City", "Muscat", "Amman"],                      "langs": ["en"]},
+    {"sector": "hotel",            "locations": ["Doha", "Muscat", "Amman", "Beirut"],                           "langs": ["en"]},
+    {"sector": "beauty salon",     "locations": ["Doha", "Kuwait City", "Muscat"],                               "langs": ["en"]},
+    {"sector": "dental clinic",    "locations": ["Doha", "Kuwait City", "Muscat"],                               "langs": ["en"]},
+
+    # ── İskandinav ────────────────────────────────────────────────
+    {"sector": "restaurant",       "locations": ["Stockholm", "Oslo", "Copenhagen", "Helsinki"],                  "langs": ["en"]},
+    {"sector": "tandlakare",       "locations": ["Stockholm", "Gothenburg", "Malmo"],                             "langs": ["en"]},
+    {"sector": "gym",              "locations": ["Stockholm", "Oslo", "Copenhagen"],                              "langs": ["en"]},
+    {"sector": "real estate",      "locations": ["Stockholm", "Oslo", "Copenhagen"],                              "langs": ["en"]},
+    {"sector": "beauty salon",     "locations": ["Stockholm", "Oslo", "Copenhagen", "Helsinki"],                  "langs": ["en"]},
+
+    # ── Fransa & İspanya & İtalya ─────────────────────────────────
+    {"sector": "restaurant",       "locations": ["Paris", "Lyon", "Madrid", "Barcelona", "Rome", "Milan"],        "langs": ["en"]},
+    {"sector": "agence immobiliere","locations": ["Paris", "Nice", "Bordeaux"],                                   "langs": ["en", "fr"]},
+    {"sector": "beauty salon",     "locations": ["Paris", "Madrid", "Barcelona", "Rome", "Milan"],                "langs": ["en"]},
+    {"sector": "dental clinic",    "locations": ["Paris", "Madrid", "Barcelona", "Rome"],                         "langs": ["en"]},
+    {"sector": "hotel",            "locations": ["Paris", "Nice", "Barcelona", "Rome", "Florence"],               "langs": ["en"]},
+
+    # ── Güney & Doğu Asya ─────────────────────────────────────────
+    {"sector": "restaurant",       "locations": ["Singapore", "Kuala Lumpur", "Jakarta", "Bangkok", "Mumbai", "Delhi"], "langs": ["en"]},
+    {"sector": "real estate",      "locations": ["Singapore", "Kuala Lumpur", "Bangkok", "Mumbai"],               "langs": ["en"]},
+    {"sector": "hotel",            "locations": ["Singapore", "Bangkok", "Bali", "Phuket"],                       "langs": ["en"]},
+    {"sector": "dental clinic",    "locations": ["Singapore", "Kuala Lumpur", "Bangkok"],                         "langs": ["en"]},
+    {"sector": "beauty salon",     "locations": ["Singapore", "Kuala Lumpur", "Bangkok"],                         "langs": ["en"]},
+    {"sector": "manufacturing",    "locations": ["Singapore", "Kuala Lumpur", "Jakarta", "Bangkok"],              "langs": ["en"]},
+]
+
+
+async def marketing_scheduler():
+    """Her 4 saatte bir farkli sektörde pazarlama kampanyası baslatir."""
+    await asyncio.sleep(45)  # Sistem tam baslasin
+    logger.info("Pazarlama zamanlayici basladi")
+
+    campaign_idx = 0
+    while True:
+        campaign = CAMPAIGNS[campaign_idx % len(CAMPAIGNS)]
+        campaign_idx += 1
+
+        for location in campaign["locations"]:
+            await bus.send(Message(
+                sender=AgentName.SYSTEM,
+                receiver=AgentName.MARKETING,
+                type=MessageType.TASK,
+                content=f"{location}'daki {campaign['sector']} isletmelerine web sitesi teklifi hazirla",
+                metadata={
+                    "sector": campaign["sector"],
+                    "location": location,
+                    "languages": campaign["langs"],
+                    "send_emails": True,
+                },
+            ))
+            await asyncio.sleep(30)  # Kampanyalar arasi bekleme
+
+        await asyncio.sleep(4 * 3600)  # 4 saat
+
+
+async def notify_handler(msg: Message):
+    """Bildirimleri hem konsola bas hem Telegram'a gönder."""
+    if msg.type != MessageType.USER_NOTIFY:
+        return
+
+    # Konsola yaz
+    print(f"\n{'='*60}")
+    print(f"BILDIRIM [{msg.sender.value}]:")
+    print(msg.content)
+    print('='*60)
+
+    # Telegram'a gönder
+    bot = get_bot()
+    if not bot:
+        return
+
+    requires_approval = msg.metadata.get("requires_approval", False)
+
+    if requires_approval:
+        # Onay butonu ile gönder
+        import uuid
+        approval_id = uuid.uuid4().hex[:8]
+        approved = await bot.request_approval(approval_id, msg.content)
+        if approved:
+            await bus.send(Message(
+                sender=AgentName.SYSTEM, receiver=AgentName.MANAGER,
+                type=MessageType.APPROVAL, content="Kullanici onayi alindi.",
+            ))
+        else:
+            await bot.send("Islem iptal edildi.")
+    else:
+        await bot.send(msg.content)
+
+
+async def handle_telegram_message(text: str):
+    """Telegram'dan gelen mesajı akıllı router'a ilet."""
+    from core.conversation import route_user_message
+    bot = get_bot()
+
+    if text == "/butce":
+        if bot:
+            await bot.send(budget.report())
+        return
+
+    async def send_fn(msg: str):
+        if bot:
+            await bot.send(msg)
+
+    await route_user_message(text, send_fn)
+
+
+async def main():
+    setup_logging()
+    logger.info("Bostok Agent Koyu baslatiliyor...")
+    logger.info(budget.report())
+
+    # Netlify başlat
+    netlify = init_netlify()
+    if netlify:
+        logger.info("Netlify hazir - otomatik deploy aktif")
+    else:
+        logger.warning("Netlify token yok - deploy manuel yapilacak")
+
+    # Gmail başlat
+    gmail = init_gmail()
+    if gmail:
+        logger.info(f"Gmail hazir: {gmail.stats}")
+        init_reader(gmail._user, gmail._password)
+        logger.info("Gmail inbox takibi aktif")
+    else:
+        logger.warning("Gmail bagli degil - sadece sablon modu")
+
+    # Telegram botu başlat
+    bot = init_bot()
+    if bot:
+        logger.info("Telegram bagli - mesaj atabilirsiniz!")
+    else:
+        logger.warning("Telegram bagli degil - sadece konsol modu")
+
+    # Bildirim listener
+    bus.add_listener(notify_handler)
+
+    # Tüm agent'ları başlat
+    agents = [
+        ManagerAgent(), AnalystAgent(), MarketingAgent(),
+        QuoteAgent(), ContentAgent(), DesignerAgent(),
+        DeveloperAgent(), QAAgent(), DeployAgent(),
+        InboxWatcherAgent(), FollowupAgent(),
+    ]
+    logger.info(f"{len(agents)} agent baslatildi")
+
+    tasks = [asyncio.create_task(a.run()) for a in agents]
+    tasks.append(asyncio.create_task(budget_monitor()))
+    tasks.append(asyncio.create_task(marketing_scheduler()))
+
+    # Telegram polling başlat
+    if bot:
+        tasks.append(asyncio.create_task(
+            bot.poll_updates(on_message=handle_telegram_message)
+        ))
+
+    # Komut satırı argümanı varsa demo görevi çalıştır
+    if len(sys.argv) > 1:
+        demo_task = " ".join(sys.argv[1:])
+        await asyncio.sleep(1)
+        logger.info(f"Demo gorevi: {demo_task}")
+        await bus.send(Message(
+            sender=AgentName.SYSTEM, receiver=AgentName.MANAGER,
+            type=MessageType.CLIENT_REQUEST, content=demo_task,
+        ))
+        if bot:
+            await bot.send(f"Gorev baslatildi: {demo_task[:100]}")
+
+    if bot:
+        await bot.send(
+            "Bostok Agent Koyu aktif!\n\n"
+            "Musteri talebi gondermek icin direkt yazin.\n"
+            "Komutlar icin /yardim yazin."
+        )
+        logger.info("Hazir! Telegram'dan mesaj atabilirsiniz.")
+    else:
+        logger.info("Demo icin: python main.py 'musteri talebi buraya'")
+
+    try:
+        await asyncio.gather(*tasks)
+    except KeyboardInterrupt:
+        logger.info("Sistem kapatiliyor...")
+        for a in agents:
+            a.stop()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

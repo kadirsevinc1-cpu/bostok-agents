@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="page-title">Demo Site — Bostok.dev</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --primary: #e85d04;
+      --dark:    #c43f00;
+      --light:   #ffd166;
+      --text:    #1a1a2e;
+      --muted:   #6b7280;
+      --bg:      #ffffff;
+      --bg-alt:  #f8f9fa;
+      --radius:  16px;
+      --shadow:  0 4px 24px rgba(0,0,0,0.08);
+    }
+
+    body { font-family: 'Inter', -apple-system, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      padding: .9rem 2rem;
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(255,255,255,.96);
+      backdrop-filter: blur(14px);
+      border-bottom: 1px solid rgba(0,0,0,.06);
+    }
+    .nav-logo { font-weight: 800; font-size: 1.1rem; color: var(--primary); }
+    .nav-cta {
+      padding: .5rem 1.25rem;
+      background: var(--primary); color: #fff;
+      border-radius: 50px; text-decoration: none;
+      font-weight: 600; font-size: .85rem;
+      transition: transform .18s, box-shadow .18s;
+    }
+    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.22); }
+
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh;
+      display: flex; align-items: center; justify-content: center;
+      background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 55%, var(--light) 100%);
+      position: relative; overflow: hidden;
+      padding: 7rem 2rem 4rem; text-align: center;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='3' fill='%23ffffff' fill-opacity='.06'/%3E%3C/svg%3E");
+    }
+    .hero-inner { position: relative; max-width: 720px; }
+    .hero-badge {
+      display: inline-block; margin-bottom: 1.5rem;
+      padding: .4rem 1.1rem;
+      background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3);
+      border-radius: 50px; color: #fff; font-size: .85rem; font-weight: 500;
+      backdrop-filter: blur(8px);
+    }
+    .hero h1 {
+      font-size: clamp(2.4rem, 6vw, 4.2rem); font-weight: 900;
+      color: #fff; line-height: 1.1; margin-bottom: 1rem;
+    }
+    .hero-sub {
+      font-size: 1.1rem; color: rgba(255,255,255,.85);
+      max-width: 520px; margin: 0 auto 2.5rem;
+    }
+    .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-white {
+      padding: .85rem 2rem;
+      background: #fff; color: var(--primary);
+      border-radius: 50px; font-weight: 700; font-size: 1rem;
+      text-decoration: none;
+      box-shadow: 0 4px 20px rgba(0,0,0,.15);
+      transition: transform .18s, box-shadow .18s;
+    }
+    .btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.2); }
+    .btn-ghost {
+      padding: .85rem 2rem;
+      background: rgba(255,255,255,.15); color: #fff;
+      border: 1px solid rgba(255,255,255,.4);
+      border-radius: 50px; font-weight: 600; font-size: 1rem;
+      text-decoration: none; backdrop-filter: blur(8px);
+      transition: background .18s;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,.25); }
+    .rating-row {
+      display: inline-flex; align-items: center; gap: .6rem;
+      margin-top: 1.75rem; padding: .5rem 1.25rem;
+      background: rgba(255,255,255,.15); border-radius: 50px;
+      color: #fff; font-size: .9rem;
+    }
+    .stars { color: #ffd166; }
+
+    /* ── SECTIONS ── */
+    section { padding: 5rem 2rem; }
+    .container { max-width: 1080px; margin: 0 auto; }
+    .tag {
+      display: inline-block; margin-bottom: .7rem;
+      padding: .3rem .9rem;
+      background: rgba(232,93,4,.12); color: var(--primary);
+      border-radius: 50px; font-size: .78rem; font-weight: 600;
+      letter-spacing: .05em; text-transform: uppercase;
+    }
+    h2 { font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 800; margin-bottom: .9rem; }
+    .lead { font-size: 1.05rem; color: var(--muted); max-width: 540px; margin-bottom: 2.8rem; }
+
+    /* ── SERVICES ── */
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.4rem; }
+    .card {
+      padding: 1.8rem;
+      background: #fff; border: 1px solid rgba(0,0,0,.07);
+      border-radius: var(--radius); box-shadow: var(--shadow);
+      transition: transform .2s, box-shadow .2s;
+    }
+    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(0,0,0,.11); }
+    .card-icon {
+      width: 50px; height: 50px; margin-bottom: 1.1rem;
+      background: rgba(232,93,4,.1);
+      border-radius: 14px; display: flex; align-items: center; justify-content: center;
+      font-size: 1.4rem;
+    }
+    .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: .4rem; }
+    .card p  { font-size: .88rem; color: var(--muted); }
+
+    /* ── ABOUT ── */
+    .about-section { background: var(--bg-alt); }
+    .about-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
+    @media (max-width: 768px) { .about-wrap { grid-template-columns: 1fr; gap: 2rem; } }
+    .about-visual {
+      aspect-ratio: 4/3; border-radius: 24px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 5rem; box-shadow: 0 20px 60px rgba(0,0,0,.14);
+    }
+    .about-text { color: var(--muted); margin-bottom: 1.6rem; }
+    .stats { display: flex; gap: 2.5rem; flex-wrap: wrap; }
+    .stat-n { font-size: 2rem; font-weight: 900; color: var(--primary); }
+    .stat-l { font-size: .82rem; color: var(--muted); }
+
+    /* ── CTA ── */
+    .cta-section {
+      background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%);
+      text-align: center; color: #fff;
+    }
+    .cta-section .tag { background: rgba(255,255,255,.2); color: #fff; }
+    .cta-section h2 { color: #fff; }
+    .cta-section .cta-sub { color: rgba(255,255,255,.85); font-size: 1.05rem; margin-bottom: 2rem; max-width: 480px; margin-left: auto; margin-right: auto; }
+
+    /* ── FOOTER ── */
+    footer {
+      padding: 1.8rem 2rem; text-align: center;
+      background: #0f0f1a; color: rgba(255,255,255,.45); font-size: .82rem;
+    }
+    footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+    /* ── DEMO BANNER ── */
+    .demo-bar {
+      position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
+      z-index: 200;
+      padding: .7rem 1.5rem;
+      background: rgba(15,15,26,.95); color: #fff;
+      border-radius: 50px; font-size: .83rem;
+      display: flex; align-items: center; gap: .75rem;
+      box-shadow: 0 8px 32px rgba(0,0,0,.35);
+      backdrop-filter: blur(14px); white-space: nowrap;
+    }
+    .demo-bar span { opacity: .65; }
+    .demo-bar a { color: var(--primary); font-weight: 700; text-decoration: none; }
+
+    @media (max-width: 600px) {
+      nav { padding: .8rem 1rem; }
+      .hero { padding: 5.5rem 1.2rem 3rem; }
+      section { padding: 3.5rem 1.2rem; }
+      .demo-bar { font-size: .75rem; padding: .6rem 1.1rem; max-width: 92vw; white-space: normal; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo" id="nav-logo">İşletme</div>
+  <a href="https://bostok.dev?ref=demo-nav" target="_blank" class="nav-cta">Web Sitesi İstiyorum</a>
+</nav>
+
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-badge" id="hero-badge">🏆 Profesyonel Web Tasarım</div>
+    <h1 id="hero-title">İşletme Adı</h1>
+    <p class="hero-sub" id="hero-sub">Şehrinizde kaliteli ve güvenilir hizmet.</p>
+    <div class="hero-btns">
+      <a href="#iletisim" class="btn-white" id="cta-btn">Hemen İletişime Geç</a>
+      <a href="#hizmetler" class="btn-ghost">Hizmetlerimiz</a>
+    </div>
+    <div class="rating-row" id="rating-row" style="display:none">
+      <span class="stars" id="stars">★★★★★</span>
+      <span id="rating-text">5.0 / 5.0 · Google</span>
+    </div>
+  </div>
+</section>
+
+<section id="hizmetler">
+  <div class="container">
+    <span class="tag">Hizmetlerimiz</span>
+    <h2>Size Nasıl Yardımcı Olabiliriz?</h2>
+    <p class="lead" id="services-lead">Uzman ekibimizle en kaliteli hizmeti sunuyoruz.</p>
+    <div class="grid" id="services-grid"></div>
+  </div>
+</section>
+
+<section class="about-section" id="hakkimizda">
+  <div class="container">
+    <div class="about-wrap">
+      <div>
+        <span class="tag">Hakkımızda</span>
+        <h2 id="about-title">Kalite ve Güvenin Adresi</h2>
+        <p class="about-text" id="about-text">Yılların deneyimiyle sektörde fark yaratan hizmetler sunuyoruz.</p>
+        <div class="stats" id="stats"></div>
+      </div>
+      <div class="about-visual" id="about-icon">🏆</div>
+    </div>
+  </div>
+</section>
+
+<section id="iletisim" class="cta-section">
+  <div class="container">
+    <span class="tag">İletişim</span>
+    <h2>Bugün Başlayalım</h2>
+    <p class="cta-sub" id="cta-sub">Profesyonel web siteniz için ücretsiz teklif alın.</p>
+    <a href="https://bostok.dev?ref=demo-cta" target="_blank" class="btn-white" id="cta-main">Ücretsiz Teklif Al →</a>
+  </div>
+</section>
+
+<footer>
+  <p>Bu site <a href="https://bostok.dev" target="_blank">Bostok.dev</a> tarafından demo olarak hazırlanmıştır.</p>
+</footer>
+
+<div class="demo-bar">
+  <span>🎨 Demo Site</span>
+  <a href="https://bostok.dev?ref=demo-bar" target="_blank">Sitenizi Yaptırın →</a>
+</div>
+
+<script>
+const SECTORS = {
+  food: {
+    label:'Yeme & İçme', icon:'🍽️',
+    p:'#e85d04', d:'#c43f00', l:'#ffd166',
+    services:[
+      {i:'🍳',t:'Lezzetli Menü',      d:'Taze malzemelerle hazırlanan ev yapımı lezzetler'},
+      {i:'📦',t:'Paket Servis',        d:'Hızlı ve güvenli kapınıza teslimat'},
+      {i:'🎉',t:'Özel Organizasyon',  d:'Doğum günü, düğün ve şirket etkinlikleri'},
+      {i:'📅',t:'Online Rezervasyon', d:'Kolay masa rezervasyonu imkânı'},
+    ],
+    taglines:['Lezzetin Adresi','Damak Zevkinize Uygun Seçenekler','Her Lokmada Kalite'],
+    stats:[{n:'500+',l:'Mutlu Müşteri'},{n:'50+',l:'Menü Çeşidi'},{n:'5★',l:'Google Puanı'}],
+    vi:'🍽️',
+  },
+  health: {
+    label:'Sağlık & Klinik', icon:'🏥',
+    p:'#0096c7', d:'#0077b6', l:'#90e0ef',
+    services:[
+      {i:'🔬',t:'Uzman Muayene',    d:'Alanında uzman doktorlarla kapsamlı muayene'},
+      {i:'💊',t:'Tedavi Planı',     d:'Kişiye özel tedavi ve takip programı'},
+      {i:'📋',t:'Online Randevu',   d:'Kolay ve hızlı randevu sistemi'},
+      {i:'🚑',t:'Acil Destek',      d:'7/24 acil durum hizmetleri'},
+    ],
+    taglines:['Sağlığınız Bizim Önceliğimiz','Uzman Kadro, Güvenilir Tedavi','Sağlıklı Yarınlar İçin'],
+    stats:[{n:'10+',l:'Uzman Hekim'},{n:'2000+',l:'Mutlu Hasta'},{n:'15+',l:'Yıl Deneyim'}],
+    vi:'⚕️',
+  },
+  legal: {
+    label:'Hukuk & Finans', icon:'⚖️',
+    p:'#1b2a4a', d:'#0f1b33', l:'#c9a84c',
+    services:[
+      {i:'⚖️',t:'Hukuki Danışmanlık', d:'Uzman avukatlardan profesyonel destek'},
+      {i:'📄',t:'Sözleşme Hazırlama', d:'Her türlü sözleşme ve belge düzenleme'},
+      {i:'🏛️',t:'Dava Yönetimi',      d:'Tüm aşamalarda güçlü hukuki temsil'},
+      {i:'📞',t:'Online Konsültasyon', d:'Video konferans ile hızlı danışmanlık'},
+    ],
+    taglines:['Haklarınız Güvende','Profesyonel Hukuki Destek','Güvenilir Hukuk Bürosu'],
+    stats:[{n:'500+',l:'Kazanılan Dava'},{n:'20+',l:'Yıl Deneyim'},{n:'98%',l:'Müşteri Memnuniyeti'}],
+    vi:'⚖️',
+  },
+  beauty: {
+    label:'Güzellik & Bakım', icon:'💅',
+    p:'#c9184a', d:'#a4133c', l:'#ff758f',
+    services:[
+      {i:'✂️',t:'Saç Tasarımı',   d:'Trendlere uygun profesyonel kesim ve şekillendirme'},
+      {i:'💆',t:'Cilt Bakımı',    d:'Cildinize özel bakım ve nemlendirme uygulamaları'},
+      {i:'💅',t:'Tırnak Bakımı',  d:'Manikür, pedikür ve kalıcı oje'},
+      {i:'🌸',t:'Spa & Masaj',    d:'Rahatlatıcı masaj ve spa deneyimi'},
+    ],
+    taglines:['Güzelliğinizi Keşfedin','Kendinize En İyi Hediyeyi Verin','Profesyonel Güzellik Uzmanları'],
+    stats:[{n:'1000+',l:'Mutlu Müşteri'},{n:'30+',l:'Hizmet Çeşidi'},{n:'8+',l:'Yıl Deneyim'}],
+    vi:'💄',
+  },
+  realestate: {
+    label:'Emlak & İnşaat', icon:'🏠',
+    p:'#588157', d:'#3a5a40', l:'#a3b18a',
+    services:[
+      {i:'🏠',t:'Satılık & Kiralık', d:'Geniş portföyden size özel mülk'},
+      {i:'📊',t:'Değerleme',          d:'Profesyonel mülk değerleme hizmeti'},
+      {i:'📝',t:'Tapu & Hukuk',       d:'Tapu işlemleri ve hukuki danışmanlık'},
+      {i:'🔑',t:'Proje Satışı',       d:'Sıfır proje ve konut danışmanlığı'},
+    ],
+    taglines:['Hayalinizdeki Evi Bulun','Güvenilir Emlak Danışmanlığı','Her Bütçeye Uygun Seçenekler'],
+    stats:[{n:'200+',l:'Satılan Mülk'},{n:'150+',l:'Aktif İlan'},{n:'12+',l:'Yıl Deneyim'}],
+    vi:'🏡',
+  },
+  auto: {
+    label:'Otomotiv', icon:'🚗',
+    p:'#37474f', d:'#1c313a', l:'#f77f00',
+    services:[
+      {i:'🔧',t:'Bakım & Onarım',   d:'Araçınız için kapsamlı bakım ve tamir'},
+      {i:'🛞',t:'Lastik & Balata',  d:'Tüm marka lastik ve fren sistemi'},
+      {i:'🔍',t:'Araç Ekspertiz',   d:'Detaylı araç muayene ve durum raporu'},
+      {i:'⚡',t:'Elektrik Sistemi', d:'Araç elektrik ve elektronik sistemleri'},
+    ],
+    taglines:['Aracınız Güvende','Uzman Ellerde Bakım','Güvenli Yolculuk İçin'],
+    stats:[{n:'5000+',l:'Servis Yapılan Araç'},{n:'15+',l:'Yıl Deneyim'},{n:'24/7',l:'Yol Yardım'}],
+    vi:'🔧',
+  },
+  education: {
+    label:'Eğitim', icon:'📚',
+    p:'#7209b7', d:'#560bad', l:'#b5179e',
+    services:[
+      {i:'📚',t:'Kurslar',        d:'Uzman eğitmenlerle kapsamlı eğitim programları'},
+      {i:'👨‍🏫',t:'Özel Ders',    d:'Birebir kişiselleştirilmiş öğretim'},
+      {i:'💻',t:'Online Eğitim', d:'İstediğin yerden, istediğin zaman öğren'},
+      {i:'🏆',t:'Sertifika',     d:'Sektörde geçerli uluslararası sertifikalar'},
+    ],
+    taglines:['Geleceğinizi Şekillendirin','Kaliteli Eğitimin Adresi','Başarıya Giden Yol'],
+    stats:[{n:'500+',l:'Mezun Öğrenci'},{n:'20+',l:'Eğitim Programı'},{n:'%95',l:'İş Bulma Oranı'}],
+    vi:'🎓',
+  },
+  hotel: {
+    label:'Konaklama', icon:'🏨',
+    p:'#264653', d:'#1a323e', l:'#e9c46a',
+    services:[
+      {i:'🛏️',t:'Konforlu Odalar',   d:'Lüks ve huzurlu konaklama deneyimi'},
+      {i:'🍳',t:'Restoran & Kahvaltı',d:'Zengin açık büfe ve à la carte menü'},
+      {i:'🏊',t:'Havuz & SPA',        d:'Yüzme havuzu ve wellness merkezi'},
+      {i:'🎉',t:'Etkinlik Salonu',    d:'Düğün, toplantı ve organizasyon hizmetleri'},
+    ],
+    taglines:['Konforun Buluşma Noktası','Unutulmaz Bir Konaklama','Misafirperverliğin Adresi'],
+    stats:[{n:'100+',l:'Oda'},{n:'5★',l:'Hizmet Kalitesi'},{n:'10+',l:'Yıl Deneyim'}],
+    vi:'🏨',
+  },
+  tech: {
+    label:'Teknoloji & Medya', icon:'💻',
+    p:'#023e8a', d:'#012a5e', l:'#48cae4',
+    services:[
+      {i:'💻',t:'Yazılım Geliştirme', d:'Web ve mobil uygulama geliştirme'},
+      {i:'🌐',t:'Web Tasarım',         d:'Modern ve kullanıcı dostu web siteleri'},
+      {i:'📱',t:'Dijital Pazarlama',   d:'SEO, sosyal medya ve reklam yönetimi'},
+      {i:'🔧',t:'Teknik Destek',       d:'7/24 teknik destek ve bakım'},
+    ],
+    taglines:['Dijital Geleceğinizi Şekillendirin','Teknoloji ile Büyüyün','Akıllı Çözümler'],
+    stats:[{n:'100+',l:'Proje'},{n:'50+',l:'Müşteri'},{n:'5+',l:'Yıl Deneyim'}],
+    vi:'🚀',
+  },
+  retail: {
+    label:'Mağaza & Hizmet', icon:'🛍️',
+    p:'#6d23a1', d:'#4f1780', l:'#e040fb',
+    services:[
+      {i:'🛍️',t:'Geniş Ürün Yelpazesi', d:'Her ihtiyacınıza uygun kaliteli ürünler'},
+      {i:'🚚',t:'Hızlı Teslimat',         d:'Aynı gün kargo ve kapıya teslim'},
+      {i:'💳',t:'Kolay Ödeme',             d:'Taksit ve farklı ödeme seçenekleri'},
+      {i:'🔄',t:'İade Garantisi',          d:'Koşulsuz iade ve değişim imkânı'},
+    ],
+    taglines:['Kaliteli Alışverişin Adresi','İhtiyacınız Ne Olursa','Güvenli ve Hızlı Alışveriş'],
+    stats:[{n:'1000+',l:'Ürün Çeşidi'},{n:'500+',l:'Mutlu Müşteri'},{n:'%100',l:'Güvenli Alışveriş'}],
+    vi:'🛒',
+  },
+  industrial: {
+    label:'Sanayi & Üretim', icon:'🏭',
+    p:'#455a64', d:'#263238', l:'#ff6f00',
+    services:[
+      {i:'🏭',t:'Üretim & İmalat',  d:'Yüksek kapasiteli endüstriyel üretim'},
+      {i:'✅',t:'Kalite Kontrol',   d:'ISO standartlarında kalite güvencesi'},
+      {i:'🤝',t:'B2B Tedarik',      d:'Toptan satış ve kurumsal tedarik anlaşmaları'},
+      {i:'🔩',t:'Teknik Servis',    d:'Makine bakım, onarım ve revizyon hizmetleri'},
+    ],
+    taglines:['Endüstriyel Güç','Üretimde Mükemmellik','Kalite ve Verimlilik'],
+    stats:[{n:'20+',l:'Yıl Deneyim'},{n:'500+',l:'B2B Müşteri'},{n:'ISO',l:'Kalite Sertifikası'}],
+    vi:'⚙️',
+  },
+};
+
+const MAP = {
+  restoran:'food', restaurant:'food', kafe:'food', cafe:'food', 'coffee shop':'food',
+  pastane:'food', bakery:'food', catering:'food', 'fast food':'food',
+  'dis hekimi':'health', dental:'health', 'dental clinic':'health', 'dental office':'health',
+  zahnarzt:'health', tandlakare:'health', eczane:'health', pharmacy:'health',
+  klinik:'health', clinic:'health', fizyoterapist:'health', psikolog:'health',
+  veteriner:'health', 'vet clinic':'health', diyetisyen:'health',
+  'spor salonu':'health', gym:'health', fitness:'health', 'goz doktoru':'health',
+  avukat:'legal', 'law firm':'legal', solicitor:'legal', lawyer:'legal',
+  muhasebe:'legal', accounting:'legal', 'accounting firm':'legal',
+  sigorta:'legal', insurance:'legal', 'mali musavir':'legal', 'financial advisor':'legal',
+  'guzellik salonu':'beauty', 'beauty salon':'beauty', friseur:'beauty',
+  berber:'beauty', barber:'beauty', 'barber shop':'beauty', spa:'beauty',
+  dovme:'beauty', tattoo:'beauty', 'tirnak salonu':'beauty', 'nail salon':'beauty',
+  emlakci:'realestate', 'real estate':'realestate', 'estate agent':'realestate',
+  immobilienmakler:'realestate', 'agence immobiliere':'realestate',
+  mimar:'realestate', architect:'realestate', insaat:'realestate', construction:'realestate',
+  tadilat:'realestate', renovation:'realestate', elektrikci:'realestate',
+  electrician:'realestate', temizlik:'realestate', 'cleaning service':'realestate',
+  nakliyat:'realestate', 'moving company':'realestate', tesisatci:'realestate',
+  'oto servis':'auto', 'auto repair':'auto', 'auto repair shop':'auto',
+  autohaus:'auto', 'car dealer':'auto', 'oto yikama':'auto', 'car wash':'auto',
+  'oto kiralama':'auto', 'car rental':'auto', lastikci:'auto', 'tire shop':'auto',
+  'oto ekspertiz':'auto', 'car inspection':'auto',
+  'ozel okul':'education', 'private school':'education', 'dil kursu':'education',
+  'language school':'education', 'surucu kursu':'education', 'driving school':'education',
+  'dans okulu':'education', 'dance studio':'education', 'muzik okulu':'education',
+  'music school':'education', 'etut merkezi':'education', tutoring:'education',
+  kres:'education', daycare:'education', kindergarten:'education',
+  otel:'hotel', hotel:'hotel', pansiyon:'hotel', 'boutique hotel':'hotel',
+  'apart otel':'hotel', resort:'hotel',
+  yazilim:'tech', 'software company':'tech', 'bilgisayar tamiri':'tech',
+  'computer repair':'tech', 'telefon tamiri':'tech', 'phone repair':'tech',
+  'reklam ajansi':'tech', 'advertising agency':'tech', fotograf:'tech',
+  photographer:'tech', matbaa:'tech', 'print shop':'tech',
+  cicekci:'retail', florist:'retail', kuyumcu:'retail', jeweler:'retail',
+  optik:'retail', optician:'retail', 'pet shop':'retail',
+  'kuru temizleme':'retail', 'dry cleaning':'retail',
+  fabrika:'industrial', factory:'industrial', imalat:'industrial',
+  manufacturing:'industrial', sanayi:'industrial', industrial:'industrial',
+  'metal isleme':'industrial', tekstil:'industrial', 'gida uretim':'industrial',
+  makine:'industrial', machinery:'industrial', 'depo ve lojistik':'industrial',
+  warehouse:'industrial', logistics:'industrial',
+};
+
+function stars(r) {
+  let s = '';
+  for (let i = 1; i <= 5; i++) s += (i <= Math.round(r)) ? '★' : '☆';
+  return s;
+}
+
+(function () {
+  const p = new URLSearchParams(location.search);
+  const raw  = (p.get('s') || 'restoran').toLowerCase();
+  const name = p.get('n') || 'İşletmemiz';
+  const city = p.get('c') || '';
+  const phone= p.get('p') || '';
+  const r    = parseFloat(p.get('r') || '0');
+
+  let cat = MAP[raw] || 'food';
+  if (!MAP[raw]) {
+    for (const [k, v] of Object.entries(MAP)) {
+      if (raw.includes(k) || k.includes(raw)) { cat = v; break; }
+    }
+  }
+  const D = SECTORS[cat] || SECTORS.food;
+
+  // Colors
+  const root = document.documentElement.style;
+  root.setProperty('--primary', D.p);
+  root.setProperty('--dark', D.d);
+  root.setProperty('--light', D.l);
+
+  // Tag bg uses primary — recalc on icon
+  document.querySelectorAll('.tag').forEach(el => {
+    el.style.background = D.p + '20';
+    el.style.color = D.p;
+  });
+  document.querySelectorAll('.card-icon').forEach(el => {
+    el.style.background = D.p + '18';
+  });
+
+  document.title = `${name}${city ? ' — ' + city : ''}`;
+  document.getElementById('nav-logo').textContent = name;
+  document.getElementById('hero-badge').textContent = `${D.icon} ${D.label}`;
+  document.getElementById('hero-title').textContent = name;
+  const tag = D.taglines[Math.floor(Math.random() * D.taglines.length)];
+  document.getElementById('hero-sub').textContent = city
+    ? `${city}'da ${tag.toLowerCase()}.`
+    : `${tag}.`;
+
+  if (r >= 1) {
+    document.getElementById('rating-row').style.display = 'inline-flex';
+    document.getElementById('stars').textContent = stars(r);
+    document.getElementById('rating-text').textContent = `${r.toFixed(1)} / 5.0 · Google`;
+  }
+
+  document.getElementById('services-grid').innerHTML = D.services.map(s =>
+    `<div class="card"><div class="card-icon">${s.i}</div><h3>${s.t}</h3><p>${s.d}</p></div>`
+  ).join('');
+
+  document.getElementById('services-lead').textContent =
+    `${name} olarak size en iyi hizmeti sunmak için buradayız.`;
+
+  document.getElementById('about-title').textContent = name + ' Hakkında';
+  document.getElementById('about-text').textContent =
+    `${city ? city + "'da " : ''}${D.label.toLowerCase()} alanında uzmanlaşmış ekibimizle müşterilerimize en yüksek kalitede hizmet sunuyoruz.`;
+  document.getElementById('about-icon').textContent = D.vi;
+
+  document.getElementById('stats').innerHTML = D.stats.map(s =>
+    `<div><div class="stat-n">${s.n}</div><div class="stat-l">${s.l}</div></div>`
+  ).join('');
+
+  document.getElementById('cta-sub').textContent =
+    `${name} için profesyonel bir web sitesi hazırlayalım. Ücretsiz demo ve teklif için bize ulaşın.`;
+
+  if (phone) {
+    const btn = document.getElementById('cta-main');
+    btn.href = `tel:${phone}`;
+    btn.textContent = `Hemen Ara: ${phone}`;
+  }
+})();
+</script>
+</body>
+</html>

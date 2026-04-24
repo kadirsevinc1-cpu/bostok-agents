@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{RESTORAN_ADI}} — {{SLOGAN}}</title>
+  <meta name="description" content="{{META_DESCRIPTION}}">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { brand: '{{RENK_KOD}}' } } }
+    }
+  </script>
+</head>
+<body class="font-sans text-gray-800">
+
+  <!-- NAV -->
+  <nav class="fixed w-full bg-white/95 backdrop-blur shadow-sm z-50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+      <span class="text-2xl font-bold text-amber-700">{{RESTORAN_ADI}}</span>
+      <div class="hidden md:flex gap-8 text-sm font-medium">
+        <a href="#menu" class="hover:text-amber-700 transition">Menü</a>
+        <a href="#hakkinda" class="hover:text-amber-700 transition">Hakkımızda</a>
+        <a href="#rezervasyon" class="hover:text-amber-700 transition">Rezervasyon</a>
+        <a href="#iletisim" class="hover:text-amber-700 transition">İletişim</a>
+      </div>
+      <a href="#rezervasyon" class="bg-amber-700 text-white px-4 py-2 rounded-lg text-sm hover:bg-amber-800 transition">
+        Rezervasyon Yap
+      </a>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-orange-100 pt-16">
+    <div class="text-center px-4">
+      <h1 class="text-5xl md:text-7xl font-bold text-amber-900 mb-6">{{SLOGAN}}</h1>
+      <p class="text-xl text-amber-700 mb-10 max-w-2xl mx-auto">{{HERO_ALT_METIN}}</p>
+      <div class="flex gap-4 justify-center flex-wrap">
+        <a href="#menu" class="bg-amber-700 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-amber-800 transition shadow-lg">
+          Menüyü Gör
+        </a>
+        <a href="#rezervasyon" class="border-2 border-amber-700 text-amber-700 px-8 py-4 rounded-xl text-lg font-semibold hover:bg-amber-50 transition">
+          Rezervasyon Yap
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- MENU -->
+  <section id="menu" class="py-20 bg-white">
+    <div class="max-w-6xl mx-auto px-4">
+      <h2 class="text-4xl font-bold text-center text-amber-900 mb-4">Menümüz</h2>
+      <p class="text-center text-gray-500 mb-12">{{MENU_ALT_BASLIK}}</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Kategori kartları buraya dinamik eklenir -->
+        {{MENU_KATEGORILERI}}
+      </div>
+    </div>
+  </section>
+
+  <!-- HAKKINDA -->
+  <section id="hakkinda" class="py-20 bg-amber-50">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <h2 class="text-4xl font-bold text-amber-900 mb-6">Hikayemiz</h2>
+      <p class="text-lg text-gray-600 leading-relaxed">{{HAKKINDA_METIN}}</p>
+    </div>
+  </section>
+
+  <!-- REZERVASYON -->
+  <section id="rezervasyon" class="py-20 bg-white">
+    <div class="max-w-2xl mx-auto px-4">
+      <h2 class="text-4xl font-bold text-center text-amber-900 mb-4">Rezervasyon</h2>
+      <p class="text-center text-gray-500 mb-10">Masanızı önceden ayırtın</p>
+      <form action="https://formspree.io/f/{{FORMSPREE_ID}}" method="POST" class="space-y-4">
+        <input type="text" name="ad" placeholder="Adınız Soyadınız" required
+               class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400">
+        <input type="tel" name="telefon" placeholder="Telefon Numaranız" required
+               class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400">
+        <input type="date" name="tarih" required
+               class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400">
+        <select name="kisi" class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <option>1-2 Kişi</option>
+          <option>3-4 Kişi</option>
+          <option>5-6 Kişi</option>
+          <option>7+ Kişi (Özel etkinlik)</option>
+        </select>
+        <textarea name="not" placeholder="Özel istek veya not..." rows="3"
+                  class="w-full border border-gray-200 rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-400"></textarea>
+        <button type="submit" class="w-full bg-amber-700 text-white py-4 rounded-xl text-lg font-semibold hover:bg-amber-800 transition">
+          Rezervasyon Yap
+        </button>
+      </form>
+    </div>
+  </section>
+
+  <!-- İLETİŞİM -->
+  <section id="iletisim" class="py-20 bg-amber-900 text-white">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <h2 class="text-4xl font-bold mb-10">İletişim & Konum</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div>
+          <div class="text-3xl mb-3">📍</div>
+          <h3 class="font-semibold mb-2">Adres</h3>
+          <p class="text-amber-200">{{ADRES}}</p>
+        </div>
+        <div>
+          <div class="text-3xl mb-3">📞</div>
+          <h3 class="font-semibold mb-2">Telefon</h3>
+          <a href="tel:{{TELEFON}}" class="text-amber-200 hover:text-white">{{TELEFON}}</a>
+        </div>
+        <div>
+          <div class="text-3xl mb-3">🕐</div>
+          <h3 class="font-semibold mb-2">Çalışma Saatleri</h3>
+          <p class="text-amber-200">{{CALISMA_SAATLERI}}</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="bg-amber-950 text-amber-300 text-center py-6 text-sm">
+    <p>© 2025 {{RESTORAN_ADI}} | Web tasarım: <a href="https://bostok.dev" class="hover:text-white">bostok.dev</a></p>
+  </footer>
+
+</body>
+</html>
