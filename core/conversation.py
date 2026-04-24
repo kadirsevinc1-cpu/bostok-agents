@@ -26,6 +26,7 @@ async def route_user_message(text: str, send_fn):
             "/durum — Aktif isleri goster\n"
             "/butce — Token harcama raporu\n"
             "/inbox — Son gelen yanitlari listele\n"
+            "/istatistik — Sistem ozeti\n"
             "/yardim — Bu mesaj\n\n"
             "<b>Yonetim:</b>\n"
             "/durdur — Mevcut isi durdur\n\n"
@@ -40,6 +41,10 @@ async def route_user_message(text: str, send_fn):
 
     if text == "/inbox":
         await _show_inbox(send_fn)
+        return
+
+    if text == "/istatistik":
+        await _show_stats(send_fn)
         return
 
     if lower.startswith("/seo "):
@@ -177,6 +182,34 @@ async def _send_lead_reply(reply_id: str, body: str, send_fn):
 def update_job_status(job_id: str, status: str):
     if job_id in _active_jobs:
         _active_jobs[job_id]["status"] = status
+
+
+async def _show_stats(send_fn):
+    import json
+    from pathlib import Path
+    from core.budget import budget
+
+    sent_ids   = Path("memory/sent_message_ids.json")
+    inbox_file = Path("memory/inbox_emails.json")
+    followup   = Path("memory/followup_log.json")
+
+    sent_count     = len(json.loads(sent_ids.read_text(encoding="utf-8"))) if sent_ids.exists() else 0
+    reply_count    = len(json.loads(inbox_file.read_text(encoding="utf-8"))) if inbox_file.exists() else 0
+    followup_data  = json.loads(followup.read_text(encoding="utf-8")) if followup.exists() else {}
+    f1 = sum(1 for v in followup_data.values() if v.get("f1_sent"))
+    f2 = sum(1 for v in followup_data.values() if v.get("f2_sent"))
+
+    reply_rate = f"{reply_count/sent_count*100:.1f}%" if sent_count else "—"
+
+    await send_fn(
+        f"<b>Sistem Istatistikleri</b>\n\n"
+        f"Gonderilen email: <b>{sent_count}</b>\n"
+        f"Gelen yanit: <b>{reply_count}</b>\n"
+        f"Yanit orani: <b>{reply_rate}</b>\n\n"
+        f"Follow-up (7. gun): <b>{f1}</b>\n"
+        f"Follow-up (14. gun): <b>{f2}</b>\n\n"
+        f"{budget.report()}"
+    )
 
 
 async def _show_inbox(send_fn):
