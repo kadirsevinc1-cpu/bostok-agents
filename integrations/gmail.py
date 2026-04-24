@@ -1,6 +1,7 @@
 """Gmail SMTP ile mail gönderme — günlük limit, tekrar önleme, yanıt takibi."""
 import asyncio
 import json
+import os
 import smtplib
 import uuid
 from datetime import date, datetime
@@ -39,15 +40,17 @@ class GmailSender:
         if SENT_IDS_FILE.exists():
             try:
                 data = json.loads(SENT_IDS_FILE.read_text(encoding="utf-8"))
-            except Exception:
-                pass
+            except Exception as e:
+                logger.error(f"sent_message_ids.json okunamadi: {e}")
         data[msg_id] = {
             "to": to,
             "subject": subject,
             "sent_at": datetime.now().isoformat(),
             **lead_info,
         }
-        SENT_IDS_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        tmp = SENT_IDS_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        os.replace(tmp, SENT_IDS_FILE)
 
     def _reset_if_new_day(self):
         today = date.today()
@@ -84,7 +87,7 @@ class GmailSender:
             msg["Subject"] = subject
             msg["Message-ID"] = msg_id
             msg.attach(MIMEText(body, "plain", "utf-8"))
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, self._smtp_send, to, msg.as_string())
             self._today_count += 1
             self._record_sent(to)
@@ -114,7 +117,7 @@ class GmailSender:
                 msg["In-Reply-To"] = in_reply_to
                 msg["References"] = in_reply_to
             msg.attach(MIMEText(body, "plain", "utf-8"))
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, self._smtp_send, to.strip(), msg.as_string())
             self._today_count += 1
             logger.info(f"Yanit gonderildi: {to} ({self._today_count}/{self._limit})")
@@ -124,7 +127,7 @@ class GmailSender:
             return False
 
     def _smtp_send(self, to: str, raw: str):
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as srv:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as srv:
             srv.login(self._user, self._password)
             srv.sendmail(self._user, to, raw)
 

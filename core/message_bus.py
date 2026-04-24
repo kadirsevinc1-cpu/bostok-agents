@@ -2,6 +2,7 @@ import asyncio
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from loguru import logger
 from typing import Callable, Any
 
 
@@ -61,8 +62,8 @@ class MessageBus:
                     await listener(msg)
                 else:
                     listener(msg)
-            except Exception:
-                pass
+            except Exception as e:
+                logger.warning(f"Listener hatasi: {e}")
 
     async def receive(self, agent: AgentName, timeout: float = None) -> Message | None:
         try:

@@ -1,6 +1,7 @@
 """FollowupAgent — yanıt gelmeyen leadlere 7. ve 14. günde otomatik takip maili atar."""
 import asyncio
 import json
+import os
 from datetime import datetime
 from pathlib import Path
 from loguru import logger
@@ -152,4 +153,6 @@ class FollowupAgent(BaseAgent):
 
     def _save_json(self, path: Path, data: dict):
         path.parent.mkdir(exist_ok=True)
-        path.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        tmp = path.with_suffix(".tmp")
+        tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        os.replace(tmp, path)

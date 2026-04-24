@@ -4,8 +4,9 @@ import email.utils
 import hashlib
 import imaplib
 import json
+import os
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from email.header import decode_header
 from pathlib import Path
 from loguru import logger
@@ -63,9 +64,9 @@ class GmailReader:
         emails = self._load_inbox_emails()
         emails[reply_id] = data
         INBOX_EMAILS_FILE.parent.mkdir(exist_ok=True)
-        INBOX_EMAILS_FILE.write_text(
-            json.dumps(emails, ensure_ascii=False, indent=2), encoding="utf-8"
-        )
+        tmp = INBOX_EMAILS_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(emails, ensure_ascii=False, indent=2), encoding="utf-8")
+        os.replace(tmp, INBOX_EMAILS_FILE)
 
     def _decode_str(self, value: str) -> str:
         if not value:
@@ -108,7 +109,8 @@ class GmailReader:
                 imap.login(self._user, self._password)
                 imap.select("INBOX")
 
-                _, data = imap.search(None, "ALL")
+                since = (datetime.now() - timedelta(days=30)).strftime("%d-%b-%Y")
+                _, data = imap.search(None, f"SINCE {since}")
                 uids = data[0].split() if data[0] else []
 
                 for uid in uids:

@@ -18,19 +18,21 @@ class TelegramBot:
         self._pending_results: dict[str, str] = {}
 
     async def send(self, text: str, reply_markup: dict = None):
-        """Mesaj gönder."""
-        payload = {"chat_id": self.chat_id, "text": text, "parse_mode": "HTML"}
-        if reply_markup:
-            import json
-            payload["reply_markup"] = json.dumps(reply_markup)
-        try:
-            async with aiohttp.ClientSession() as session:
-                async with session.post(f"{self._base}/sendMessage", json=payload) as resp:
-                    data = await resp.json()
-                    if not data.get("ok"):
-                        logger.warning(f"Telegram send hatasi: {data}")
-        except Exception as e:
-            logger.error(f"Telegram send error: {e}")
+        """Mesaj gönder. 4096 karakter limitini aşarsa parçalar halinde gönderir."""
+        chunks = [text[i:i+4000] for i in range(0, len(text), 4000)]
+        for chunk in chunks:
+            payload = {"chat_id": self.chat_id, "text": chunk, "parse_mode": "HTML"}
+            if reply_markup and chunk == chunks[-1]:
+                import json
+                payload["reply_markup"] = json.dumps(reply_markup)
+            try:
+                async with aiohttp.ClientSession() as session:
+                    async with session.post(f"{self._base}/sendMessage", json=payload) as resp:
+                        data = await resp.json()
+                        if not data.get("ok"):
+                            logger.warning(f"Telegram send hatasi: {data}")
+            except Exception as e:
+                logger.error(f"Telegram send error: {e}")
 
     async def request_approval(self, approval_id: str, message: str) -> bool:
         """Onay iste, kullanıcı /onayla veya /reddet yazana kadar bekle."""

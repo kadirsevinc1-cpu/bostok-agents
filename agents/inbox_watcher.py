@@ -18,7 +18,7 @@ class InboxWatcherAgent(BaseAgent):
             await asyncio.sleep(60)
             return
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         try:
             replies = await loop.run_in_executor(None, reader.check_replies)
         except Exception as e:

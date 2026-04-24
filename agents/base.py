@@ -46,11 +46,18 @@ class BaseAgent:
     async def run(self):
         self.running = True
         logger.info(f"{self.name.value} başlatıldı")
+        crash_count = 0
         while self.running:
             try:
                 await self.loop()
+                crash_count = 0
             except Exception as e:
-                logger.exception(f"{self.name.value} HATA: {e}")
+                crash_count += 1
+                logger.exception(f"{self.name.value} HATA ({crash_count}/10): {e}")
+                if crash_count >= 10:
+                    logger.error(f"{self.name.value} arka arkaya 10 hata, durduruluyor")
+                    self.running = False
+                    break
                 await asyncio.sleep(5)
 
     async def loop(self):
