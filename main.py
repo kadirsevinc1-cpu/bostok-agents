@@ -254,9 +254,9 @@ async def marketing_scheduler():
                     "send_emails": True,
                 },
             ))
-            await asyncio.sleep(30)  # Kampanyalar arasi bekleme
+            await asyncio.sleep(10)  # Kampanyalar arasi bekleme
 
-        await asyncio.sleep(4 * 3600)  # 4 saat
+        await asyncio.sleep(3600)  # 1 saat
 
 
 async def notify_handler(msg: Message):

@@ -20,7 +20,7 @@ Kurallar:
 
 LANG_NAMES = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca", "nl": "Flemenkçe", "fr": "Fransızca"}
 
-DEMO_BASE = "https://demo.bostok.dev"
+DEMO_BASE = "https://bostok-demo.kadirsevinc1.workers.dev"
 
 
 class MarketingAgent(BaseAgent):
