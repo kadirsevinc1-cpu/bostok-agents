@@ -63,13 +63,29 @@ class NetlifyClient:
         if not site_id:
             site_id, site_url = await self._find_existing_site("bostok-demo")
 
-        # 4. Hâlâ yoksa oluştur (ilk kez)
+        # 4. NETLIFY_DEMO_SITE_ID env var varsa onu kullan
         if not site_id:
-            logger.info("Demo site yok, yeni oluşturuluyor...")
+            try:
+                from config import settings
+                env_id = getattr(settings, "netlify_demo_site_id", "")
+                if env_id:
+                    site_id  = env_id
+                    site_url = await self._get_site_url(site_id)
+                    logger.info(f"Demo site env'den alindi: {site_id}")
+            except Exception:
+                pass
+
+        # 5. Hâlâ yoksa oluşturmayı dene; 422 gelirse Worker'a bırak
+        if not site_id:
+            logger.info("Demo site bulunamadi, olusturulmaya calisiliyor...")
             site_id, site_url = await self._create_site("bostok-demo")
 
         if not site_id:
-            logger.error("Demo site ID alınamadı, deploy iptal")
+            logger.warning(
+                "Demo site Netlify'a yuklenemedi (hesap site limiti dolu). "
+                "Worker URL kullanilacak. Cozum: Netlify dashboard'dan bir site ID alip "
+                ".env'e NETLIFY_DEMO_SITE_ID=<id> olarak ekleyin."
+            )
             return ""
 
         # ID'yi cache'le

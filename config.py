@@ -17,7 +17,8 @@ class Settings(BaseSettings):
     anthropic_api_key:   str = Field("", env="ANTHROPIC_API_KEY")
 
     # Netlify deploy
-    netlify_token:       str = Field("", env="NETLIFY_TOKEN")
+    netlify_token:          str = Field("", env="NETLIFY_TOKEN")
+    netlify_demo_site_id:   str = Field("", env="NETLIFY_DEMO_SITE_ID")
 
     # Gmail (uygulama sifresi ile)
     gmail_user:          str = Field("", env="GMAIL_USER")
