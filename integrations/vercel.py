@@ -1,11 +1,10 @@
-"""Vercel deploy — demo_site/ klasörünü Vercel'e deploy et, URL al."""
+"""Vercel deploy — demo_site/ klasörünü Vercel REST API ile deploy et."""
 import asyncio
-import json
-import os
-import subprocess
+import base64
 from pathlib import Path
 from loguru import logger
 
+VERCEL_API = "https://api.vercel.com"
 _VERCEL_URL_CACHE = Path("memory/vercel_site_url.txt")
 
 
@@ -20,9 +19,7 @@ def _get_token() -> str:
 async def deploy_demo_site(demo_dir: str) -> str:
     """
     demo_site/ klasörünü Vercel'e deploy et, URL döndür.
-    - URL cache geçerliyse dokunma.
-    - `npx vercel --prod --yes --token <TOKEN>` ile deploy et.
-    - VERCEL_TOKEN .env'de yoksa "" döner.
+    Vercel REST API kullanır (CLI'dan bağımsız, token formatından bağımsız).
     """
     token = _get_token()
     if not token:
@@ -45,46 +42,120 @@ async def deploy_demo_site(demo_dir: str) -> str:
 
     logger.info("Vercel deploy basliyor...")
     try:
-        loop = asyncio.get_running_loop()
-        result = await loop.run_in_executor(None, _run_deploy, demo_dir, token)
-        if result:
+        url = await _api_deploy(demo_dir, token)
+        if url:
             _VERCEL_URL_CACHE.parent.mkdir(exist_ok=True)
-            _VERCEL_URL_CACHE.write_text(result, encoding="utf-8")
-            logger.info(f"Vercel demo yayinda: {result}")
-        return result
+            _VERCEL_URL_CACHE.write_text(url, encoding="utf-8")
+            logger.info(f"Vercel demo yayinda: {url}")
+        return url
     except Exception as e:
         logger.warning(f"Vercel deploy hata: {e}")
         return ""
 
 
-def _run_deploy(demo_dir: str, token: str) -> str:
-    """Vercel CLI ile deploy (blocking — executor'da çalışır)."""
-    cmd = [
-        "npx", "vercel",
-        "--prod", "--yes",
-        "--token", token,
-        "--name", "bostok-demo",
-        demo_dir,
-    ]
-    try:
-        proc = subprocess.run(
-            cmd, capture_output=True, text=True, timeout=120,
-            cwd=str(Path(demo_dir).parent),
-        )
-        output = proc.stdout.strip()
-        # Son satır deployment URL'i
-        lines = [l.strip() for l in output.splitlines() if l.strip().startswith("http")]
-        if lines:
-            url = lines[-1]
-            logger.info(f"Vercel deploy tamamlandi: {url}")
+async def _api_deploy(demo_dir: str, token: str) -> str:
+    """Vercel REST API v13 ile dosyaları deploy et."""
+    import aiohttp
+
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json",
+    }
+
+    # Dosyaları topla
+    files = []
+    base = Path(demo_dir).resolve()
+    for fpath in base.rglob("*"):
+        if not fpath.is_file():
+            continue
+        rel = fpath.relative_to(base).as_posix()
+        raw = fpath.read_bytes()
+        files.append({
+            "file": rel,
+            "data": base64.b64encode(raw).decode(),
+            "encoding": "base64",
+        })
+
+    payload = {
+        "name": "bostok-demo",
+        "files": files,
+        "target": "production",
+        "projectSettings": {
+            "framework": None,
+            "outputDirectory": None,
+            "buildCommand": None,
+            "installCommand": None,
+            "devCommand": None,
+        },
+    }
+
+    async with aiohttp.ClientSession() as session:
+        async with session.post(
+            f"{VERCEL_API}/v13/deployments",
+            json=payload,
+            headers=headers,
+            timeout=aiohttp.ClientTimeout(total=60),
+        ) as resp:
+            data = await resp.json()
+            if resp.status not in (200, 201):
+                logger.warning(f"Vercel API hata {resp.status}: {data.get('error', data)}")
+                return ""
+
+            deploy_id = data.get("id", "")
+            url = data.get("url", "")
+            if url and not url.startswith("http"):
+                url = f"https://{url}"
+
+            if deploy_id:
+                url = await _wait_ready(session, deploy_id, headers, url)
+
+            # SSO korumasını kapat — herkese açık olsun
+            await _disable_protection(session, headers)
+
             return url
-        if proc.returncode != 0:
-            logger.warning(f"Vercel CLI hata (exit {proc.returncode}): {proc.stderr[:300]}")
-    except subprocess.TimeoutExpired:
-        logger.warning("Vercel deploy timeout (120s)")
-    except Exception as e:
-        logger.warning(f"Vercel CLI calıstırılamadi: {e}")
-    return ""
+
+
+async def _disable_protection(session, headers: dict):
+    """Proje SSO/authentication korumasını kapat (public erişim)."""
+    import aiohttp
+    try:
+        async with session.patch(
+            f"{VERCEL_API}/v9/projects/bostok-demo",
+            json={"ssoProtection": None},
+            headers=headers,
+            timeout=aiohttp.ClientTimeout(total=10),
+        ) as resp:
+            if resp.status == 200:
+                logger.debug("Vercel SSO korumasi kapatildi")
+    except Exception:
+        pass
+
+
+async def _wait_ready(session, deploy_id: str, headers: dict, fallback: str) -> str:
+    """Deploy 'READY' olana kadar bekle (max 2 dakika)."""
+    import aiohttp
+    for _ in range(24):
+        await asyncio.sleep(5)
+        try:
+            async with session.get(
+                f"{VERCEL_API}/v13/deployments/{deploy_id}",
+                headers=headers,
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                data = await resp.json()
+                state = data.get("readyState") or data.get("state", "")
+                if state == "READY":
+                    url = data.get("url", fallback)
+                    if url and not url.startswith("http"):
+                        url = f"https://{url}"
+                    return url
+                if state in ("ERROR", "CANCELED"):
+                    logger.error(f"Vercel deploy basarisiz: {state}")
+                    return ""
+        except Exception:
+            pass
+    logger.warning("Vercel deploy timeout — URL tahmin ediliyor")
+    return fallback
 
 
 def get_vercel_url() -> str:
