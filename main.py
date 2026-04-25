@@ -331,8 +331,14 @@ async def main():
     netlify = init_netlify()
     if netlify:
         logger.info("Netlify hazir - otomatik deploy aktif")
+        # Demo site'i Netlify'a deploy et (ilk çalıştırmada, sonrasında cache'den okur)
+        demo_url = await netlify.deploy_demo_site("demo_site")
+        if demo_url:
+            logger.info(f"Demo site URL: {demo_url}")
+        else:
+            logger.warning("Demo site deploy edilemedi, Worker URL kullanilacak")
     else:
-        logger.warning("Netlify token yok - deploy manuel yapilacak")
+        logger.warning("Netlify token yok - demo Worker URL ile calisacak")
 
     # Gmail başlat
     gmail = init_gmail()

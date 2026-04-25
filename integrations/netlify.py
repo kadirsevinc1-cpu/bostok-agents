@@ -101,6 +101,42 @@ class NetlifyClient:
         return fallback
 
 
+    async def deploy_demo_site(self, demo_dir: str) -> str:
+        """
+        demo_site/ klasörünü kalıcı bir Netlify sitesine deploy et.
+        URL memory/demo_site_url.txt'de cache'lenir; geçerliyse yeniden deploy etmez.
+        """
+        from pathlib import Path
+        import aiohttp as _aiohttp
+        cache = Path("memory/demo_site_url.txt")
+
+        # Cache kontrolü
+        if cache.exists():
+            cached = cache.read_text(encoding="utf-8").strip()
+            if cached:
+                try:
+                    async with _aiohttp.ClientSession() as s:
+                        async with s.head(cached, timeout=_aiohttp.ClientTimeout(total=6)) as r:
+                            if r.status < 400:
+                                logger.info(f"Demo site zaten aktif: {cached}")
+                                return cached
+                except Exception:
+                    logger.warning("Demo site cache URL erişilemiyor, yeniden deploy ediliyor")
+
+        # Deploy
+        logger.info("Demo site Netlify'a deploy ediliyor...")
+        zip_bytes = self._zip_directory(demo_dir)
+        site_id, site_url = await self._create_site("bostok-demo-v2")
+        if not site_id:
+            return ""
+        url = await self._deploy_zip(site_id, zip_bytes, site_url)
+        if url:
+            cache.parent.mkdir(exist_ok=True)
+            cache.write_text(url, encoding="utf-8")
+            logger.info(f"Demo site Netlify'da yayinda: {url}")
+        return url
+
+
 _client: NetlifyClient | None = None
 
 

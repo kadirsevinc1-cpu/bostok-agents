@@ -20,7 +20,33 @@ Kurallar:
 
 LANG_NAMES = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca", "nl": "Flemenkçe", "fr": "Fransızca"}
 
-DEMO_BASE = "https://bostok-demo.kadirsevinc1.workers.dev"
+_WORKER_BASE = "https://bostok-demo.kadirsevinc1.workers.dev"
+_DEMO_URL_CACHE = None   # startup'ta Netlify URL buraya yüklenir
+
+_TR_TABLE = str.maketrans(
+    "şğüöıçŞĞÜÖIÇ",
+    "sguoicSGUOIC",
+)
+
+
+def _ascii_param(s: str) -> str:
+    """URL parametresi için Türkçe→ASCII dönüşümü + max 50 karakter."""
+    return s.translate(_TR_TABLE)[:50]
+
+
+def _get_demo_base() -> str:
+    """Netlify cache'i varsa kullan, yoksa Worker URL."""
+    global _DEMO_URL_CACHE
+    if _DEMO_URL_CACHE:
+        return _DEMO_URL_CACHE
+    from pathlib import Path
+    cache = Path("memory/demo_site_url.txt")
+    if cache.exists():
+        url = cache.read_text(encoding="utf-8").strip()
+        if url:
+            _DEMO_URL_CACHE = url
+            return url
+    return _WORKER_BASE
 
 
 class MarketingAgent(BaseAgent):
@@ -144,12 +170,18 @@ class MarketingAgent(BaseAgent):
 
     def _make_demo_url(self, lead, lang: str) -> str:
         import urllib.parse
-        params = {"s": lead.sector, "n": lead.name, "c": lead.location, "lang": lang}
+        params = {
+            "s": _ascii_param(lead.sector),
+            "n": _ascii_param(lead.name),
+            "c": _ascii_param(lead.location),
+            "lang": lang,
+        }
         if getattr(lead, "rating", None):
             params["r"] = str(lead.rating)
         if getattr(lead, "phone", None):
             params["p"] = lead.phone
-        return f"{DEMO_BASE}/?{urllib.parse.urlencode(params, quote_via=urllib.parse.quote)}"
+        base = _get_demo_base()
+        return f"{base}/?{urllib.parse.urlencode(params, quote_via=urllib.parse.quote)}"
 
     async def _write_email(self, lead, lang: str, seo=None) -> tuple[str, str]:
         lang_name = LANG_NAMES.get(lang, lang)
