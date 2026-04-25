@@ -38,10 +38,29 @@ class QuoteAgent(BaseAgent):
 
     async def _handle(self, msg: Message):
         from loguru import logger
+        from core.skills.pricing_calculator import (
+            estimate_price, detect_region, detect_site_type, extract_features
+        )
+        from core.skills.sector_kb import detect_sector
         logger.info(f"Teklif hazırlanıyor: {msg.content[:60]}")
 
+        region   = detect_region(msg.content)
+        stype    = detect_site_type(msg.content)
+        sector   = detect_sector(msg.content)
+        features = extract_features(msg.content)
+        est      = estimate_price(region, stype, sector, features)
+
+        price_hint = (
+            f"[Fiyat Hesaplama — Formül Tahmini]\n"
+            f"{est.summary()}\n"
+            f"(Bu tahmini referans al, brief'e göre ince ayar yap)"
+        )
+
         quote = await self.ask(
-            f"Proje brief'i:\n{msg.content}\n\nBu proje için detaylı teklif hazırla."
+            f"Proje brief'i:\n{msg.content}\n\n"
+            f"{price_hint}\n\n"
+            "Bu proje için detaylı, profesyonel teklif hazırla. "
+            "Formül tahminini rehber olarak kullan ama brief'teki detaylara göre gerekirse ayarla."
         )
 
         self.save_observation(f"Teklif: {quote[:200]}", importance=8.5)

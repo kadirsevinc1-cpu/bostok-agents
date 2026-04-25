@@ -43,6 +43,15 @@ class BaseAgent:
     async def receive(self, timeout: float = None) -> Message | None:
         return await bus.receive(self.name, timeout=timeout)
 
+    async def _notify_crash(self, message: str):
+        try:
+            from integrations.telegram import get_bot
+            bot = get_bot()
+            if bot:
+                await bot.send(message)
+        except Exception:
+            pass
+
     async def run(self):
         self.running = True
         logger.info(f"{self.name.value} başlatıldı")
@@ -57,6 +66,12 @@ class BaseAgent:
                 if crash_count >= 10:
                     logger.error(f"{self.name.value} arka arkaya 10 hata, durduruluyor")
                     self.running = False
+                    await self._notify_crash(
+                        f"🚨 <b>Agent Çöktü!</b>\n"
+                        f"<b>Agent:</b> {self.name.value}\n"
+                        f"<b>Hata:</b> {str(e)[:300]}\n"
+                        f"<b>Durum:</b> Arka arkaya 10 hata — agent durduruldu."
+                    )
                     break
                 await asyncio.sleep(5)
 

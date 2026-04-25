@@ -240,8 +240,19 @@ async def marketing_scheduler():
     while True:
         campaign = CAMPAIGNS[campaign_idx % len(CAMPAIGNS)]
         campaign_idx += 1
+        total = len(campaign["locations"])
 
-        for location in campaign["locations"]:
+        logger.info(
+            f"[Kampanya {campaign_idx}/{len(CAMPAIGNS)}] "
+            f"{campaign['sector'].upper()} — {total} lokasyon: "
+            f"{', '.join(campaign['locations'][:4])}"
+            + (f" ...+{total - 4}" if total > 4 else "")
+        )
+
+        for loc_idx, location in enumerate(campaign["locations"], 1):
+            logger.info(
+                f"  [{loc_idx}/{total}] {campaign['sector']} — {location}"
+            )
             await bus.send(Message(
                 sender=AgentName.SYSTEM,
                 receiver=AgentName.MARKETING,
@@ -256,6 +267,7 @@ async def marketing_scheduler():
             ))
             await asyncio.sleep(10)  # Kampanyalar arasi bekleme
 
+        logger.info(f"[Kampanya tamamlandi] {campaign['sector']} — 1 saat bekleniyor")
         await asyncio.sleep(3600)  # 1 saat
 
 

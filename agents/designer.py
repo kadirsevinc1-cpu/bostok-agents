@@ -31,14 +31,18 @@ class DesignerAgent(BaseAgent):
 
     async def _handle(self, msg: Message):
         from loguru import logger
+        from core.skills.design_kb import format_design_hint
         logger.info(f"Tasarım hazırlanıyor: {msg.content[:60]}")
+
+        design_hint = format_design_hint(msg.content)
 
         design = await self.ask(
             f"Proje içerikleri ve brief:\n{msg.content}\n\n"
+            f"{design_hint}\n"
             "Bu proje için:\n"
-            "1. Detaylı tasarım rehberi yaz\n"
+            "1. Yukarıdaki tasarım rehberine uygun detaylı tasarım kararları yaz\n"
             "2. Tailwind CSS kullanarak HTML iskeleti oluştur\n"
-            "3. Renk paleti, font ve layout kararlarını gerekçelendir"
+            "3. Renk paleti ve font seçimlerini kısa gerekçelendir"
         )
 
         self.save_observation(f"Tasarım: {design[:150]}", importance=7.5)

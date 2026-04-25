@@ -42,6 +42,7 @@ class QAAgent(BaseAgent):
         from core.skills.html_validator import validate_html
         from core.skills.link_checker import check_links
         from core.skills.seo_checker import check_seo
+        from core.skills.accessibility_checker import check_accessibility
 
         logger.info(f"QA kontrolü başladı: {msg.content[:60]}")
 
@@ -55,15 +56,20 @@ class QAAgent(BaseAgent):
             html_rep  = validate_html(html_content)
             link_rep  = check_links(html_content)
             seo_rep   = check_seo(html_content)
+            a11y_rep  = check_accessibility(html_content)
 
             skill_summary = (
                 f"=== Otomatik Analiz ===\n"
                 f"HTML Yapısı:\n{html_rep.summary()}\n\n"
                 f"Linkler:\n{link_rep.summary()}\n\n"
-                f"SEO:\n{seo_rep.summary()}"
+                f"SEO:\n{seo_rep.summary()}\n\n"
+                f"Erişilebilirlik:\n{a11y_rep.summary()}"
             )
-            logger.info(f"QA skill analizi tamamlandı — SEO: {seo_rep.score}/100, "
-                        f"HTML hataları: {len(html_rep.errors)}")
+            logger.info(
+                f"QA skill analizi tamamlandi — SEO: {seo_rep.score}/100, "
+                f"HTML hatalari: {len(html_rep.errors)}, "
+                f"A11y hatalari: {len(a11y_rep.errors)}"
+            )
 
             review_prompt = (
                 f"Otomatik araçların tespitleri:\n{skill_summary}\n\n"

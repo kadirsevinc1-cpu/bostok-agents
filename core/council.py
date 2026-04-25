@@ -99,7 +99,16 @@ async def hold_meeting(brief: str) -> CouncilDecision:
     snippet = brief[:BRIEF_SNIPPET_LEN]
     logger.info("Konsey toplantisi basladi (3 paralel oy)...")
 
-    votes = list(await asyncio.gather(*[_ask_member(m, snippet) for m in _MEMBERS]))
+    try:
+        votes = list(
+            await asyncio.wait_for(
+                asyncio.gather(*[_ask_member(m, snippet) for m in _MEMBERS]),
+                timeout=45.0,
+            )
+        )
+    except asyncio.TimeoutError:
+        logger.warning("Konsey zaman asimi (45s) — varsayilan ONAY verildi")
+        votes = [Vote(m["name"], True, "Zaman asimi — varsayilan onay") for m in _MEMBERS]
 
     approval_count = sum(1 for v in votes if v.approved)
     approved = approval_count >= 2

@@ -32,8 +32,31 @@ class InboxWatcherAgent(BaseAgent):
             location = sent.get("location", "")
             lead_name = sent.get("name", "")
 
+            # Niyeti tespit et (0 token)
+            from core.skills.reply_analyzer import analyze_reply
+            analysis = analyze_reply(reply.body, reply.subject)
+            intent_emoji = {
+                "ready":       "🔥",
+                "meeting":     "📅",
+                "interested":  "✨",
+                "question":    "❓",
+                "negative":    "👎",
+                "unsubscribe": "🚫",
+                "spam":        "🗑️",
+                "unknown":     "🤷",
+            }.get(analysis.intent.value, "📧")
+
+            if analysis.intent.value == "spam":
+                logger.info(f"Spam yanit atlanıyor: {reply.from_email}")
+                continue
+
+            if analysis.intent.value == "unsubscribe":
+                logger.info(f"Abonelik iptali: {reply.from_email}")
+
             notify = (
-                f"📧 <b>Yeni Yanit!</b> [ID: {reply.reply_id}]\n\n"
+                f"{intent_emoji} <b>Yeni Yanit!</b> [ID: {reply.reply_id}]\n"
+                f"<b>Niyet:</b> {analysis.summary}\n"
+                f"<b>Oneri:</b> {analysis.suggested_action}\n\n"
                 f"<b>Kimden:</b> {reply.from_name} &lt;{reply.from_email}&gt;\n"
                 f"<b>Konu:</b> {reply.subject}\n"
             )
