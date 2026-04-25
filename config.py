@@ -22,6 +22,7 @@ class Settings(BaseSettings):
     # Gmail (uygulama sifresi ile)
     gmail_user:          str = Field("", env="GMAIL_USER")
     gmail_app_password:  str = Field("", env="GMAIL_APP_PASSWORD")
+    gmail_daily_limit:   int = Field(500, env="GMAIL_DAILY_LIMIT")
 
     # Google Maps Places API (lead finder icin - opsiyonel)
     google_maps_api_key: str = Field("", env="GOOGLE_MAPS_API_KEY")

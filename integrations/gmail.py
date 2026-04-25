@@ -140,10 +140,11 @@ def init_gmail() -> GmailSender | None:
     try:
         from config import settings
         user = getattr(settings, "gmail_user", "")
-        pwd = getattr(settings, "gmail_app_password", "")
+        pwd  = getattr(settings, "gmail_app_password", "")
+        limit = int(getattr(settings, "gmail_daily_limit", 500))
         if user and pwd:
-            _sender = GmailSender(user, pwd)
-            logger.info(f"Gmail hazir: {user}")
+            _sender = GmailSender(user, pwd, daily_limit=limit)
+            logger.info(f"Gmail hazir: {user} (gunluk limit: {limit})")
             return _sender
     except Exception as e:
         logger.warning(f"Gmail init hata: {e}")
