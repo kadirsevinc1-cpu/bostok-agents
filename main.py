@@ -322,9 +322,29 @@ async def handle_telegram_message(text: str):
     await route_user_message(text, send_fn)
 
 
+async def _wait_for_internet(timeout: int = 120):
+    """İnternet bağlantısı gelene kadar bekle (max 2 dakika)."""
+    import aiohttp
+    for attempt in range(timeout // 5):
+        try:
+            async with aiohttp.ClientSession() as s:
+                async with s.get("https://api.telegram.org", timeout=aiohttp.ClientTimeout(total=4)) as r:
+                    if r.status < 500:
+                        if attempt > 0:
+                            logger.info(f"Internet baglantisi geldi ({attempt * 5}s sonra)")
+                        return
+        except Exception:
+            pass
+        if attempt == 0:
+            logger.warning("Internet baglantisi yok, bekleniyor...")
+        await asyncio.sleep(5)
+    logger.warning("Internet baglantisi 2 dakika icinde gelmedi, devam ediliyor")
+
+
 async def main():
     setup_logging()
     logger.info("Bostok Agent Koyu baslatiliyor...")
+    await _wait_for_internet()
     logger.info(budget.report())
 
     # Demo site deploy — Vercel (öncelikli) → Netlify → Worker fallback

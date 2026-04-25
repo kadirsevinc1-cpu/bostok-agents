@@ -18,21 +18,32 @@ class TelegramBot:
         self._pending_results: dict[str, str] = {}
 
     async def send(self, text: str, reply_markup: dict = None):
-        """Mesaj gönder. 4096 karakter limitini aşarsa parçalar halinde gönderir."""
+        """Mesaj gönder. Ağ hatasında 3 kez retry yapar (2s, 8s, 20s)."""
         chunks = [text[i:i+4000] for i in range(0, len(text), 4000)]
         for chunk in chunks:
             payload = {"chat_id": self.chat_id, "text": chunk, "parse_mode": "HTML"}
             if reply_markup and chunk == chunks[-1]:
                 import json
                 payload["reply_markup"] = json.dumps(reply_markup)
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.post(f"{self._base}/sendMessage", json=payload) as resp:
-                        data = await resp.json()
-                        if not data.get("ok"):
+            for attempt, delay in enumerate([0, 2, 8, 20]):
+                if delay:
+                    await asyncio.sleep(delay)
+                try:
+                    async with aiohttp.ClientSession() as session:
+                        async with session.post(
+                            f"{self._base}/sendMessage", json=payload,
+                            timeout=aiohttp.ClientTimeout(total=10),
+                        ) as resp:
+                            data = await resp.json()
+                            if data.get("ok"):
+                                break
                             logger.warning(f"Telegram send hatasi: {data}")
-            except Exception as e:
-                logger.error(f"Telegram send error: {e}")
+                            break
+                except Exception as e:
+                    if attempt < 3:
+                        logger.debug(f"Telegram send retry {attempt+1}: {e}")
+                    else:
+                        logger.warning(f"Telegram ulasılamıyor (3 deneme): {e}")
 
     async def request_approval(self, approval_id: str, message: str) -> bool:
         """Onay iste, kullanıcı /onayla veya /reddet yazana kadar bekle."""
@@ -61,6 +72,7 @@ class TelegramBot:
     async def poll_updates(self, on_message, on_callback=None):
         """Sürekli güncelleme al — komutları işle."""
         logger.info("Telegram polling başladı")
+        _fail_delay = 5  # saniye; hata olunca exponential artar
         while True:
             try:
                 async with aiohttp.ClientSession() as session:
@@ -104,8 +116,11 @@ class TelegramBot:
             except asyncio.CancelledError:
                 break
             except Exception as e:
-                logger.warning(f"Telegram poll hatasi: {e}")
-                await asyncio.sleep(5)
+                logger.warning(f"Telegram poll hatasi ({_fail_delay}s): {e}")
+                await asyncio.sleep(_fail_delay)
+                _fail_delay = min(_fail_delay * 2, 120)  # max 2 dakika
+                continue
+            _fail_delay = 5  # başarılıysa sıfırla
 
     async def _handle_callback(self, data: str):
         """Inline buton callback'lerini işle."""
