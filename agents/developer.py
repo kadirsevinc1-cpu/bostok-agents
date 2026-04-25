@@ -38,16 +38,35 @@ class DeveloperAgent(BaseAgent):
         from loguru import logger
         from core import memory
         from core.knowledge import get_template, detect_template, log_error
+        from core.skills.video_finder import find_video, get_css_fallback_animation
 
         logger.info(f"Kod yazılıyor: {msg.content[:60]}")
 
-        # Uygun şablonu seç ve yükle
+        sector = msg.metadata.get("sector", "") or ""
+
+        # Şablonu seç
         template_name = detect_template(msg.content)
         template = get_template(template_name)
         template_hint = f"\n\nŞablon ({template_name}):\n{template[:2000]}" if template else ""
 
+        # Arka plan videosu bulmayı dene (Pexels)
+        video_hint = ""
+        if sector:
+            video = await find_video(sector)
+            if video.found:
+                video_hint = (
+                    f"\n\n[Arka Plan Videosu — Pexels]\n"
+                    f"Hero section'da kullan:\n{video.html_snippet}\n"
+                    f"(Video üstüne koyu overlay + beyaz metin koy)"
+                )
+                logger.info(f"Video bulundu ve HTML'e ekleniyor: {sector}")
+            else:
+                # CSS animasyon fallback
+                css_anim = get_css_fallback_animation(sector)
+                video_hint = f"\n\n[Hero Arka Plan — CSS Animasyon]\n{css_anim}"
+
         code = await self.ask(
-            f"Tasarım ve içerik:\n{msg.content}{template_hint}\n\n"
+            f"Tasarım ve içerik:\n{msg.content}{template_hint}{video_hint}\n\n"
             "Şablonu referans alarak tam çalışan index.html yaz. "
             "Tüm {{PLACEHOLDER}}'ları gerçek içerikle doldur. "
             "Tailwind CSS CDN kullan. Sadece HTML kodu döndür."
