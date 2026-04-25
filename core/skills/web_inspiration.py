@@ -2,7 +2,6 @@
 Web ilham bulucu — sektör bazlı tasarım trendleri, rakip analizi, referans örnekler.
 Önce statik kuratif veri (0 token), opsiyonel Serper API ile canlı arama.
 """
-import asyncio
 from dataclasses import dataclass, field
 from loguru import logger
 
@@ -215,8 +214,39 @@ def _normalize_sector(text: str) -> str:
     return "default"
 
 
+async def _serpapi_search(query: str) -> list[dict]:
+    """SerpApi ile Google araması (serpapi.com)."""
+    try:
+        from config import settings
+        api_key = getattr(settings, "serpapi_api_key", "")
+        if not api_key:
+            return []
+        import aiohttp
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                "https://serpapi.com/search.json",
+                params={"q": query, "api_key": api_key, "engine": "google", "num": 5, "hl": "en"},
+                timeout=aiohttp.ClientTimeout(total=10),
+            ) as resp:
+                if resp.status != 200:
+                    logger.warning(f"SerpApi hata: {resp.status}")
+                    return []
+                data = await resp.json()
+                return [
+                    {
+                        "title":   r.get("title", ""),
+                        "link":    r.get("link", ""),
+                        "snippet": r.get("snippet", ""),
+                    }
+                    for r in data.get("organic_results", [])[:5]
+                ]
+    except Exception as e:
+        logger.debug(f"SerpApi arama hata: {e}")
+        return []
+
+
 async def _serper_search(query: str) -> list[dict]:
-    """Serper.dev API ile web araması (opsiyonel)."""
+    """Serper.dev API ile web araması (SerpApi yoksa fallback)."""
     try:
         from config import settings
         api_key = getattr(settings, "serper_api_key", "")
@@ -258,10 +288,10 @@ async def get_inspiration(sector: str, location: str = "") -> InspirationReport:
         keywords_seo = db["keywords_seo"],
     )
 
-    # Serper ile canlı arama (varsa)
+    # Canlı arama: SerpApi önce, yoksa Serper fallback
     loc_suffix = f" {location}" if location else ""
     query = f"{sector} web site design 2024 best examples{loc_suffix}"
-    live = await _serper_search(query)
+    live = await _serpapi_search(query) or await _serper_search(query)
     if live:
         report.live_results = live
         logger.info(f"Web ilham araması: {len(live)} sonuç — {query[:60]}")

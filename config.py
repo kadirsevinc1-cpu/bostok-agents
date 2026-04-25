@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     pexels_api_key:      str = Field("", env="PEXELS_API_KEY")
 
     # Web Arama (tasarim ilham, opsiyonel)
+    serpapi_api_key:     str = Field("", env="SERPAPI_API_KEY")
     serper_api_key:      str = Field("", env="SERPER_API_KEY")
 
     # Telegram
@@ -59,6 +60,7 @@ class Settings(BaseSettings):
             ("gmail_app_password",  "gmail_app_password"),
             ("google_maps_api_key", "google_maps_api_key"),
             ("pexels_api_key",      "pexels_api_key"),
+            ("serpapi_api_key",     "serpapi_api_key"),
             ("serper_api_key",      "serper_api_key"),
         ]
         for attr, key in pairs:
