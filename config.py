@@ -27,6 +27,12 @@ class Settings(BaseSettings):
     # Google Maps Places API (lead finder icin - opsiyonel)
     google_maps_api_key: str = Field("", env="GOOGLE_MAPS_API_KEY")
 
+    # Gorsel & Video
+    pexels_api_key:      str = Field("", env="PEXELS_API_KEY")
+
+    # Web Arama (tasarim ilham, opsiyonel)
+    serper_api_key:      str = Field("", env="SERPER_API_KEY")
+
     # Telegram
     telegram_bot_token:  str = Field("", env="TELEGRAM_BOT_TOKEN")
     telegram_chat_id:    str = Field("", env="TELEGRAM_CHAT_ID")
@@ -52,6 +58,8 @@ class Settings(BaseSettings):
             ("gmail_user",          "gmail_user"),
             ("gmail_app_password",  "gmail_app_password"),
             ("google_maps_api_key", "google_maps_api_key"),
+            ("pexels_api_key",      "pexels_api_key"),
+            ("serper_api_key",      "serper_api_key"),
         ]
         for attr, key in pairs:
             if not getattr(self, attr):
