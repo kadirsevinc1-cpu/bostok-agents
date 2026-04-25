@@ -14,12 +14,14 @@ Yazacakların:
 - SEO meta açıklamaları
 
 Kurallar:
-- Müşterinin sektörüne uygun dil kullan
-- SEO dostu yaz (anahtar kelimeler doğal aksa)
-- Türkçe yaz, gerekirse İngilizce de ekle
+- Müşterinin lokasyonuna ve diline göre içerik dilini belirle:
+  Türkiye → Türkçe | Almanya/Avusturya/İsviçre → Almanca | İngiltere/ABD/Kanada/Avustralya/BAE → İngilizce | Fransa → Fransızca | Hollanda/Belçika → İngilizce
+- Müşterinin sektörüne uygun terminoloji kullan
+- SEO dostu yaz (anahtar kelimeler doğal aksın)
 - Samimi ve profesyonel ton
 - Her bölüm için başlık + içerik formatı kullan
-- CTA (harekete geçirici çağrı) ekle her sayfaya"""
+- CTA (harekete geçirici çağrı) ekle her sayfaya
+- İmla ve gramer hatası kesinlikle olmamalı"""
 
 
 class ContentAgent(BaseAgent):

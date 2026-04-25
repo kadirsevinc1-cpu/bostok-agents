@@ -26,7 +26,7 @@ Kod çalışır durumda olmalı, tarayıcıda açılabilmeli."""
 class DeveloperAgent(BaseAgent):
     name = AgentName.DEVELOPER
     system_prompt = SYSTEM
-    max_tokens = 4000
+    max_tokens = 8000
 
     async def loop(self):
         msg = await self.receive(timeout=1.0)

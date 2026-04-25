@@ -50,18 +50,17 @@ class QAAgent(BaseAgent):
         review_content = html_content if html_content else msg.content
 
         report = await self.ask(
-            f"Aşağıdaki web sitesi kodunu kalite kontrolden geçir:\n\n{review_content[:3000]}\n\n"
+            f"Aşağıdaki web sitesi kodunu kalite kontrolden geçir:\n\n{review_content}\n\n"
             "Kontrol listesindeki tüm maddeleri incele ve detaylı rapor yaz."
         )
 
         self.save_observation(f"QA raporu: {report[:150]}", importance=8.0)
 
-        # Kritik hata var mı kontrol et
         has_critical = "❌" in report
-        metadata = {"file_path": file_path, "has_critical_errors": has_critical}
-
-        if has_critical:
-            await self.send(AgentName.MANAGER, MessageType.STATUS,
-                           f"⚠️ QA kritik hata buldu:\n{report}", metadata)
-        else:
-            await self.send(AgentName.MANAGER, MessageType.RESULT, report, metadata)
+        metadata = {
+            "file_path": file_path,
+            "site_dir": msg.metadata.get("site_dir", ""),
+            "project_name": msg.metadata.get("project_name", ""),
+            "has_critical_errors": has_critical,
+        }
+        await self.send(AgentName.MANAGER, MessageType.RESULT, report, metadata)

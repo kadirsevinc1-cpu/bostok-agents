@@ -61,13 +61,16 @@ class ManagerAgent(BaseAgent):
             result = msg.content
 
             if msg.sender == AgentName.MARKETING:
-                summary = result[:300] + ("..." if len(result) > 300 else "")
                 await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
-                                f"Pazarlama Raporu:\n{summary}")
+                                f"Pazarlama Raporu:\n{result}")
 
             elif msg.sender == AgentName.ANALYST:
-                await self.send(AgentName.QUOTE, MessageType.TASK, result)
-                await self.send(AgentName.CONTENT, MessageType.TASK, result)
+                project_name = msg.metadata.get("project_name", "")
+                if project_name:
+                    self._current_project_name = project_name
+                meta = {"project_name": self._current_project_name}
+                await self.send(AgentName.QUOTE, MessageType.TASK, result, meta)
+                await self.send(AgentName.CONTENT, MessageType.TASK, result, meta)
 
             elif msg.sender == AgentName.QUOTE:
                 await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
@@ -92,15 +95,21 @@ class ManagerAgent(BaseAgent):
                                  "project_name": self._current_project_name})
 
             elif msg.sender == AgentName.QA:
-                # QA bitti → Deploy agent'a gönder
-                await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
-                                f"QA tamamlandi, site Netlify'a yukleniyor...\n\n{result[:300]}")
-                await self.send(
-                    AgentName.DEPLOY, MessageType.TASK,
-                    result,
-                    {"site_dir": self._current_site_dir,
-                     "project_name": self._current_project_name},
-                )
+                has_critical = msg.metadata.get("has_critical_errors", False)
+                site_dir = msg.metadata.get("site_dir", self._current_site_dir)
+                project_name = msg.metadata.get("project_name", self._current_project_name)
+
+                if has_critical:
+                    await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
+                                    f"QA kritik hata buldu, deploy durduruldu:\n\n{result[:500]}")
+                else:
+                    await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
+                                    f"QA tamamlandi, site yukleniyor...\n\n{result[:300]}")
+                    await self.send(
+                        AgentName.DEPLOY, MessageType.TASK,
+                        result,
+                        {"site_dir": site_dir, "project_name": project_name},
+                    )
 
             elif msg.sender == AgentName.DEPLOY:
                 # Deploy tamamlandı → kullanıcıya demo linki sun
