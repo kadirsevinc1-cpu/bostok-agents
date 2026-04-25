@@ -52,57 +52,57 @@ async def budget_monitor():
 
 CAMPAIGNS = [
     # ── Türkiye — Yeme & İçme ─────────────────────────────────────
-    {"sector": "restoran",         "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Gaziantep", "Adana", "Mersin", "Kayseri", "Samsun", "Trabzon", "Denizli", "Malatya", "Sanliurfa", "Erzurum"], "langs": ["tr"]},
-    {"sector": "kafe",             "locations": ["Istanbul", "Ankara", "Izmir", "Eskisehir", "Samsun", "Trabzon", "Denizli", "Kayseri", "Adana"], "langs": ["tr"]},
-    {"sector": "pastane",          "locations": ["Istanbul", "Ankara", "Bursa", "Konya", "Adana", "Samsun", "Trabzon", "Kayseri"], "langs": ["tr"]},
-    {"sector": "catering",         "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Mersin", "Samsun"],    "langs": ["tr"]},
+    {"sector": "restoran",         "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Gaziantep", "Adana", "Mersin", "Kayseri", "Samsun", "Trabzon", "Denizli", "Malatya", "Sanliurfa", "Erzurum", "Tekirdag", "Edirne", "Sakarya", "Ordu", "Diyarbakir", "Canakkale", "Rize", "Kahramanmaras", "Corum"], "langs": ["tr"]},
+    {"sector": "kafe",             "locations": ["Istanbul", "Ankara", "Izmir", "Eskisehir", "Samsun", "Trabzon", "Denizli", "Kayseri", "Adana", "Tekirdag", "Edirne", "Canakkale", "Ordu", "Rize"], "langs": ["tr"]},
+    {"sector": "pastane",          "locations": ["Istanbul", "Ankara", "Bursa", "Konya", "Adana", "Samsun", "Trabzon", "Kayseri", "Tekirdag", "Sakarya", "Ordu"], "langs": ["tr"]},
+    {"sector": "catering",         "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Mersin", "Samsun", "Tekirdag", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
 
     # ── Türkiye — Sağlık ──────────────────────────────────────────
-    {"sector": "dis hekimi",       "locations": ["Istanbul", "Ankara", "Izmir", "Konya", "Antalya", "Adana", "Mersin", "Kayseri", "Samsun", "Denizli", "Hatay", "Trabzon", "Malatya"], "langs": ["tr"]},
-    {"sector": "eczane",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Mersin", "Samsun", "Kayseri"], "langs": ["tr"]},
-    {"sector": "veteriner",        "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Adana", "Samsun", "Denizli"], "langs": ["tr"]},
-    {"sector": "spor salonu",      "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Antalya", "Adana", "Mersin", "Kayseri", "Samsun"], "langs": ["tr"]},
-    {"sector": "psikolog",         "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri"],   "langs": ["tr"]},
-    {"sector": "fizyoterapist",    "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Bursa"],     "langs": ["tr"]},
+    {"sector": "dis hekimi",       "locations": ["Istanbul", "Ankara", "Izmir", "Konya", "Antalya", "Adana", "Mersin", "Kayseri", "Samsun", "Denizli", "Hatay", "Trabzon", "Malatya", "Tekirdag", "Edirne", "Sakarya", "Ordu", "Diyarbakir", "Kahramanmaras", "Corum"], "langs": ["tr"]},
+    {"sector": "eczane",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Mersin", "Samsun", "Kayseri", "Tekirdag", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
+    {"sector": "veteriner",        "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Adana", "Samsun", "Denizli", "Tekirdag", "Sakarya", "Canakkale"], "langs": ["tr"]},
+    {"sector": "spor salonu",      "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Antalya", "Adana", "Mersin", "Kayseri", "Samsun", "Tekirdag", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
+    {"sector": "psikolog",         "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Tekirdag", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
+    {"sector": "fizyoterapist",    "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Bursa", "Tekirdag", "Sakarya", "Kahramanmaras"], "langs": ["tr"]},
 
     # ── Türkiye — Hukuk & Finans ──────────────────────────────────
-    {"sector": "avukat",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Mersin", "Kayseri", "Samsun", "Erzurum", "Hatay", "Malatya", "Sanliurfa"], "langs": ["tr"]},
-    {"sector": "muhasebe",         "locations": ["Istanbul", "Ankara", "Izmir", "Kocaeli", "Adana", "Mersin", "Samsun", "Kayseri", "Denizli"], "langs": ["tr"]},
-    {"sector": "sigorta",          "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Mersin", "Samsun", "Kayseri"], "langs": ["tr"]},
-    {"sector": "mali musavir",     "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri"],   "langs": ["tr"]},
+    {"sector": "avukat",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Mersin", "Kayseri", "Samsun", "Erzurum", "Hatay", "Malatya", "Sanliurfa", "Tekirdag", "Sakarya", "Diyarbakir", "Kahramanmaras", "Corum"], "langs": ["tr"]},
+    {"sector": "muhasebe",         "locations": ["Istanbul", "Ankara", "Izmir", "Kocaeli", "Adana", "Mersin", "Samsun", "Kayseri", "Denizli", "Tekirdag", "Sakarya", "Diyarbakir", "Corum"], "langs": ["tr"]},
+    {"sector": "sigorta",          "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Mersin", "Samsun", "Kayseri", "Tekirdag", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
+    {"sector": "mali musavir",     "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Tekirdag", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
 
     # ── Türkiye — Güzellik & Bakım ────────────────────────────────
-    {"sector": "guzellik salonu",  "locations": ["Istanbul", "Ankara", "Antalya", "Bursa", "Izmir", "Adana", "Mersin", "Kayseri", "Samsun", "Denizli", "Trabzon", "Hatay"], "langs": ["tr"]},
-    {"sector": "berber",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Mersin", "Samsun", "Trabzon", "Denizli", "Kayseri"], "langs": ["tr"]},
-    {"sector": "tirnak salonu",    "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri"],    "langs": ["tr"]},
-    {"sector": "spa",              "locations": ["Istanbul", "Antalya", "Bodrum", "Alanya", "Trabzon", "Mersin"], "langs": ["tr", "en"]},
+    {"sector": "guzellik salonu",  "locations": ["Istanbul", "Ankara", "Antalya", "Bursa", "Izmir", "Adana", "Mersin", "Kayseri", "Samsun", "Denizli", "Trabzon", "Hatay", "Tekirdag", "Edirne", "Sakarya", "Ordu", "Diyarbakir", "Canakkale"], "langs": ["tr"]},
+    {"sector": "berber",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Mersin", "Samsun", "Trabzon", "Denizli", "Kayseri", "Tekirdag", "Edirne", "Kirklareli", "Sakarya", "Ordu", "Diyarbakir", "Canakkale", "Rize", "Kahramanmaras", "Corum"], "langs": ["tr"]},
+    {"sector": "tirnak salonu",    "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Tekirdag", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
+    {"sector": "spa",              "locations": ["Istanbul", "Antalya", "Bodrum", "Alanya", "Trabzon", "Mersin", "Canakkale", "Edirne", "Rize"], "langs": ["tr", "en"]},
 
     # ── Türkiye — Emlak & İnşaat ──────────────────────────────────
-    {"sector": "emlakci",          "locations": ["Istanbul", "Ankara", "Alanya", "Bodrum", "Izmir", "Adana", "Mersin", "Samsun", "Denizli", "Trabzon", "Kayseri"], "langs": ["tr"]},
-    {"sector": "insaat",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Gaziantep"], "langs": ["tr"]},
-    {"sector": "tadilat",          "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa"], "langs": ["tr"]},
-    {"sector": "temizlik sirketi", "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Mersin", "Kayseri"], "langs": ["tr"]},
-    {"sector": "nakliyat",         "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Mersin"], "langs": ["tr"]},
-    {"sector": "elektrikci",       "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa"], "langs": ["tr"]},
+    {"sector": "emlakci",          "locations": ["Istanbul", "Ankara", "Alanya", "Bodrum", "Izmir", "Adana", "Mersin", "Samsun", "Denizli", "Trabzon", "Kayseri", "Tekirdag", "Edirne", "Sakarya", "Canakkale", "Diyarbakir"], "langs": ["tr"]},
+    {"sector": "insaat",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Gaziantep", "Tekirdag", "Sakarya", "Diyarbakir", "Kahramanmaras"], "langs": ["tr"]},
+    {"sector": "tadilat",          "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa", "Tekirdag", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
+    {"sector": "temizlik sirketi", "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Mersin", "Kayseri", "Tekirdag", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
+    {"sector": "nakliyat",         "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Mersin", "Tekirdag", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
+    {"sector": "elektrikci",       "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa", "Tekirdag", "Sakarya", "Kahramanmaras", "Corum"], "langs": ["tr"]},
 
     # ── Türkiye — Otomotiv ────────────────────────────────────────
-    {"sector": "oto servis",       "locations": ["Istanbul", "Ankara", "Bursa", "Kocaeli", "Izmir", "Adana", "Mersin", "Samsun", "Gaziantep", "Denizli", "Kayseri"], "langs": ["tr"]},
-    {"sector": "oto yikama",       "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Mersin"], "langs": ["tr"]},
-    {"sector": "lastikci",         "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa"], "langs": ["tr"]},
-    {"sector": "oto kiralama",     "locations": ["Istanbul", "Antalya", "Izmir", "Bodrum", "Trabzon", "Mersin", "Alanya"], "langs": ["tr", "en"]},
+    {"sector": "oto servis",       "locations": ["Istanbul", "Ankara", "Bursa", "Kocaeli", "Izmir", "Adana", "Mersin", "Samsun", "Gaziantep", "Denizli", "Kayseri", "Tekirdag", "Sakarya", "Diyarbakir", "Kahramanmaras", "Corum"], "langs": ["tr"]},
+    {"sector": "oto yikama",       "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Mersin", "Tekirdag", "Sakarya", "Diyarbakir", "Corum"], "langs": ["tr"]},
+    {"sector": "lastikci",         "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa", "Tekirdag", "Sakarya", "Diyarbakir", "Kahramanmaras"], "langs": ["tr"]},
+    {"sector": "oto kiralama",     "locations": ["Istanbul", "Antalya", "Izmir", "Bodrum", "Trabzon", "Mersin", "Alanya", "Canakkale", "Edirne"], "langs": ["tr", "en"]},
 
     # ── Türkiye — Eğitim ──────────────────────────────────────────
-    {"sector": "ozel okul",        "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa"], "langs": ["tr"]},
-    {"sector": "dil kursu",        "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Trabzon", "Kayseri"], "langs": ["tr"]},
-    {"sector": "etut merkezi",     "locations": ["Istanbul", "Ankara", "Izmir", "Konya", "Bursa", "Adana", "Samsun", "Kayseri", "Trabzon"], "langs": ["tr"]},
-    {"sector": "surucu kursu",     "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Mersin", "Kayseri"], "langs": ["tr"]},
-    {"sector": "dans okulu",       "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun"],              "langs": ["tr"]},
-    {"sector": "kres",             "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Mersin"], "langs": ["tr"]},
+    {"sector": "ozel okul",        "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa", "Tekirdag", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
+    {"sector": "dil kursu",        "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Trabzon", "Kayseri", "Tekirdag", "Sakarya", "Canakkale", "Edirne"], "langs": ["tr"]},
+    {"sector": "etut merkezi",     "locations": ["Istanbul", "Ankara", "Izmir", "Konya", "Bursa", "Adana", "Samsun", "Kayseri", "Trabzon", "Tekirdag", "Sakarya", "Diyarbakir", "Corum"], "langs": ["tr"]},
+    {"sector": "surucu kursu",     "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Mersin", "Kayseri", "Tekirdag", "Edirne", "Kirklareli", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
+    {"sector": "dans okulu",       "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Tekirdag", "Sakarya"], "langs": ["tr"]},
+    {"sector": "kres",             "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Mersin", "Tekirdag", "Sakarya", "Diyarbakir", "Corum"], "langs": ["tr"]},
 
     # ── Türkiye — Konaklama ───────────────────────────────────────
-    {"sector": "otel",             "locations": ["Antalya", "Cappadocia", "Bodrum", "Alanya", "Kusadasi", "Trabzon", "Erzurum", "Samsun", "Mersin", "Adana", "Hatay"], "langs": ["tr", "en"]},
-    {"sector": "pansiyon",         "locations": ["Cappadocia", "Bodrum", "Alanya", "Safranbolu", "Trabzon", "Artvin", "Amasya", "Mardin"], "langs": ["tr", "en"]},
-    {"sector": "apart otel",       "locations": ["Istanbul", "Ankara", "Antalya", "Izmir", "Adana", "Samsun", "Mersin"], "langs": ["tr"]},
+    {"sector": "otel",             "locations": ["Antalya", "Cappadocia", "Bodrum", "Alanya", "Kusadasi", "Trabzon", "Erzurum", "Samsun", "Mersin", "Adana", "Hatay", "Edirne", "Canakkale", "Rize", "Ordu"], "langs": ["tr", "en"]},
+    {"sector": "pansiyon",         "locations": ["Cappadocia", "Bodrum", "Alanya", "Safranbolu", "Trabzon", "Artvin", "Amasya", "Mardin", "Edirne", "Canakkale", "Rize", "Ordu"], "langs": ["tr", "en"]},
+    {"sector": "apart otel",       "locations": ["Istanbul", "Ankara", "Antalya", "Izmir", "Adana", "Samsun", "Mersin", "Tekirdag", "Sakarya", "Diyarbakir"], "langs": ["tr"]},
 
     # ── Türkiye — Mağaza & Hizmet ─────────────────────────────────
     {"sector": "cicekci",          "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Trabzon"], "langs": ["tr"]},
@@ -112,10 +112,10 @@ CAMPAIGNS = [
     {"sector": "fotograf",         "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Samsun", "Trabzon", "Kayseri"], "langs": ["tr"]},
 
     # ── Türkiye — Sanayi ──────────────────────────────────────────
-    {"sector": "sanayi",           "locations": ["Istanbul", "Bursa", "Kocaeli", "Ankara", "Izmir", "Konya"],    "langs": ["tr"]},
-    {"sector": "imalat",           "locations": ["Bursa", "Kocaeli", "Gaziantep", "Konya", "Eskisehir"],         "langs": ["tr"]},
-    {"sector": "tekstil",          "locations": ["Istanbul", "Bursa", "Denizli", "Gaziantep"],                    "langs": ["tr", "en"]},
-    {"sector": "depo ve lojistik", "locations": ["Istanbul", "Ankara", "Izmir", "Kocaeli"],                       "langs": ["tr"]},
+    {"sector": "sanayi",           "locations": ["Istanbul", "Bursa", "Kocaeli", "Ankara", "Izmir", "Konya", "Tekirdag", "Sakarya", "Kahramanmaras"], "langs": ["tr"]},
+    {"sector": "imalat",           "locations": ["Bursa", "Kocaeli", "Gaziantep", "Konya", "Eskisehir", "Tekirdag", "Sakarya", "Kahramanmaras", "Corum"], "langs": ["tr"]},
+    {"sector": "tekstil",          "locations": ["Istanbul", "Bursa", "Denizli", "Gaziantep", "Tekirdag"],        "langs": ["tr", "en"]},
+    {"sector": "depo ve lojistik", "locations": ["Istanbul", "Ankara", "Izmir", "Kocaeli", "Tekirdag", "Sakarya"], "langs": ["tr"]},
 
     # ── Almanya & Avusturya & İsviçre ─────────────────────────────
     {"sector": "restaurant",       "locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart", "Nuremberg", "Dresden", "Leipzig", "Bremen", "Hannover", "Dortmund"], "langs": ["tr", "de"]},
