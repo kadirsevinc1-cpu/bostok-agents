@@ -89,6 +89,8 @@ class MarketingAgent(BaseAgent):
         sent = skipped = no_email = 0
 
         for lead in leads:
+            if not gmail.can_send():
+                break
             if not lead.email:
                 no_email += 1
                 continue
