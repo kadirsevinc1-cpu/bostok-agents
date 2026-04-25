@@ -56,6 +56,10 @@ class NetlifyClient:
         if _DEMO_ID_CACHE.exists():
             site_id = _DEMO_ID_CACHE.read_text(encoding="utf-8").strip()
             if site_id:
+                # Disabled site'a deploy etme — zaman kaybı + URL çalışmaz
+                if await self._is_site_disabled(site_id):
+                    logger.warning(f"Demo site disabled (Netlify dashboard'dan enable et): {site_id}")
+                    return ""
                 site_url = await self._get_site_url(site_id)
                 logger.info(f"Demo site ID cache: {site_id}")
 
@@ -69,6 +73,9 @@ class NetlifyClient:
                 from config import settings
                 env_id = getattr(settings, "netlify_demo_site_id", "")
                 if env_id:
+                    if await self._is_site_disabled(env_id):
+                        logger.warning(f"NETLIFY_DEMO_SITE_ID disabled, Worker kullaniliyor")
+                        return ""
                     site_id  = env_id
                     site_url = await self._get_site_url(site_id)
                     logger.info(f"Demo site env'den alindi: {site_id}")
@@ -81,11 +88,7 @@ class NetlifyClient:
             site_id, site_url = await self._create_site("bostok-demo")
 
         if not site_id:
-            logger.warning(
-                "Demo site Netlify'a yuklenemedi (hesap site limiti dolu). "
-                "Worker URL kullanilacak. Cozum: Netlify dashboard'dan bir site ID alip "
-                ".env'e NETLIFY_DEMO_SITE_ID=<id> olarak ekleyin."
-            )
+            logger.warning("Demo site Netlify'a yuklenemedi — Worker URL kullanilacak")
             return ""
 
         # ID'yi cache'le
@@ -96,11 +99,20 @@ class NetlifyClient:
         logger.info(f"Demo site deploy ediliyor (site: {site_id})...")
         zip_bytes = self._zip_directory(demo_dir)
         url = await self._deploy_zip(site_id, zip_bytes, site_url)
+        # Sadece gerçekten erişilebilirse cache'le
         if url:
-            _DEMO_URL_CACHE.parent.mkdir(exist_ok=True)
-            _DEMO_URL_CACHE.write_text(url, encoding="utf-8")
-            logger.info(f"Demo site yayinda: {url}")
-        return url
+            try:
+                async with aiohttp.ClientSession() as s:
+                    async with s.head(url, timeout=aiohttp.ClientTimeout(total=8)) as r:
+                        if r.status < 400:
+                            _DEMO_URL_CACHE.parent.mkdir(exist_ok=True)
+                            _DEMO_URL_CACHE.write_text(url, encoding="utf-8")
+                            logger.info(f"Demo site yayinda: {url}")
+                            return url
+            except Exception:
+                pass
+            logger.warning(f"Deploy URL erişilemiyor ({url}) — Worker kullanilacak")
+        return ""
 
     # ── Yardımcı metodlar ─────────────────────────────────────────────────────
 
@@ -113,6 +125,22 @@ class NetlifyClient:
                     arcname = os.path.relpath(filepath, directory)
                     zf.write(filepath, arcname)
         return buf.getvalue()
+
+    async def _is_site_disabled(self, site_id: str) -> bool:
+        """Site disabled mi? Disabled sitelere deploy etme."""
+        try:
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    f"{NETLIFY_API}/sites/{site_id}",
+                    headers=self._headers,
+                    timeout=aiohttp.ClientTimeout(total=10),
+                ) as resp:
+                    if resp.status == 200:
+                        data = await resp.json()
+                        return bool(data.get("disabled", False))
+        except Exception:
+            pass
+        return False
 
     async def _find_existing_site(self, name_prefix: str) -> tuple[str, str]:
         """Hesaptaki siteler arasında name_prefix ile başlayan ilkini bul."""
