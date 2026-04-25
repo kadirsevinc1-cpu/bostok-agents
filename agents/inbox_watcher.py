@@ -27,6 +27,16 @@ class InboxWatcherAgent(BaseAgent):
             return
 
         for reply in replies:
+            # Bounce / teslimat hatası mı?
+            from integrations.gmail import is_bounce, record_bounce
+            if is_bounce(reply.from_email):
+                # Orijinal alıcıyı sent_info'dan çıkar ve blacklist'e ekle
+                original_to = reply.sent_info.get("to", "")
+                if original_to:
+                    record_bounce(original_to)
+                logger.info(f"Bounce tespit edildi, blackliste eklendi: {original_to} (gonden: {reply.from_email})")
+                continue
+
             sent = reply.sent_info
             sector = sent.get("sector", "")
             location = sent.get("location", "")

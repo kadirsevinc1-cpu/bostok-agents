@@ -10,8 +10,35 @@ from email.mime.text import MIMEText
 from pathlib import Path
 from loguru import logger
 
-SENT_LOG = Path("memory/sent_emails.txt")
+SENT_LOG      = Path("memory/sent_emails.txt")
 SENT_IDS_FILE = Path("memory/sent_message_ids.json")
+BOUNCE_LOG    = Path("memory/bounced_emails.txt")
+
+_BOUNCE_SENDERS = {
+    "mailer-daemon", "postmaster", "noreply@", "no-reply@",
+    "mail-daemon", "delivery-failure", "bounce",
+}
+
+
+def is_bounce(from_email: str) -> bool:
+    f = from_email.lower()
+    return any(s in f for s in _BOUNCE_SENDERS)
+
+
+def record_bounce(email: str):
+    """Bounce olan adresi kalıcı olarak kaydet."""
+    BOUNCE_LOG.parent.mkdir(exist_ok=True)
+    existing = set(BOUNCE_LOG.read_text(encoding="utf-8").splitlines()) if BOUNCE_LOG.exists() else set()
+    if email not in existing:
+        with BOUNCE_LOG.open("a", encoding="utf-8") as f:
+            f.write(email + "\n")
+        logger.info(f"Bounce kaydedildi: {email}")
+
+
+def load_bounced() -> set:
+    if BOUNCE_LOG.exists():
+        return set(BOUNCE_LOG.read_text(encoding="utf-8").splitlines())
+    return set()
 
 
 class GmailSender:
@@ -75,6 +102,9 @@ class GmailSender:
         to = to.strip().lower()
         if to in self._sent:
             logger.debug(f"Zaten gonderildi: {to}")
+            return False
+        if to in load_bounced():
+            logger.debug(f"Bounce listesinde, atlanıyor: {to}")
             return False
         if not self.can_send():
             logger.warning(f"Gunluk mail limiti doldu: {self._limit}")

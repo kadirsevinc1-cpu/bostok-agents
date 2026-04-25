@@ -308,11 +308,75 @@ async def notify_handler(msg: Message):
 async def handle_telegram_message(text: str):
     """Telegram'dan gelen mesajı akıllı router'a ilet."""
     from core.conversation import route_user_message
+    from integrations.gmail import load_bounced
     bot = get_bot()
 
-    if text == "/butce":
+    cmd = text.strip().lower()
+
+    if cmd == "/butce":
         if bot:
             await bot.send(budget.report())
+        return
+
+    if cmd == "/durum":
+        if bot:
+            from integrations.vercel import get_vercel_url
+            from agents.marketing import _get_demo_base, _WORKER_BASE
+            demo = _get_demo_base()
+            demo_src = "Vercel" if "vercel.app" in demo else ("Worker" if demo == _WORKER_BASE else "Netlify")
+            bounced = len(load_bounced())
+            from pathlib import Path
+            sent = len(Path("memory/sent_emails.txt").read_text(encoding="utf-8").splitlines()) if Path("memory/sent_emails.txt").exists() else 0
+            import json
+            inbox = len(json.loads(Path("memory/inbox_emails.json").read_text(encoding="utf-8"))) if Path("memory/inbox_emails.json").exists() else 0
+            b = budget.daily_usage()
+            msg = (
+                f"<b>Sistem Durumu</b>\n\n"
+                f"<b>LLM:</b> {b['requests']} istek, {b['tokens_used']:,} token kullanıldı\n"
+                f"<b>Bütçe:</b> {'⛔ BLOKE' if b['blocked'] else '✅ Normal'} ({b['tokens_used']/20000:.1f}%)\n\n"
+                f"<b>Mail:</b>\n"
+                f"  • Gönderilen: {sent}\n"
+                f"  • Gelen yanıt: {inbox}\n"
+                f"  • Bounce (geçersiz): {bounced}\n\n"
+                f"<b>Demo site:</b> {demo_src}\n{demo[:60]}"
+            )
+            await bot.send(msg)
+        return
+
+    if cmd == "/istatistik":
+        if bot:
+            from pathlib import Path
+            import json
+            sent_ids = json.loads(Path("memory/sent_message_ids.json").read_text(encoding="utf-8")) if Path("memory/sent_message_ids.json").exists() else {}
+            by_sector: dict = {}
+            by_lang: dict = {}
+            for info in sent_ids.values():
+                s = info.get("sector", "?")
+                l = info.get("lang", "?")
+                by_sector[s] = by_sector.get(s, 0) + 1
+                by_lang[l]   = by_lang.get(l, 0) + 1
+            top_sectors = sorted(by_sector.items(), key=lambda x: -x[1])[:5]
+            langs_str = " | ".join(f"{l}:{n}" for l, n in sorted(by_lang.items(), key=lambda x: -x[1]))
+            sector_str = "\n".join(f"  • {s}: {n}" for s, n in top_sectors)
+            msg = (
+                f"<b>Kampanya İstatistikleri</b>\n\n"
+                f"<b>Toplam mail:</b> {len(sent_ids)}\n\n"
+                f"<b>Sektörler:</b>\n{sector_str or '  Veri yok'}\n\n"
+                f"<b>Diller:</b> {langs_str or 'Veri yok'}"
+            )
+            await bot.send(msg)
+        return
+
+    if cmd == "/yardim" or cmd == "/help":
+        if bot:
+            await bot.send(
+                "<b>Bostok Agent Köyü — Komutlar</b>\n\n"
+                "/durum — Sistem durumu (token, mail, demo)\n"
+                "/butce — Günlük token bütçesi\n"
+                "/istatistik — Kampanya istatistikleri\n"
+                "/yardim — Bu yardım mesajı\n\n"
+                "Veya doğrudan mesaj yaz: <i>İstanbul'daki kafeler için kampanya başlat</i>"
+            )
         return
 
     async def send_fn(msg: str):

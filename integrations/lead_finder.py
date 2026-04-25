@@ -41,9 +41,11 @@ class Lead:
     sector: str
     phone: str = ""
     email: str = ""
-    has_website: bool = False   # True ise zaten sitesi var — daha az öncelikli
-    website: str = ""           # Mevcut web sitesi URL'i (SEO analizi için)
+    has_website: bool = False
+    website: str = ""
     maps_url: str = ""
+    rating: float = 0.0          # Google Maps puanı (1-5)
+    review_count: int = 0        # Değerlendirme sayısı
 
 
 async def find_leads(sector: str, location: str, api_key: str = "") -> list[Lead]:
@@ -84,7 +86,7 @@ async def _maps_leads(sector: str, location: str, api_key: str) -> list[Lead]:
                 if place_id:
                     detail_params = {
                         "place_id": place_id,
-                        "fields": "name,website,formatted_phone_number,url",
+                        "fields": "name,website,formatted_phone_number,url,rating,user_ratings_total",
                         "key": api_key,
                     }
                     async with session.get(
@@ -96,11 +98,17 @@ async def _maps_leads(sector: str, location: str, api_key: str) -> list[Lead]:
                     website = result.get("website", "")
                     phone = result.get("formatted_phone_number", "")
                     maps_url = result.get("url", maps_url)
+                    rating = float(result.get("rating", 0) or 0)
+                    review_count = int(result.get("user_ratings_total", 0) or 0)
+                else:
+                    rating = float(place.get("rating", 0) or 0)
+                    review_count = int(place.get("user_ratings_total", 0) or 0)
 
                 lead = Lead(
                     name=name, location=location, sector=sector,
                     phone=phone, has_website=bool(website),
                     website=website, maps_url=maps_url,
+                    rating=rating, review_count=review_count,
                 )
 
                 if not website:

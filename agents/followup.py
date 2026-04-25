@@ -130,7 +130,7 @@ class FollowupAgent(BaseAgent):
                 f"gönderdik ama yanıt gelmedi.\n"
                 f"Mükemmel {lang_name} dil bilgisiyle kısa, samimi, baskısız takip maili yaz. Max 80 kelime.\n"
                 "Ton: 'Sadece takip ediyorum, görme fırsatı buldunuz mu?' tarzında.\n"
-                "Sona https://bostok.dev linki ve imza ekle: Kadir Sevinc — Bostok.dev\n"
+                "Sona https://bostok.dev linki ve imza ekle: Kadir Şevinç — Bostok.dev\n"
                 "Sadece mail gövdesini yaz, konu satırı yazma."
             )
         else:
@@ -139,7 +139,7 @@ class FollowupAgent(BaseAgent):
                 f"yanıt yok.\n"
                 f"Mükemmel {lang_name} dil bilgisiyle kibarca kapanış maili yaz. Max 60 kelime.\n"
                 "Ton: 'Son kez yazıyorum, ilgi duymuyorsanız sorun değil, ihtiyaç olursa buradayım.'\n"
-                "Sona https://bostok.dev linki ve imza ekle: Kadir Sevinc — Bostok.dev\n"
+                "Sona https://bostok.dev linki ve imza ekle: Kadir Şevinç — Bostok.dev\n"
                 "Sadece mail gövdesini yaz, konu satırı yazma."
             )
 
