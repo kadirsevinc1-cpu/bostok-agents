@@ -68,6 +68,18 @@ class ManagerAgent(BaseAgent):
                 if project_name:
                     self._current_project_name = project_name
                 meta = {"project_name": self._current_project_name}
+
+                # Konsey toplantısı — 3 uzman paralel oy kullanır (~500 token)
+                await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
+                                "Konsey toplantısı başladı, brief değerlendiriliyor...")
+                from core.council import hold_meeting
+                decision = await hold_meeting(result)
+                self.save_observation(f"Konsey: {decision.report()[:200]}", importance=9.0)
+                await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY, decision.report())
+
+                if not decision.approved:
+                    return  # 2/3 RET — pipeline durduruldu
+
                 await self.send(AgentName.QUOTE, MessageType.TASK, result, meta)
                 await self.send(AgentName.CONTENT, MessageType.TASK, result, meta)
 
