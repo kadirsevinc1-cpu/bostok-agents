@@ -23,10 +23,7 @@ LANG_NAMES = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca", "nl": "Flem
 _WORKER_BASE = "https://bostok-demo.kadirsevinc1.workers.dev"
 _DEMO_URL_CACHE = None   # startup'ta Netlify URL buraya yüklenir
 
-_TR_TABLE = str.maketrans(
-    "şğüöıçŞĞÜÖIÇ",
-    "sguoicSGUOIC",
-)
+_TR_TABLE = str.maketrans("şğüöıçŞĞÜÖİIÇ", "sguoicSGUOIIC")
 
 
 def _ascii_param(s: str) -> str:
@@ -35,7 +32,7 @@ def _ascii_param(s: str) -> str:
 
 
 def _get_demo_base() -> str:
-    """Netlify cache'i varsa kullan, yoksa Worker URL."""
+    """Netlify cache'i varsa kullan (erişilebilirse), yoksa Worker URL."""
     global _DEMO_URL_CACHE
     if _DEMO_URL_CACHE:
         return _DEMO_URL_CACHE
@@ -44,8 +41,15 @@ def _get_demo_base() -> str:
     if cache.exists():
         url = cache.read_text(encoding="utf-8").strip()
         if url:
-            _DEMO_URL_CACHE = url
-            return url
+            try:
+                import urllib.request
+                req = urllib.request.Request(url, method="HEAD")
+                with urllib.request.urlopen(req, timeout=4) as r:
+                    if r.status < 400:
+                        _DEMO_URL_CACHE = url
+                        return url
+            except Exception:
+                pass
     return _WORKER_BASE
 
 
@@ -215,7 +219,7 @@ class MarketingAgent(BaseAgent):
             f"Dil kurallari: Mükemmel {lang_name} dil bilgisi kullan. "
             "Imla, noktalama ve gramer hatasi KESINLIKLE olmamali. "
             "Kurallar: isletme adini kullan, bostok.dev dogal tanit, "
-            "sonda https://bostok.dev linki ver, imza: Kadir Sevinc - Bostok.dev"
+            "sonda https://bostok.dev linki ver, imza: Kadir Şevinç - Bostok.dev"
         )
         result = await self.ask(prompt)
         subject = f"Web Siteniz Hakkinda — Bostok.dev"
@@ -248,7 +252,7 @@ class MarketingAgent(BaseAgent):
             f"1. {lang_name} imla ve gramer hatalarini duzelt (en onemli adim)\n"
             "2. Spam tetikleyici ifadeleri kaldir (BUYUK HARF, !!!, 'ucretsiz kazan' vb.)\n"
             "3. https://bostok.dev linki yoksa ekle\n"
-            "4. Imza yoksa ekle: Kadir Sevinc - Bostok.dev\n"
+            "4. Imza yoksa ekle: Kadir Şevinç - Bostok.dev\n"
             "5. 150 kelimeyi asiyorsa kisalt\n\n"
             "Yanit SADECE su formatta olmali, baska hicbir sey yazma:\n"
             "DURUM: ONAYLANDI\n"
