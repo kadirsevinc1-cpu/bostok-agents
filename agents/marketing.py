@@ -85,7 +85,6 @@ class MarketingAgent(BaseAgent):
         if not gmail.can_send():
             return f"Gunluk mail limiti doldu. {gmail.stats}"
 
-        lang = languages[0] if languages else "tr"
         sent = skipped = no_email = 0
 
         for lead in leads:
@@ -94,6 +93,7 @@ class MarketingAgent(BaseAgent):
             if not lead.email:
                 no_email += 1
                 continue
+
             seo = None
             if lead.has_website and lead.website:
                 try:
@@ -101,23 +101,25 @@ class MarketingAgent(BaseAgent):
                     seo = await seo_analyze(lead.website)
                 except Exception:
                     pass
-            subject, body = await self._write_email(lead, lang, seo)
 
-            # Kalite kontrolü — sorun varsa bir kez düzelt
-            body = await self._qa_email(subject, body, lang)
-            if not body:
-                logger.warning(f"Mail kalite kontrolden gecemedi, atlandi: {lead.email}")
-                skipped += 1
-                continue
-
-            ok = await gmail.send(lead.email, subject, body, lead_info={
-                "name": lead.name, "sector": sector, "location": location,
-            })
-            if ok:
-                sent += 1
-            else:
-                skipped += 1
-            await asyncio.sleep(8)  # spam önleme: mailler arası bekleme
+            # Her dil için ayrı mail gönder (örn. Istanbul oteli → tr + en)
+            for lang in (languages or ["tr"]):
+                if not gmail.can_send():
+                    break
+                subject, body = await self._write_email(lead, lang, seo)
+                body = await self._qa_email(subject, body, lang)
+                if not body:
+                    logger.warning(f"Mail kalite kontrolden gecemedi, atlandi: {lead.email} [{lang}]")
+                    skipped += 1
+                    continue
+                ok = await gmail.send(lead.email, subject, body, lead_info={
+                    "name": lead.name, "sector": sector, "location": location, "lang": lang,
+                })
+                if ok:
+                    sent += 1
+                else:
+                    skipped += 1
+                await asyncio.sleep(8)  # spam önleme: mailler arası bekleme
 
         return (
             f"Kampanya tamamlandi [{sector}/{location}]:\n"

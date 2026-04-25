@@ -24,7 +24,11 @@ class FollowupAgent(BaseAgent):
 
     async def loop(self):
         await self._check_and_send()
-        await asyncio.sleep(86400)  # 24 saatte bir kontrol
+        # 24 saatlik beklemeyi 30'ar saniyelik parçalara böl — graceful shutdown için
+        for _ in range(2880):
+            if not self.running:
+                break
+            await asyncio.sleep(30)
 
     async def _check_and_send(self):
         sent_ids = self._load_json(SENT_IDS_FILE)
@@ -92,29 +96,50 @@ class FollowupAgent(BaseAgent):
         if sent_count:
             logger.info(f"FollowupAgent: {sent_count} follow-up gonderildi")
 
+    def _detect_lang(self, info: dict) -> str:
+        """Lead bilgisinden dili tahmin et."""
+        lang = info.get("lang", "")
+        if lang:
+            return lang
+        location = info.get("location", "").lower()
+        de_cities = {"berlin", "hamburg", "munich", "frankfurt", "cologne", "stuttgart",
+                     "dusseldorf", "vienna", "zurich", "bern", "graz"}
+        en_cities = {"london", "manchester", "birmingham", "new york", "los angeles",
+                     "chicago", "toronto", "sydney", "melbourne", "dubai", "amsterdam"}
+        if any(c in location for c in de_cities):
+            return "de"
+        if any(c in location for c in en_cities):
+            return "en"
+        return "tr"
+
+    def _lang_name(self, lang: str) -> str:
+        return {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca"}.get(lang, "İngilizce")
+
     async def _send_followup(self, gmail, to: str, info: dict, original_msg_id: str, stage: int) -> bool:
         original_subject = info.get("subject", "Web Site Teklifi")
         subject = original_subject if original_subject.lower().startswith("re:") else f"Re: {original_subject}"
         sector   = info.get("sector", "")
         location = info.get("location", "")
         name     = info.get("name", "")
+        lang     = self._detect_lang(info)
+        lang_name = self._lang_name(lang)
 
         if stage == 1:
             prompt = (
-                f"Bir {sector} işletmesine ({name}, {location}) 7 gün önce web site teklifi "
+                f"{sector} sektöründeki \"{name}\" işletmesine ({location}) 7 gün önce web site teklifi "
                 f"gönderdik ama yanıt gelmedi.\n"
-                "Kısa, samimi, baskısız takip maili yaz. Max 80 kelime.\n"
+                f"Mükemmel {lang_name} dil bilgisiyle kısa, samimi, baskısız takip maili yaz. Max 80 kelime.\n"
                 "Ton: 'Sadece takip ediyorum, görme fırsatı buldunuz mu?' tarzında.\n"
-                "Sona https://bostok.dev linki ve imza ekle: Kadir Şevinç — Bostok.dev\n"
+                "Sona https://bostok.dev linki ve imza ekle: Kadir Sevinc — Bostok.dev\n"
                 "Sadece mail gövdesini yaz, konu satırı yazma."
             )
         else:
             prompt = (
-                f"Bir {sector} işletmesine ({name}, {location}) iki haftadır iki mail gönderdik, "
+                f"{sector} sektöründeki \"{name}\" işletmesine ({location}) iki haftadır iki mail gönderdik, "
                 f"yanıt yok.\n"
-                "Kibarca kapanış maili yaz. Max 60 kelime.\n"
+                f"Mükemmel {lang_name} dil bilgisiyle kibarca kapanış maili yaz. Max 60 kelime.\n"
                 "Ton: 'Son kez yazıyorum, ilgi duymuyorsanız sorun değil, ihtiyaç olursa buradayım.'\n"
-                "Sona https://bostok.dev linki ve imza ekle: Kadir Şevinç — Bostok.dev\n"
+                "Sona https://bostok.dev linki ve imza ekle: Kadir Sevinc — Bostok.dev\n"
                 "Sadece mail gövdesini yaz, konu satırı yazma."
             )
 

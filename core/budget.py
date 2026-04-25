@@ -3,6 +3,7 @@ Bütçe Kontrolcüsü — her API çağrısını izler, limiti aşınca sistemi 
 Gemini Flash: ~$0.075/1M input token, ~$0.30/1M output token (ücretsiz tier: 15 RPM, 1M TPD)
 """
 import json
+import os
 from pathlib import Path
 from datetime import datetime, date
 from loguru import logger
@@ -29,7 +30,9 @@ class BudgetController:
         return {}
 
     def _save(self):
-        BUDGET_FILE.write_text(json.dumps(self._data, ensure_ascii=False, indent=2), encoding="utf-8")
+        tmp = BUDGET_FILE.with_suffix(".tmp")
+        tmp.write_text(json.dumps(self._data, ensure_ascii=False, indent=2), encoding="utf-8")
+        os.replace(tmp, BUDGET_FILE)
 
     def _ensure_today(self):
         if self._today not in self._data:

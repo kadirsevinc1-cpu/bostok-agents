@@ -51,11 +51,10 @@ class ManagerAgent(BaseAgent):
                 msg.content,
                 {"source": msg.sender.value},
             )
-            response = await self.ask(
-                f"Yeni musteri talebi geldi: {msg.content}\n"
-                "Analist'e brief icin gonderdim. Musteriye kisa bilgi ver."
+            await self.send(
+                AgentName.SYSTEM, MessageType.USER_NOTIFY,
+                "Talebiniz alındı. Analist brief hazırlıyor, ardından teklif ve içerik oluşturulacak.",
             )
-            await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY, response)
 
         elif msg.type == MessageType.RESULT:
             result = msg.content
@@ -77,21 +76,23 @@ class ManagerAgent(BaseAgent):
                                 f"Teklif hazir:\n{result}")
 
             elif msg.sender == AgentName.CONTENT:
-                await self.send(AgentName.DESIGNER, MessageType.TASK, result)
+                await self.send(AgentName.DESIGNER, MessageType.TASK, result,
+                                {"project_name": self._current_project_name})
 
             elif msg.sender == AgentName.DESIGNER:
-                await self.send(AgentName.DEVELOPER, MessageType.TASK, result)
+                await self.send(AgentName.DEVELOPER, MessageType.TASK, result,
+                                {"project_name": self._current_project_name})
 
             elif msg.sender == AgentName.DEVELOPER:
                 # Site dizinini sakla — QA'dan sonra Deploy'a göndereceğiz
-                self._current_site_dir = msg.metadata.get("file_path", "")
+                file_path = msg.metadata.get("file_path", "")
                 self._current_project_name = msg.metadata.get("project_name", "site")
-                # site_dir = index.html'nin klasörü
                 from pathlib import Path
-                if self._current_site_dir:
-                    self._current_site_dir = str(Path(self._current_site_dir).parent)
+                if file_path:
+                    self._current_site_dir = str(Path(file_path).parent)
                 await self.send(AgentName.QA, MessageType.TASK, result,
-                                {"site_dir": self._current_site_dir,
+                                {"file_path": file_path,
+                                 "site_dir": self._current_site_dir,
                                  "project_name": self._current_project_name})
 
             elif msg.sender == AgentName.QA:
