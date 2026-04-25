@@ -163,6 +163,8 @@ class MarketingAgent(BaseAgent):
             "Format:\n"
             "Konu: [kisa konu satiri]\n\n"
             "[Mail metni — max 130 kelime]\n\n"
+            f"Dil kurallari: Mükemmel {lang_name} dil bilgisi kullan. "
+            "Imla, noktalama ve gramer hatasi KESINLIKLE olmamali. "
             "Kurallar: isletme adini kullan, bostok.dev dogal tanit, "
             "sonda https://bostok.dev linki ver, imza: Kadir Sevinc - Bostok.dev"
         )
@@ -191,49 +193,35 @@ class MarketingAgent(BaseAgent):
 
         lang_name = LANG_NAMES.get(lang, lang)
         prompt = (
-            f"Asagidaki soguk satis mailini {lang_name} dil kurallari ve profesyonellik acisindan denetle.\n\n"
-            f"Konu: {subject}\n\n{body}\n\n"
-            "Kontrol listesi:\n"
-            "1. Dil bilgisi ve imla hatasi var mi?\n"
-            "2. Ton profesyonel ve samimi mi (agresif veya spam gibi degil)?\n"
-            "3. https://bostok.dev linki var mi?\n"
-            "4. Imza var mi (Kadir Sevinc - Bostok.dev)?\n"
-            "5. 150 kelimeden kisa mi?\n"
-            "6. Spam tetikleyici kelimeler var mi? (ucretsiz kazan, BUYUK HARF, !!! gibi)\n\n"
-            "Yanit formati:\n"
-            "DURUM: ONAYLANDI veya DUZELTILDI veya REDDEDILDI\n"
-            "SORUNLAR: [buldugun sorunlari listele, yoksa 'yok']\n"
-            "MAIL:\n[onaylanmis veya duzeltilmis mail metni — sadece body, konu satiri olmadan]"
+            f"Asagidaki soguk satis mailini {lang_name} dil kurallari acisindan denetle ve MUTLAKA duzelt.\n\n"
+            f"KONU: {subject}\n\nMAIL:\n{body}\n\n"
+            "Gorev:\n"
+            f"1. {lang_name} imla ve gramer hatalarini duzelt (en onemli adim)\n"
+            "2. Spam tetikleyici ifadeleri kaldir (BUYUK HARF, !!!, 'ucretsiz kazan' vb.)\n"
+            "3. https://bostok.dev linki yoksa ekle\n"
+            "4. Imza yoksa ekle: Kadir Sevinc - Bostok.dev\n"
+            "5. 150 kelimeyi asiyorsa kisalt\n\n"
+            "Yanit SADECE su formatta olmali, baska hicbir sey yazma:\n"
+            "DURUM: ONAYLANDI\n"
+            "DUZELTILMIS_MAIL:\n"
+            "[duzeltilmis veya onaylanmis mail metni buraya — sadece body]"
         )
 
         try:
             result = await self.ask(prompt)
-            lines = result.strip().splitlines()
 
-            durum = ""
-            mail_lines = []
-            in_mail = False
+            # DUZELTILMIS_MAIL: etiketi ile ayristir
+            marker = "DUZELTILMIS_MAIL:"
+            if marker in result.upper():
+                idx = result.upper().index(marker)
+                corrected_body = result[idx + len(marker):].strip()
+                if corrected_body and len(corrected_body) > 20:
+                    if "ONAYLANDI" not in result.upper()[:idx]:
+                        logger.info(f"Mail QA duzeltildi: {subject[:50]}")
+                    return corrected_body
 
-            for line in lines:
-                if line.upper().startswith("DURUM:"):
-                    durum = line.split(":", 1)[1].strip().upper()
-                elif line.upper().startswith("MAIL:"):
-                    in_mail = True
-                elif in_mail:
-                    mail_lines.append(line)
-
-            corrected_body = "\n".join(mail_lines).strip()
-
-            if "REDDEDILDI" in durum:
-                logger.warning(f"Mail QA reddetti: {subject[:50]}")
-                return ""
-
-            if corrected_body:
-                if "DUZELTILDI" in durum:
-                    logger.info(f"Mail QA duzeltildi: {subject[:50]}")
-                return corrected_body
-
-            # Format bozuksa orijinal body'yi koru
+            # Marker yoksa orijinal gonder ama logla
+            logger.warning(f"Mail QA format hatasi, orijinal gonderiliyor: {subject[:50]}")
             return body
 
         except Exception as e:
