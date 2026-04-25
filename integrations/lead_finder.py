@@ -12,9 +12,26 @@ from loguru import logger
 
 MAPS_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json"
 MAPS_DETAIL_URL = "https://maps.googleapis.com/maps/api/place/details/json"
-EMAIL_RE = re.compile(r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b')
+EMAIL_RE = re.compile(r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,6}\b')
+_IMAGE_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".ico", ".bmp"}
 SKIP_WORDS = {"noreply", "no-reply", "example", "test@", "@sentry", "@privacy",
-              "wix.com", "wordpress", "squarespace", "schema", "w3.org"}
+              "wix.com", "wordpress", "squarespace", "schema", "w3.org",
+              "@2x", "@3x", "placeholder", "domain.com", "email.com"}
+
+
+def _valid_email(email: str) -> bool:
+    """Sahte email eşleşmelerini filtrele."""
+    if any(skip in email.lower() for skip in SKIP_WORDS):
+        return False
+    # Resim uzantısı TLD gibi görünüyorsa reddet (.png, .jpg, vb.)
+    tld = "." + email.rsplit(".", 1)[-1].lower()
+    if tld in _IMAGE_EXTS:
+        return False
+    # @ sonrası kısım çok kısa veya sayı içeriyorsa şüpheli
+    domain = email.split("@", 1)[-1]
+    if len(domain) < 4 or domain[0].isdigit():
+        return False
+    return True
 
 
 @dataclass
@@ -113,16 +130,40 @@ async def _maps_leads(sector: str, location: str, api_key: str) -> list[Lead]:
 
 
 async def _find_email_no_website(session: aiohttp.ClientSession, name: str, location: str) -> str:
-    """Web sitesi olmayan işletme için Facebook veya arama sonuçlarından email bul."""
-    # Google arama: işletme adı + şehir + email/iletişim
-    query = f'"{name}" {location} email OR "e-posta" OR "@gmail" OR "@hotmail" OR "iletisim"'
+    """Web sitesi olmayan işletme için SerpApi veya direkt arama üzerinden email bul."""
+    try:
+        from config import settings
+        serpapi_key = getattr(settings, "serpapi_api_key", "")
+    except Exception:
+        serpapi_key = ""
+
+    query = f'"{name}" {location} "@gmail" OR "@hotmail" OR "@yahoo" OR "iletisim" OR "e-posta"'
+
+    # 1. SerpApi — güvenilir, captcha yok
+    if serpapi_key:
+        try:
+            async with session.get(
+                "https://serpapi.com/search",
+                params={"q": query, "api_key": serpapi_key, "num": 10, "hl": "tr"},
+                timeout=aiohttp.ClientTimeout(total=12),
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    text = " ".join(
+                        r.get("snippet", "") + " " + r.get("title", "")
+                        for r in data.get("organic_results", [])
+                    )
+                    for match in EMAIL_RE.findall(text):
+                        if _valid_email(match):
+                            logger.debug(f"SerpApi email bulundu: {match} [{name}]")
+                            return match.lower()
+        except Exception as e:
+            logger.debug(f"SerpApi email hata [{name}]: {e}")
+
+    # 2. Fallback: direkt Google scrape (daha az güvenilir)
     search_url = "https://www.google.com/search?q=" + urllib.parse.quote(query)
-
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                      "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-    }
-
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+               "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"}
     try:
         async with session.get(
             search_url, headers=headers,
@@ -131,10 +172,10 @@ async def _find_email_no_website(session: aiohttp.ClientSession, name: str, loca
         ) as resp:
             text = await resp.text(errors="ignore")
             for match in EMAIL_RE.findall(text):
-                if not any(skip in match.lower() for skip in SKIP_WORDS):
+                if _valid_email(match):
                     return match.lower()
     except Exception as e:
-        logger.debug(f"Arama email hata [{name}]: {e}")
+        logger.debug(f"Google scrape email hata [{name}]: {e}")
 
     return ""
 
@@ -155,7 +196,7 @@ async def _scrape_email(session: aiohttp.ClientSession, url: str) -> str:
                     continue
                 text = await resp.text(errors="ignore")
                 for match in EMAIL_RE.findall(text):
-                    if not any(skip in match.lower() for skip in SKIP_WORDS):
+                    if _valid_email(match):
                         return match.lower()
         except Exception:
             pass
