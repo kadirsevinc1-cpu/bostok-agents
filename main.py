@@ -327,18 +327,19 @@ async def main():
     logger.info("Bostok Agent Koyu baslatiliyor...")
     logger.info(budget.report())
 
-    # Netlify başlat
-    netlify = init_netlify()
-    if netlify:
-        logger.info("Netlify hazir - otomatik deploy aktif")
-        # Demo site'i Netlify'a deploy et (ilk çalıştırmada, sonrasında cache'den okur)
-        demo_url = await netlify.deploy_demo_site("demo_site")
-        if demo_url:
-            logger.info(f"Demo site URL: {demo_url}")
-        else:
-            logger.warning("Demo site deploy edilemedi, Worker URL kullanilacak")
+    # Demo site deploy — Vercel (öncelikli) → Netlify → Worker fallback
+    from integrations.vercel import deploy_demo_site as vercel_deploy
+    vercel_url = await vercel_deploy("demo_site")
+    if vercel_url:
+        logger.info(f"Demo site (Vercel): {vercel_url}")
     else:
-        logger.warning("Netlify token yok - demo Worker URL ile calisacak")
+        netlify = init_netlify()
+        if netlify:
+            netlify_url = await netlify.deploy_demo_site("demo_site")
+            if netlify_url:
+                logger.info(f"Demo site (Netlify): {netlify_url}")
+            else:
+                logger.info("Demo site: Cloudflare Worker kullaniliyor")
 
     # Gmail başlat
     gmail = init_gmail()

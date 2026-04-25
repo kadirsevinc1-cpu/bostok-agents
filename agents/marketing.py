@@ -32,24 +32,39 @@ def _ascii_param(s: str) -> str:
 
 
 def _get_demo_base() -> str:
-    """Netlify cache'i varsa kullan (erişilebilirse), yoksa Worker URL."""
+    """Sırayla: Vercel cache → Netlify cache → Worker URL."""
     global _DEMO_URL_CACHE
     if _DEMO_URL_CACHE:
         return _DEMO_URL_CACHE
+
     from pathlib import Path
-    cache = Path("memory/demo_site_url.txt")
-    if cache.exists():
-        url = cache.read_text(encoding="utf-8").strip()
-        if url:
-            try:
-                import urllib.request
-                req = urllib.request.Request(url, method="HEAD")
-                with urllib.request.urlopen(req, timeout=4) as r:
-                    if r.status < 400:
-                        _DEMO_URL_CACHE = url
-                        return url
-            except Exception:
-                pass
+    import urllib.request
+
+    def _reachable(url: str) -> bool:
+        try:
+            req = urllib.request.Request(url, method="HEAD")
+            with urllib.request.urlopen(req, timeout=4) as r:
+                return r.status < 400
+        except Exception:
+            return False
+
+    # 1. Vercel (öncelikli — çok güvenilir)
+    vercel_cache = Path("memory/vercel_site_url.txt")
+    if vercel_cache.exists():
+        url = vercel_cache.read_text(encoding="utf-8").strip()
+        if url and _reachable(url):
+            _DEMO_URL_CACHE = url
+            return url
+
+    # 2. Netlify
+    netlify_cache = Path("memory/demo_site_url.txt")
+    if netlify_cache.exists():
+        url = netlify_cache.read_text(encoding="utf-8").strip()
+        if url and _reachable(url):
+            _DEMO_URL_CACHE = url
+            return url
+
+    # 3. Cloudflare Worker (her zaman açık fallback)
     return _WORKER_BASE
 
 
@@ -187,6 +202,20 @@ class MarketingAgent(BaseAgent):
         base = _get_demo_base()
         return f"{base}/?{urllib.parse.urlencode(params, quote_via=urllib.parse.quote)}"
 
+    async def _verify_demo_url(self, url: str) -> str:
+        """Demo URL'i test et — erişilemezse boş döndür (kırık link mail gitmesin)."""
+        import aiohttp
+        from loguru import logger
+        try:
+            async with aiohttp.ClientSession() as s:
+                async with s.head(url, timeout=aiohttp.ClientTimeout(total=4), allow_redirects=True) as r:
+                    if r.status < 400:
+                        return url
+                    logger.warning(f"Demo URL erişilemiyor ({r.status}), maile link eklenmeyecek")
+        except Exception as e:
+            logger.warning(f"Demo URL kontrol hata: {e} — maile link eklenmeyecek")
+        return ""
+
     async def _write_email(self, lead, lang: str, seo=None) -> tuple[str, str]:
         lang_name = LANG_NAMES.get(lang, lang)
 
@@ -207,12 +236,21 @@ class MarketingAgent(BaseAgent):
             )
 
         demo_url = self._make_demo_url(lead, lang)
+        demo_url = await self._verify_demo_url(demo_url)
+
+        if demo_url:
+            demo_instruction = (
+                f"Onemli: Mailde su demo linki dogal bir sekilde vurgula: {demo_url}\n"
+                f"(\"Sizin icin bir demo hazirladim\" veya \"Nasil gorunebilecegini buradan gorebilirsiniz\" tarzinda)\n\n"
+            )
+        else:
+            demo_instruction = ""
+
         prompt = (
             f"{lead.sector} sektöründeki \"{lead.name}\" isletmesine ({lead.location}) "
             f"{lang_name} dilinde profesyonel soguk e-posta yaz.\n\n"
             f"Durum: {offer}\n\n"
-            f"Onemli: Mailde su demo linki dogal bir sekilde vurgula: {demo_url}\n"
-            f"(\"Sizin icin bir demo hazirladim\" veya \"Nasil gorunebilecegini buradan gorebilirsiniz\" tarzinda)\n\n"
+            f"{demo_instruction}"
             "Format:\n"
             "Konu: [kisa konu satiri]\n\n"
             "[Mail metni — max 130 kelime]\n\n"
