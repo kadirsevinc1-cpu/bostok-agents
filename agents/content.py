@@ -37,11 +37,16 @@ class ContentAgent(BaseAgent):
 
     async def _handle(self, msg: Message):
         from loguru import logger
+        from core.skills.sector_kb import detect_sector, get_sector_context
         logger.info(f"İçerik yazılıyor: {msg.content[:60]}")
+
+        sector = detect_sector(msg.content)
+        kb_ctx = get_sector_context(sector)
 
         content = await self.ask(
             f"Proje brief'i:\n{msg.content}\n\n"
-            "Bu proje için tüm sayfa içeriklerini yaz. "
+            + (f"{kb_ctx}\n\n" if kb_ctx else "")
+            + "Bu proje için tüm sayfa içeriklerini yaz. "
             "Her sayfa için başlık ve içerik bölümlerini net ayır."
         )
 

@@ -85,6 +85,13 @@ class MarketingAgent(BaseAgent):
         if not gmail.can_send():
             return f"Gunluk mail limiti doldu. {gmail.stats}"
 
+        from core.skills.lead_scorer import sort_leads_by_score
+        from core.skills.email_ab import pick_better_subject
+
+        # Leadleri puana göre sırala — yüksek potansiyelli önce
+        leads = sort_leads_by_score(leads)
+        logger.info(f"Lead skorlama: {len(leads)} aktif lead")
+
         sent = skipped = no_email = 0
 
         for lead in leads:
@@ -112,6 +119,12 @@ class MarketingAgent(BaseAgent):
                     logger.warning(f"Mail kalite kontrolden gecemedi, atlandi: {lead.email} [{lang}]")
                     skipped += 1
                     continue
+
+                # A/B konu satırı — ~100 token, daha yüksek açılma oranı
+                better = await pick_better_subject(lead.name, sector, lang, body[:200])
+                if better:
+                    subject = better
+
                 ok = await gmail.send(lead.email, subject, body, lead_info={
                     "name": lead.name, "sector": sector, "location": location, "lang": lang,
                 })

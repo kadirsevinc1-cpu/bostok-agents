@@ -33,10 +33,16 @@ class AnalystAgent(BaseAgent):
 
     async def _handle(self, msg: Message):
         from loguru import logger
+        from core.skills.sector_kb import detect_sector, get_sector_context
         logger.info(f"Analist brief hazırlıyor: {msg.content[:60]}")
 
+        sector = detect_sector(msg.content)
+        kb_ctx = get_sector_context(sector)
+
         brief = await self.ask(
-            f"Müşteri talebi:\n{msg.content}\n\nBu talep için detaylı proje brief'i hazırla."
+            f"Müşteri talebi:\n{msg.content}\n\n"
+            + (f"{kb_ctx}\n\n" if kb_ctx else "")
+            + "Bu talep için detaylı proje brief'i hazırla."
         )
 
         import re, uuid
