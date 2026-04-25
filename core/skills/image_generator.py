@@ -2,7 +2,6 @@
 Görsel üretici — Pollinations.ai (ücretsiz, API key yok) + Pexels stok görseller.
 Sektöre uygun hero, hizmet ve arka plan görselleri üretir/bulur.
 """
-import asyncio
 import urllib.parse
 from dataclasses import dataclass, field
 from loguru import logger
@@ -204,20 +203,44 @@ async def find_pexels_images(sector: str, count: int = 3) -> list[dict]:
         return []
 
 
-async def get_best_images(sector: str, project_name: str = "", style: str = "") -> ImageSet:
+async def get_best_images(
+    sector: str,
+    project_name: str = "",
+    style: str = "",
+    mode: str = "demo",          # "demo" → sadece hero (1 görsel) | "full" → hero+hizmet+arka plan
+) -> ImageSet:
     """
     Önce Pexels dene (gerçek fotoğraf), yoksa Pollinations (AI üretim).
+
+    mode="demo"  → 1 görsel (hero). Demo siteler ve taslak aşaması için.
+    mode="full"  → 3 görsel (hero + hizmet + arka plan). Müşteri onaylı projeler için.
     """
-    pexels = await find_pexels_images(sector, count=3)
+    count = 1 if mode == "demo" else 3
+    pexels = await find_pexels_images(sector, count=count)
 
     if pexels:
         img_set = ImageSet(
             hero_url    = pexels[0]["url"],
-            service_url = pexels[1]["url"] if len(pexels) > 1 else "",
-            bg_url      = pexels[2]["url"] if len(pexels) > 2 else "",
+            service_url = pexels[1]["url"] if (mode == "full" and len(pexels) > 1) else "",
+            bg_url      = pexels[2]["url"] if (mode == "full" and len(pexels) > 2) else "",
             source      = "pexels.com",
         )
-        logger.info(f"Pexels görselleri kullanılıyor: {sector}")
+        logger.info(f"Pexels görsel ({mode}): {sector} — {count} adet")
+        return img_set
+
+    # Pexels yoksa Pollinations
+    if mode == "demo":
+        # Demo: sadece hero
+        key = _normalize_sector(sector)
+        prompts = _SECTOR_PROMPTS.get(key, _SECTOR_PROMPTS["default"])
+        hero_prompt = prompts["hero"] + (f" {style}" if style else "")
+        if project_name:
+            hero_prompt = f"{project_name} " + hero_prompt
+        img_set = ImageSet(
+            hero_url = _pollinations_url(hero_prompt, 1280, 640, seed=1),
+            source   = "pollinations.ai",
+        )
+        logger.info(f"Pollinations görsel (demo): {sector}")
         return img_set
 
     return await generate_images(sector, project_name, style)

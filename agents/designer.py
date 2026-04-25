@@ -78,9 +78,12 @@ class DesignerAgent(BaseAgent):
         needs_images = _should_fetch_images(msg.content, sector)
 
         if needs_images:
+            # confirmed=True ise müşteri onaylı proje → tam görsel seti
+            confirmed = msg.metadata.get("confirmed", False)
+            img_mode  = "full" if confirmed else "demo"
             inspiration, images = await asyncio.gather(
                 get_inspiration(sector, location),
-                get_best_images(sector, project_name=msg.metadata.get("project_name", "")),
+                get_best_images(sector, project_name=msg.metadata.get("project_name", ""), mode=img_mode),
             )
             image_hint = ""
             if images and images.hero_url:
