@@ -503,6 +503,18 @@ async def main():
     else:
         logger.info("Demo icin: python main.py 'musteri talebi buraya'")
 
+    async def _embed_loop():
+        """Her 10 dakikada yeni memory'lere embedding üret."""
+        while True:
+            try:
+                await asyncio.sleep(600)
+                from core.memory import store
+                await store.embed_pending(limit=30)
+            except Exception:
+                pass
+
+    tasks.append(_embed_loop())
+
     try:
         await asyncio.gather(*tasks)
     except KeyboardInterrupt:

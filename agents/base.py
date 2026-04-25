@@ -25,7 +25,8 @@ class BaseAgent:
 
     async def ask(self, user_message: str, context: str = "") -> str:
         messages = [{"role": "system", "content": self.system_prompt}]
-        mem = self.memory_context(user_message)
+        from core.memory import aget_context
+        mem = await aget_context(self.name.value, query=user_message, n=7)
         if mem:
             messages.append({"role": "user", "content": f"[Geçmiş hafıza]\n{mem}"})
             messages.append({"role": "assistant", "content": "Hafızam hazır."})

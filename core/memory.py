@@ -23,6 +23,7 @@ class Memory:
     last_accessed: float
     access_count:  int = 0
     id:            str = field(default_factory=lambda: uuid.uuid4().hex[:8])
+    embedding:     list = field(default_factory=list)
 
 
 class MemoryStore:
@@ -42,17 +43,24 @@ class MemoryStore:
         self._save()
         return m
 
-    def retrieve(self, query: str, agent: str, n: int = 10) -> list[Memory]:
+    def retrieve(self, query: str, agent: str, n: int = 10,
+                 query_embedding: list[float] = None) -> list[Memory]:
         now = time.time()
         pool = [m for m in self._memories if m.agent == agent]
         query_words = set(query.lower().split()) if query else set()
+        use_cosine = bool(query_embedding)
 
         def score(m: Memory) -> float:
             hours_ago  = (now - m.last_accessed) / 3600
             recency    = math.pow(0.995, hours_ago * 60)
             importance = m.importance / 10.0
-            relevance  = len(query_words & set(m.content.lower().split())) / max(len(query_words), 1) if query_words else 0.4
-            bonus      = 1.4 if m.type == "reflection" else (1.2 if m.type == "plan" else 1.0)
+            if use_cosine and m.embedding:
+                from core.embedder import cosine
+                relevance = cosine(query_embedding, m.embedding)
+            else:
+                relevance = (len(query_words & set(m.content.lower().split())) /
+                             max(len(query_words), 1)) if query_words else 0.4
+            bonus = 1.4 if m.type in ("reflection", "lead_insight") else (1.2 if m.type == "plan" else 1.0)
             return recency * importance * (0.3 + relevance * 0.7) * bonus
 
         top = sorted(pool, key=score, reverse=True)[:n]
@@ -60,6 +68,22 @@ class MemoryStore:
             m.last_accessed = now
             m.access_count += 1
         return top
+
+    async def embed_pending(self, limit: int = 30):
+        """Embedding'i olmayan son N memory'yi toplu olarak embed et."""
+        pending = [m for m in self._memories[-200:] if not m.embedding][:limit]
+        if not pending:
+            return
+        from core.embedder import embed
+        try:
+            texts = [m.content for m in pending]
+            embeddings = await embed(texts)
+            for m, emb in zip(pending, embeddings):
+                m.embedding = emb
+            self._save()
+            logger.debug(f"MemoryStore: {len(pending)} embedding üretildi")
+        except Exception as e:
+            logger.debug(f"embed_pending hata: {e}")
 
     def get_recent(self, agent: str, n: int = 20) -> list[Memory]:
         pool = [m for m in self._memories if m.agent == agent]
@@ -96,6 +120,20 @@ store = MemoryStore()
 
 def get_context(agent: str, query: str = "", n: int = 8) -> str:
     mems = store.retrieve(query or "gorev proje musteri", agent, n=n)
+    if not mems:
+        return ""
+    lines = []
+    for m in mems:
+        ts = datetime.fromtimestamp(m.created_at).strftime("%m/%d %H:%M")
+        lines.append(f"[{ts}][{m.type}] {m.content[:180]}")
+    return "\n".join(lines)
+
+
+async def aget_context(agent: str, query: str = "", n: int = 8) -> str:
+    """Semantic embedding ile hafıza getir (async)."""
+    from core.embedder import embed_one
+    q_emb = await embed_one(query) if query else []
+    mems = store.retrieve(query or "gorev proje musteri", agent, n=n, query_embedding=q_emb)
     if not mems:
         return ""
     lines = []

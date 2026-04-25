@@ -47,7 +47,11 @@ class FollowupAgent(BaseAgent):
         now = datetime.now()
         sent_count = 0
 
-        for msg_id, info in sent_ids.items():
+        # Focal-point: öncelik skoruna göre sırala
+        candidates = list(sent_ids.items())
+        candidates = self._sort_by_focal_priority(candidates, followup_log, replied_emails, now)
+
+        for msg_id, info in candidates:
             to = info.get("to", "").lower()
             if not to:
                 continue
@@ -139,10 +143,23 @@ class FollowupAgent(BaseAgent):
         lang     = self._detect_lang(info)
         lang_name = self._lang_name(lang)
 
+        # Lead insight — varsa prompt'a ekle
+        insight_ctx = ""
+        try:
+            from core.lead_reflection import maybe_reflect, get_insight
+            insight = await get_insight(to)
+            if not insight:
+                insight = await maybe_reflect(to) or ""
+            if insight:
+                insight_ctx = f"\nLead içgörüsü: {insight}\n"
+        except Exception:
+            pass
+
         if stage == 1:
             prompt = (
                 f"{sector} sektöründeki \"{name}\" işletmesine ({location}) 7 gün önce web site teklifi "
                 f"gönderdik ama yanıt gelmedi.\n"
+                f"{insight_ctx}"
                 f"Mükemmel {lang_name} dil bilgisiyle kısa, samimi, baskısız takip maili yaz. Max 80 kelime.\n"
                 "Ton: 'Sadece takip ediyorum, görme fırsatı buldunuz mu?' tarzında.\n"
                 "Sona https://bostok.dev linki ve imza ekle: Kadir Şevinç — Bostok.dev\n"
@@ -152,6 +169,7 @@ class FollowupAgent(BaseAgent):
             prompt = (
                 f"{sector} sektöründeki \"{name}\" işletmesine ({location}) iki haftadır iki mail gönderdik, "
                 f"yanıt yok.\n"
+                f"{insight_ctx}"
                 f"Mükemmel {lang_name} dil bilgisiyle kibarca kapanış maili yaz. Max 60 kelime.\n"
                 "Ton: 'Son kez yazıyorum, ilgi duymuyorsanız sorun değil, ihtiyaç olursa buradayım.'\n"
                 "Sona https://bostok.dev linki ve imza ekle: Kadir Şevinç — Bostok.dev\n"
@@ -178,6 +196,41 @@ class FollowupAgent(BaseAgent):
             type=MessageType.USER_NOTIFY,
             content=f"Follow-up gonderildi: {to} ({label})\n{name} — {sector} / {location}",
         ))
+
+    def _sort_by_focal_priority(
+        self,
+        candidates: list[tuple],
+        followup_log: dict,
+        replied_emails: set,
+        now: datetime,
+    ) -> list[tuple]:
+        """
+        Focal-point önceliklendirme:
+        Yanıt vermiş / kapanmış leadler atlanır.
+        Kalanlar: daha uzun bekleyen + yüksek değerli sektör önce gelir.
+        """
+        HIGH_VALUE_SECTORS = {"teknoloji", "fintech", "hukuk", "muhasebe", "klinik",
+                               "diş", "doktor", "avukat", "yazılım", "e-ticaret",
+                               "restaurant", "cafe", "otel", "spa"}
+
+        def focal_score(item: tuple) -> float:
+            _, info = item
+            to = info.get("to", "").lower()
+            if to in replied_emails:
+                return -1.0
+            sent_at_str = info.get("sent_at", "")
+            try:
+                days = (now - datetime.fromisoformat(sent_at_str)).days
+            except Exception:
+                days = 0
+            sector = info.get("sector", "").lower()
+            sector_bonus = 1.3 if any(s in sector for s in HIGH_VALUE_SECTORS) else 1.0
+            log = followup_log.get(to, {})
+            # F2 bekleyenler önce (daha acil), sonra F1
+            stage_bonus = 1.2 if (log.get("f1_sent") and not log.get("f2_sent")) else 1.0
+            return days * sector_bonus * stage_bonus
+
+        return sorted(candidates, key=focal_score, reverse=True)
 
     def _get_replied_emails(self) -> set:
         inbox = self._load_json(INBOX_FILE)
