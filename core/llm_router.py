@@ -14,13 +14,19 @@ class ProviderConfig:
     api_key:    str
     base_url:   str
     model:      str
-    backend:    str  # "openai" veya "gemini" veya "anthropic"
+    backend:    str                    # "openai" | "gemini" | "anthropic"
+    headers:    dict = None            # opsiyonel ek header (OpenRouter vb.)
 
 
 def _build_providers() -> list[ProviderConfig]:
+    """
+    Provider öncelik sırası (ücretsizler önce, ücretliler sonda):
+    Groq → Cerebras → Gemini → Mistral → Sambanova → OpenRouter → Cohere → DeepSeek → Claude
+    """
     from config import settings
     providers = []
 
+    # ── 1. Groq — ücretsiz, hızlı ─────────────────────────────────
     if settings.groq_api_key:
         providers.append(ProviderConfig(
             name="Groq", api_key=settings.groq_api_key,
@@ -28,6 +34,7 @@ def _build_providers() -> list[ProviderConfig]:
             model="llama-3.1-8b-instant", backend="openai",
         ))
 
+    # ── 2. Cerebras — ücretsiz, çok hızlı ────────────────────────
     if settings.cerebras_api_key:
         providers.append(ProviderConfig(
             name="Cerebras", api_key=settings.cerebras_api_key,
@@ -35,19 +42,14 @@ def _build_providers() -> list[ProviderConfig]:
             model="llama3.1-8b", backend="openai",
         ))
 
-    if settings.deepseek_api_key:
-        providers.append(ProviderConfig(
-            name="DeepSeek", api_key=settings.deepseek_api_key,
-            base_url="https://api.deepseek.com",
-            model="deepseek-chat", backend="openai",
-        ))
-
+    # ── 3. Gemini — ücretsiz, 1M token/gün ───────────────────────
     if settings.gemini_api_key:
         providers.append(ProviderConfig(
             name="Gemini", api_key=settings.gemini_api_key,
             base_url="", model="gemini-2.0-flash-lite", backend="gemini",
         ))
 
+    # ── 4. Mistral — ücretsiz tier ────────────────────────────────
     if settings.mistral_api_key:
         providers.append(ProviderConfig(
             name="Mistral", api_key=settings.mistral_api_key,
@@ -55,6 +57,40 @@ def _build_providers() -> list[ProviderConfig]:
             model="mistral-small-latest", backend="openai",
         ))
 
+    # ── 5. Sambanova — ücretsiz tier, hızlı ─────────────────────
+    if settings.sambanova_api_key:
+        providers.append(ProviderConfig(
+            name="Sambanova", api_key=settings.sambanova_api_key,
+            base_url="https://api.sambanova.ai/v1",
+            model="Meta-Llama-3.1-8B-Instruct", backend="openai",
+        ))
+
+    # ── 6. OpenRouter (ücretsiz modeller) ────────────────────────
+    if settings.openrouter_api_key:
+        providers.append(ProviderConfig(
+            name="OpenRouter", api_key=settings.openrouter_api_key,
+            base_url="https://openrouter.ai/api/v1",
+            model="meta-llama/llama-3.1-8b-instruct:free", backend="openai",
+            headers={"HTTP-Referer": "https://bostok.dev", "X-Title": "Bostok Agents"},
+        ))
+
+    # ── 7. Cohere — ücretsiz tier (1000 çağrı/ay) ────────────────
+    if settings.cohere_api_key:
+        providers.append(ProviderConfig(
+            name="Cohere", api_key=settings.cohere_api_key,
+            base_url="https://api.cohere.com/compatibility/v1",
+            model="command-r-08-2024", backend="openai",
+        ))
+
+    # ── 8. DeepSeek — ücretli, sparingly kullan ──────────────────
+    if settings.deepseek_api_key:
+        providers.append(ProviderConfig(
+            name="DeepSeek", api_key=settings.deepseek_api_key,
+            base_url="https://api.deepseek.com",
+            model="deepseek-chat", backend="openai",
+        ))
+
+    # ── 9. Claude — ücretli, son çare ────────────────────────────
     if settings.anthropic_api_key:
         providers.append(ProviderConfig(
             name="Claude", api_key=settings.anthropic_api_key,
@@ -67,7 +103,11 @@ def _build_providers() -> list[ProviderConfig]:
 async def _call_openai(cfg: ProviderConfig, messages: list[dict], max_tokens: int) -> str | None:
     try:
         from openai import AsyncOpenAI
-        client = AsyncOpenAI(api_key=cfg.api_key, base_url=cfg.base_url)
+        client = AsyncOpenAI(
+            api_key=cfg.api_key,
+            base_url=cfg.base_url,
+            default_headers=cfg.headers or {},
+        )
         resp = await client.chat.completions.create(
             model=cfg.model, messages=messages, max_tokens=max_tokens
         )

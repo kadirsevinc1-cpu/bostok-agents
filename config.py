@@ -5,12 +5,15 @@ from loguru import logger
 
 
 class Settings(BaseSettings):
-    # LLM Provider Keys (öncelik sırasına göre)
+    # LLM Provider Keys (öncelik sırasına göre — ücretsizler önce, ücretliler sonda)
     groq_api_key:        str = Field("", env="GROQ_API_KEY")
     cerebras_api_key:    str = Field("", env="CEREBRAS_API_KEY")
-    deepseek_api_key:    str = Field("", env="DEEPSEEK_API_KEY")
     gemini_api_key:      str = Field("", env="GEMINI_API_KEY")
     mistral_api_key:     str = Field("", env="MISTRAL_API_KEY")
+    sambanova_api_key:   str = Field("", env="SAMBANOVA_API_KEY")
+    openrouter_api_key:  str = Field("", env="OPENROUTER_API_KEY")
+    cohere_api_key:      str = Field("", env="COHERE_API_KEY")
+    deepseek_api_key:    str = Field("", env="DEEPSEEK_API_KEY")
     anthropic_api_key:   str = Field("", env="ANTHROPIC_API_KEY")
 
     # Netlify deploy
@@ -36,9 +39,12 @@ class Settings(BaseSettings):
         pairs = [
             ("groq_api_key",        "groq_api_key"),
             ("cerebras_api_key",    "cerebras_api_key"),
-            ("deepseek_api_key",    "deepseek_api_key"),
             ("gemini_api_key",      "gemini_api_key"),
             ("mistral_api_key",     "mistral_api_key"),
+            ("sambanova_api_key",   "sambanova_api_key"),
+            ("openrouter_api_key",  "openrouter_api_key"),
+            ("cohere_api_key",      "cohere_api_key"),
+            ("deepseek_api_key",    "deepseek_api_key"),
             ("anthropic_api_key",   "anthropic_api_key"),
             ("telegram_bot_token",  "telegram_bot_token"),
             ("netlify_token",        "netlify_token"),
