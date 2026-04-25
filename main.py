@@ -52,64 +52,64 @@ async def budget_monitor():
 
 CAMPAIGNS = [
     # ── Türkiye — Yeme & İçme ─────────────────────────────────────
-    {"sector": "restoran",         "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Gaziantep"], "langs": ["tr"]},
-    {"sector": "kafe",             "locations": ["Istanbul", "Ankara", "Izmir", "Eskisehir"],                     "langs": ["tr"]},
-    {"sector": "pastane",          "locations": ["Istanbul", "Ankara", "Bursa", "Konya"],                         "langs": ["tr"]},
-    {"sector": "catering",         "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "restoran",         "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Gaziantep", "Adana", "Mersin", "Kayseri", "Samsun", "Trabzon", "Denizli", "Malatya", "Sanliurfa", "Erzurum"], "langs": ["tr"]},
+    {"sector": "kafe",             "locations": ["Istanbul", "Ankara", "Izmir", "Eskisehir", "Samsun", "Trabzon", "Denizli", "Kayseri", "Adana"], "langs": ["tr"]},
+    {"sector": "pastane",          "locations": ["Istanbul", "Ankara", "Bursa", "Konya", "Adana", "Samsun", "Trabzon", "Kayseri"], "langs": ["tr"]},
+    {"sector": "catering",         "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Mersin", "Samsun"],    "langs": ["tr"]},
 
     # ── Türkiye — Sağlık ──────────────────────────────────────────
-    {"sector": "dis hekimi",       "locations": ["Istanbul", "Ankara", "Izmir", "Konya", "Antalya"],              "langs": ["tr"]},
-    {"sector": "eczane",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
-    {"sector": "veteriner",        "locations": ["Istanbul", "Ankara", "Izmir", "Antalya"],                       "langs": ["tr"]},
-    {"sector": "spor salonu",      "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Antalya"],              "langs": ["tr"]},
-    {"sector": "psikolog",         "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
-    {"sector": "fizyoterapist",    "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "dis hekimi",       "locations": ["Istanbul", "Ankara", "Izmir", "Konya", "Antalya", "Adana", "Mersin", "Kayseri", "Samsun", "Denizli", "Hatay", "Trabzon", "Malatya"], "langs": ["tr"]},
+    {"sector": "eczane",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Mersin", "Samsun", "Kayseri"], "langs": ["tr"]},
+    {"sector": "veteriner",        "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Adana", "Samsun", "Denizli"], "langs": ["tr"]},
+    {"sector": "spor salonu",      "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Antalya", "Adana", "Mersin", "Kayseri", "Samsun"], "langs": ["tr"]},
+    {"sector": "psikolog",         "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri"],   "langs": ["tr"]},
+    {"sector": "fizyoterapist",    "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Bursa"],     "langs": ["tr"]},
 
     # ── Türkiye — Hukuk & Finans ──────────────────────────────────
-    {"sector": "avukat",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
-    {"sector": "muhasebe",         "locations": ["Istanbul", "Ankara", "Izmir", "Kocaeli"],                       "langs": ["tr"]},
-    {"sector": "sigorta",          "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
-    {"sector": "mali musavir",     "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "avukat",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Mersin", "Kayseri", "Samsun", "Erzurum", "Hatay", "Malatya", "Sanliurfa"], "langs": ["tr"]},
+    {"sector": "muhasebe",         "locations": ["Istanbul", "Ankara", "Izmir", "Kocaeli", "Adana", "Mersin", "Samsun", "Kayseri", "Denizli"], "langs": ["tr"]},
+    {"sector": "sigorta",          "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Mersin", "Samsun", "Kayseri"], "langs": ["tr"]},
+    {"sector": "mali musavir",     "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri"],   "langs": ["tr"]},
 
     # ── Türkiye — Güzellik & Bakım ────────────────────────────────
-    {"sector": "guzellik salonu",  "locations": ["Istanbul", "Ankara", "Antalya", "Bursa", "Izmir"],              "langs": ["tr"]},
-    {"sector": "berber",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
-    {"sector": "tirnak salonu",    "locations": ["Istanbul", "Ankara", "Izmir"],                                   "langs": ["tr"]},
-    {"sector": "spa",              "locations": ["Istanbul", "Antalya", "Bodrum", "Alanya"],                      "langs": ["tr", "en"]},
+    {"sector": "guzellik salonu",  "locations": ["Istanbul", "Ankara", "Antalya", "Bursa", "Izmir", "Adana", "Mersin", "Kayseri", "Samsun", "Denizli", "Trabzon", "Hatay"], "langs": ["tr"]},
+    {"sector": "berber",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Mersin", "Samsun", "Trabzon", "Denizli", "Kayseri"], "langs": ["tr"]},
+    {"sector": "tirnak salonu",    "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri"],    "langs": ["tr"]},
+    {"sector": "spa",              "locations": ["Istanbul", "Antalya", "Bodrum", "Alanya", "Trabzon", "Mersin"], "langs": ["tr", "en"]},
 
     # ── Türkiye — Emlak & İnşaat ──────────────────────────────────
-    {"sector": "emlakci",          "locations": ["Istanbul", "Ankara", "Alanya", "Bodrum", "Izmir"],              "langs": ["tr"]},
-    {"sector": "insaat",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
-    {"sector": "tadilat",          "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
-    {"sector": "temizlik sirketi", "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
-    {"sector": "nakliyat",         "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
-    {"sector": "elektrikci",       "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
+    {"sector": "emlakci",          "locations": ["Istanbul", "Ankara", "Alanya", "Bodrum", "Izmir", "Adana", "Mersin", "Samsun", "Denizli", "Trabzon", "Kayseri"], "langs": ["tr"]},
+    {"sector": "insaat",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Gaziantep"], "langs": ["tr"]},
+    {"sector": "tadilat",          "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa"], "langs": ["tr"]},
+    {"sector": "temizlik sirketi", "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Mersin", "Kayseri"], "langs": ["tr"]},
+    {"sector": "nakliyat",         "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Mersin"], "langs": ["tr"]},
+    {"sector": "elektrikci",       "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa"], "langs": ["tr"]},
 
     # ── Türkiye — Otomotiv ────────────────────────────────────────
-    {"sector": "oto servis",       "locations": ["Istanbul", "Ankara", "Bursa", "Kocaeli", "Izmir"],              "langs": ["tr"]},
-    {"sector": "oto yikama",       "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
-    {"sector": "lastikci",         "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
-    {"sector": "oto kiralama",     "locations": ["Istanbul", "Antalya", "Izmir", "Bodrum"],                       "langs": ["tr", "en"]},
+    {"sector": "oto servis",       "locations": ["Istanbul", "Ankara", "Bursa", "Kocaeli", "Izmir", "Adana", "Mersin", "Samsun", "Gaziantep", "Denizli", "Kayseri"], "langs": ["tr"]},
+    {"sector": "oto yikama",       "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Mersin"], "langs": ["tr"]},
+    {"sector": "lastikci",         "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa"], "langs": ["tr"]},
+    {"sector": "oto kiralama",     "locations": ["Istanbul", "Antalya", "Izmir", "Bodrum", "Trabzon", "Mersin", "Alanya"], "langs": ["tr", "en"]},
 
     # ── Türkiye — Eğitim ──────────────────────────────────────────
-    {"sector": "ozel okul",        "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
-    {"sector": "dil kursu",        "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
-    {"sector": "etut merkezi",     "locations": ["Istanbul", "Ankara", "Izmir", "Konya", "Bursa"],                "langs": ["tr"]},
-    {"sector": "surucu kursu",     "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
-    {"sector": "dans okulu",       "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
-    {"sector": "kres",             "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
+    {"sector": "ozel okul",        "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa"], "langs": ["tr"]},
+    {"sector": "dil kursu",        "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Trabzon", "Kayseri"], "langs": ["tr"]},
+    {"sector": "etut merkezi",     "locations": ["Istanbul", "Ankara", "Izmir", "Konya", "Bursa", "Adana", "Samsun", "Kayseri", "Trabzon"], "langs": ["tr"]},
+    {"sector": "surucu kursu",     "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Mersin", "Kayseri"], "langs": ["tr"]},
+    {"sector": "dans okulu",       "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun"],              "langs": ["tr"]},
+    {"sector": "kres",             "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Mersin"], "langs": ["tr"]},
 
     # ── Türkiye — Konaklama ───────────────────────────────────────
-    {"sector": "otel",             "locations": ["Antalya", "Cappadocia", "Bodrum", "Alanya", "Kusadasi"],        "langs": ["tr", "en"]},
-    {"sector": "pansiyon",         "locations": ["Cappadocia", "Bodrum", "Alanya", "Safranbolu"],                 "langs": ["tr", "en"]},
-    {"sector": "apart otel",       "locations": ["Istanbul", "Ankara", "Antalya", "Izmir"],                       "langs": ["tr"]},
+    {"sector": "otel",             "locations": ["Antalya", "Cappadocia", "Bodrum", "Alanya", "Kusadasi", "Trabzon", "Erzurum", "Samsun", "Mersin", "Adana", "Hatay"], "langs": ["tr", "en"]},
+    {"sector": "pansiyon",         "locations": ["Cappadocia", "Bodrum", "Alanya", "Safranbolu", "Trabzon", "Artvin", "Amasya", "Mardin"], "langs": ["tr", "en"]},
+    {"sector": "apart otel",       "locations": ["Istanbul", "Ankara", "Antalya", "Izmir", "Adana", "Samsun", "Mersin"], "langs": ["tr"]},
 
     # ── Türkiye — Mağaza & Hizmet ─────────────────────────────────
-    {"sector": "cicekci",          "locations": ["Istanbul", "Ankara", "Izmir", "Bursa"],                         "langs": ["tr"]},
-    {"sector": "optik",            "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
-    {"sector": "pet shop",         "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
-    {"sector": "kuru temizleme",   "locations": ["Istanbul", "Ankara", "Izmir"],                                  "langs": ["tr"]},
-    {"sector": "fotograf",         "locations": ["Istanbul", "Ankara", "Izmir", "Antalya"],                       "langs": ["tr"]},
+    {"sector": "cicekci",          "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Trabzon"], "langs": ["tr"]},
+    {"sector": "optik",            "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri"],   "langs": ["tr"]},
+    {"sector": "pet shop",         "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Bursa"],     "langs": ["tr"]},
+    {"sector": "kuru temizleme",   "locations": ["Istanbul", "Ankara", "Izmir", "Adana", "Samsun", "Kayseri", "Bursa"], "langs": ["tr"]},
+    {"sector": "fotograf",         "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Samsun", "Trabzon", "Kayseri"], "langs": ["tr"]},
 
     # ── Türkiye — Sanayi ──────────────────────────────────────────
     {"sector": "sanayi",           "locations": ["Istanbul", "Bursa", "Kocaeli", "Ankara", "Izmir", "Konya"],    "langs": ["tr"]},
@@ -118,17 +118,17 @@ CAMPAIGNS = [
     {"sector": "depo ve lojistik", "locations": ["Istanbul", "Ankara", "Izmir", "Kocaeli"],                       "langs": ["tr"]},
 
     # ── Almanya & Avusturya & İsviçre ─────────────────────────────
-    {"sector": "restaurant",       "locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart"], "langs": ["tr", "de"]},
-    {"sector": "friseur",          "locations": ["Berlin", "Hamburg", "Dusseldorf", "Frankfurt", "Stuttgart"],    "langs": ["tr", "de"]},
-    {"sector": "autohaus",         "locations": ["Frankfurt", "Stuttgart", "Munich", "Cologne"],                  "langs": ["de"]},
-    {"sector": "immobilienmakler", "locations": ["Berlin", "Hamburg", "Munich", "Frankfurt"],                     "langs": ["de"]},
-    {"sector": "zahnarzt",         "locations": ["Vienna", "Zurich", "Bern", "Graz", "Berlin"],                  "langs": ["de"]},
-    {"sector": "rechtsanwalt",     "locations": ["Berlin", "Hamburg", "Munich", "Frankfurt"],                     "langs": ["de"]},
-    {"sector": "steuerberater",    "locations": ["Berlin", "Hamburg", "Munich", "Cologne"],                       "langs": ["de"]},
-    {"sector": "fitnessstudio",    "locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt"],          "langs": ["de"]},
-    {"sector": "fahrschule",       "locations": ["Berlin", "Hamburg", "Munich", "Frankfurt"],                     "langs": ["de"]},
-    {"sector": "tierarzt",         "locations": ["Berlin", "Hamburg", "Munich", "Vienna"],                        "langs": ["de"]},
-    {"sector": "manufacturing",    "locations": ["Stuttgart", "Munich", "Frankfurt", "Dusseldorf"],               "langs": ["de"]},
+    {"sector": "restaurant",       "locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart", "Nuremberg", "Dresden", "Leipzig", "Bremen", "Hannover", "Dortmund"], "langs": ["tr", "de"]},
+    {"sector": "friseur",          "locations": ["Berlin", "Hamburg", "Dusseldorf", "Frankfurt", "Stuttgart", "Nuremberg", "Leipzig", "Bremen", "Hannover", "Dortmund"], "langs": ["tr", "de"]},
+    {"sector": "autohaus",         "locations": ["Frankfurt", "Stuttgart", "Munich", "Cologne", "Nuremberg", "Hannover", "Dortmund"], "langs": ["de"]},
+    {"sector": "immobilienmakler", "locations": ["Berlin", "Hamburg", "Munich", "Frankfurt", "Leipzig", "Dresden", "Hannover", "Nuremberg"], "langs": ["de"]},
+    {"sector": "zahnarzt",         "locations": ["Vienna", "Zurich", "Bern", "Graz", "Berlin", "Nuremberg", "Dresden", "Leipzig", "Hannover"], "langs": ["de"]},
+    {"sector": "rechtsanwalt",     "locations": ["Berlin", "Hamburg", "Munich", "Frankfurt", "Nuremberg", "Leipzig", "Dresden", "Hannover", "Dortmund"], "langs": ["de"]},
+    {"sector": "steuerberater",    "locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Nuremberg", "Leipzig", "Hannover", "Dortmund", "Frankfurt"], "langs": ["de"]},
+    {"sector": "fitnessstudio",    "locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Nuremberg", "Leipzig", "Hannover", "Dortmund"], "langs": ["de"]},
+    {"sector": "fahrschule",       "locations": ["Berlin", "Hamburg", "Munich", "Frankfurt", "Nuremberg", "Leipzig", "Hannover", "Cologne"], "langs": ["de"]},
+    {"sector": "tierarzt",         "locations": ["Berlin", "Hamburg", "Munich", "Vienna", "Nuremberg", "Leipzig", "Frankfurt", "Hannover"], "langs": ["de"]},
+    {"sector": "manufacturing",    "locations": ["Stuttgart", "Munich", "Frankfurt", "Dusseldorf", "Nuremberg", "Hannover", "Dortmund", "Leipzig"], "langs": ["de"]},
 
     # ── Hollanda & Belçika ────────────────────────────────────────
     {"sector": "restaurant",       "locations": ["Amsterdam", "Rotterdam", "The Hague", "Brussels", "Antwerp"],   "langs": ["en", "nl"]},
@@ -137,16 +137,16 @@ CAMPAIGNS = [
     {"sector": "real estate",      "locations": ["Amsterdam", "Rotterdam", "Brussels"],                           "langs": ["en", "nl"]},
 
     # ── İngiltere ─────────────────────────────────────────────────
-    {"sector": "restaurant",       "locations": ["London", "Manchester", "Birmingham", "Leeds", "Glasgow"],       "langs": ["en"]},
-    {"sector": "solicitor",        "locations": ["London", "Birmingham", "Manchester", "Leeds"],                  "langs": ["en"]},
-    {"sector": "estate agent",     "locations": ["London", "Manchester", "Bristol", "Edinburgh"],                 "langs": ["en"]},
-    {"sector": "dental clinic",    "locations": ["London", "Birmingham", "Leeds", "Manchester"],                  "langs": ["en"]},
-    {"sector": "gym",              "locations": ["London", "Manchester", "Birmingham", "Leeds"],                  "langs": ["en"]},
-    {"sector": "accountant",       "locations": ["London", "Manchester", "Birmingham"],                           "langs": ["en"]},
-    {"sector": "cleaning service", "locations": ["London", "Manchester", "Birmingham", "Leeds"],                  "langs": ["en"]},
-    {"sector": "driving school",   "locations": ["London", "Birmingham", "Manchester"],                           "langs": ["en"]},
-    {"sector": "barber shop",      "locations": ["London", "Manchester", "Birmingham"],                           "langs": ["en"]},
-    {"sector": "florist",          "locations": ["London", "Manchester", "Edinburgh"],                            "langs": ["en"]},
+    {"sector": "restaurant",       "locations": ["London", "Manchester", "Birmingham", "Leeds", "Glasgow", "Liverpool", "Sheffield", "Bristol", "Newcastle", "Nottingham", "Edinburgh", "Cardiff"], "langs": ["en"]},
+    {"sector": "solicitor",        "locations": ["London", "Birmingham", "Manchester", "Leeds", "Liverpool", "Sheffield", "Bristol", "Newcastle", "Nottingham", "Edinburgh"], "langs": ["en"]},
+    {"sector": "estate agent",     "locations": ["London", "Manchester", "Bristol", "Edinburgh", "Liverpool", "Sheffield", "Newcastle", "Leeds", "Nottingham", "Cardiff"], "langs": ["en"]},
+    {"sector": "dental clinic",    "locations": ["London", "Birmingham", "Leeds", "Manchester", "Liverpool", "Sheffield", "Bristol", "Newcastle", "Nottingham"], "langs": ["en"]},
+    {"sector": "gym",              "locations": ["London", "Manchester", "Birmingham", "Leeds", "Liverpool", "Sheffield", "Bristol", "Newcastle", "Nottingham"], "langs": ["en"]},
+    {"sector": "accountant",       "locations": ["London", "Manchester", "Birmingham", "Liverpool", "Sheffield", "Bristol", "Newcastle", "Leeds", "Nottingham"], "langs": ["en"]},
+    {"sector": "cleaning service", "locations": ["London", "Manchester", "Birmingham", "Leeds", "Liverpool", "Sheffield", "Bristol", "Newcastle", "Cardiff"], "langs": ["en"]},
+    {"sector": "driving school",   "locations": ["London", "Birmingham", "Manchester", "Liverpool", "Sheffield", "Bristol", "Newcastle"], "langs": ["en"]},
+    {"sector": "barber shop",      "locations": ["London", "Manchester", "Birmingham", "Liverpool", "Sheffield", "Bristol", "Newcastle", "Nottingham"], "langs": ["en"]},
+    {"sector": "florist",          "locations": ["London", "Manchester", "Edinburgh", "Liverpool", "Sheffield", "Bristol", "Newcastle"], "langs": ["en"]},
 
     # ── Amerika (USA) ─────────────────────────────────────────────
     {"sector": "restaurant",       "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Miami", "Phoenix", "Dallas", "San Diego", "San Antonio", "San Jose"], "langs": ["en"]},
