@@ -34,6 +34,11 @@ class InboxWatcherAgent(BaseAgent):
                 original_to = reply.sent_info.get("to", "")
                 if original_to:
                     record_bounce(original_to)
+                    try:
+                        from core.lead_state import get_tracker, LeadStage
+                        get_tracker().update(original_to, LeadStage.BOUNCED, f"Bounce from: {reply.from_email}")
+                    except Exception:
+                        pass
                 logger.info(f"Bounce tespit edildi, blackliste eklendi: {original_to} (gonden: {reply.from_email})")
                 continue
 
@@ -59,6 +64,18 @@ class InboxWatcherAgent(BaseAgent):
             if analysis.intent.value == "spam":
                 logger.info(f"Spam yanit atlanıyor: {reply.from_email}")
                 continue
+
+            # Lead state güncelle
+            try:
+                from core.lead_state import get_tracker, LeadStage
+                tracker = get_tracker()
+                if analysis.intent.value == "unsubscribe":
+                    tracker.update(reply.from_email, LeadStage.UNSUBSCRIBED, reply.subject[:80])
+                else:
+                    tracker.update(reply.from_email, LeadStage.REPLIED,
+                                   f"{analysis.intent.value}: {reply.subject[:60]}")
+            except Exception:
+                pass
 
             if analysis.intent.value == "unsubscribe":
                 logger.info(f"Abonelik iptali: {reply.from_email}")

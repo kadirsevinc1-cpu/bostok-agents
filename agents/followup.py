@@ -53,6 +53,11 @@ class FollowupAgent(BaseAgent):
                 continue
             if to in replied_emails:
                 continue  # Yanıt vermişse dokunma
+            from core.lead_state import get_tracker, LeadStage
+            stage = get_tracker().get_stage(to)
+            if stage in (LeadStage.REPLIED, LeadStage.BOUNCED, LeadStage.UNSUBSCRIBED,
+                         LeadStage.CLOSED_WON, LeadStage.CLOSED_LOST):
+                continue
 
             sent_at_str = info.get("sent_at", "")
             try:
@@ -72,6 +77,11 @@ class FollowupAgent(BaseAgent):
                     followup_log[to] = log_entry
                     self._save_json(FOLLOWUP_LOG, followup_log)
                     sent_count += 1
+                    try:
+                        from core.lead_state import get_tracker, LeadStage
+                        get_tracker().update(to, LeadStage.FOLLOWED_UP, "7. gün takip maili")
+                    except Exception:
+                        pass
                     await self._notify(to, info, stage=1)
                     await asyncio.sleep(10)
 
@@ -90,6 +100,11 @@ class FollowupAgent(BaseAgent):
                     followup_log[to] = log_entry
                     self._save_json(FOLLOWUP_LOG, followup_log)
                     sent_count += 1
+                    try:
+                        from core.lead_state import get_tracker, LeadStage
+                        get_tracker().update(to, LeadStage.FOLLOWED_UP2, "14. gün kapanış maili")
+                    except Exception:
+                        pass
                     await self._notify(to, info, stage=2)
                     await asyncio.sleep(10)
 

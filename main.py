@@ -330,6 +330,23 @@ async def handle_telegram_message(text: str):
             import json
             inbox = len(json.loads(Path("memory/inbox_emails.json").read_text(encoding="utf-8"))) if Path("memory/inbox_emails.json").exists() else 0
             b = budget.daily_usage()
+
+            # Lead lifecycle özeti
+            try:
+                from core.lead_state import get_tracker
+                stage_summary = get_tracker().summary()
+                stage_labels = {
+                    "new": "Yeni", "contacted": "Maillendi", "followed_up": "Takip1",
+                    "followed_up2": "Takip2", "replied": "Yanıtladı", "bounced": "Bounce",
+                    "unsubscribed": "İptal", "closed_won": "Müşteri", "closed_lost": "Kapandı",
+                }
+                lead_lines = "\n".join(
+                    f"  • {stage_labels.get(s, s)}: {c}"
+                    for s, c in sorted(stage_summary.items(), key=lambda x: x[1], reverse=True)
+                ) or "  Henüz veri yok"
+            except Exception:
+                lead_lines = "  Veri okunamadı"
+
             msg = (
                 f"<b>Sistem Durumu</b>\n\n"
                 f"<b>LLM:</b> {b['requests']} istek, {b['tokens_used']:,} token kullanıldı\n"
@@ -338,6 +355,7 @@ async def handle_telegram_message(text: str):
                 f"  • Gönderilen: {sent}\n"
                 f"  • Gelen yanıt: {inbox}\n"
                 f"  • Bounce (geçersiz): {bounced}\n\n"
+                f"<b>Lead Aşamaları:</b>\n{lead_lines}\n\n"
                 f"<b>Demo site:</b> {demo_src}\n{demo[:60]}"
             )
             await bot.send(msg)

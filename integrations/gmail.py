@@ -123,6 +123,14 @@ class GmailSender:
             self._record_sent(to)
             self._save_message_id(msg_id, to, subject, lead_info or {})
             logger.info(f"Mail gonderildi: {to} ({self._today_count}/{self._limit})")
+            try:
+                from core.lead_state import get_tracker, LeadStage
+                info = lead_info or {}
+                tracker = get_tracker()
+                tracker.upsert(to, name=info.get("name", ""), sector=info.get("sector", ""), location=info.get("location", ""))
+                tracker.update(to, LeadStage.CONTACTED, f"Konu: {subject[:80]}")
+            except Exception:
+                pass
             return True
         except Exception as e:
             logger.error(f"Mail hata [{to}]: {e}")
