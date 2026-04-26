@@ -5,6 +5,53 @@ from agents.base import BaseAgent
 from core.message_bus import AgentName, MessageType, Message, bus
 
 
+DRAFTS_FILE = __import__("pathlib").Path("memory/drafts.json")
+DRAFT_SIGNATURE = "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev"
+
+
+async def _generate_draft(body: str, from_name: str, lead_name: str,
+                           sector: str, location: str, lang: str) -> str:
+    """Soru içerikli yanıt için LLM ile taslak üret."""
+    from core.llm_router import router
+    from core.user_profile import get_context as profile_ctx
+
+    lang_names = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca",
+                  "nl": "Flemenkçe", "fr": "Fransızca"}
+    lang_name = lang_names.get(lang, lang)
+    name = lead_name or from_name or "müşteri"
+
+    prompt = (
+        f"{profile_ctx('inbox')}\n\n"
+        f"Müşteri sorusu ({lang_name}):\n{body[:600]}\n\n"
+        f"Müşteri: {name} — {sector}/{location}\n\n"
+        f"Bostok.dev adına {lang_name} dilinde kısa, profesyonel yanıt yaz. "
+        f"Max 80 kelime. İmza YAZMA. Sadece mail metni."
+    )
+    try:
+        result = await router.chat(
+            [{"role": "user", "content": prompt}], max_tokens=300
+        )
+        return result.strip() if result else ""
+    except Exception as e:
+        logger.warning(f"Taslak uretme hatasi: {e}")
+        return ""
+
+
+def _save_draft(reply_id: str, draft_text: str) -> None:
+    import json as _json
+    data: dict = {}
+    if DRAFTS_FILE.exists():
+        try:
+            data = _json.loads(DRAFTS_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    data[reply_id] = {
+        "draft": draft_text,
+        "created_at": __import__("datetime").datetime.now().isoformat(),
+    }
+    DRAFTS_FILE.write_text(_json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
 class InboxWatcherAgent(BaseAgent):
     name = AgentName.INBOX_WATCHER
     system_prompt = "Inbox takip agent"
@@ -97,6 +144,21 @@ class InboxWatcherAgent(BaseAgent):
             if analysis.intent.value == "unsubscribe":
                 logger.info(f"Abonelik iptali: {reply.from_email}")
 
+            # Soru niyetinde otomatik taslak üret
+            draft_hint = ""
+            if analysis.intent.value == "question":
+                draft_text = await _generate_draft(
+                    reply.body, reply.from_name, lead_name, sector, location,
+                    sent.get("lang", "tr"),
+                )
+                if draft_text:
+                    _save_draft(reply.reply_id, draft_text)
+                    draft_hint = (
+                        f"\n\n💬 <b>Otomatik Taslak:</b>\n<i>{draft_text[:300]}</i>"
+                        f"\n\n✅ Göndermek için: <code>onayla {reply.reply_id}</code>"
+                        f"\n✏️ Düzenlemek için: <code>yanit {reply.reply_id} kendi mesajın</code>"
+                    )
+
             notify = (
                 f"{intent_emoji} <b>Yeni Yanit!</b> [ID: {reply.reply_id}]\n"
                 f"<b>Niyet:</b> {analysis.summary}\n"
@@ -111,7 +173,9 @@ class InboxWatcherAgent(BaseAgent):
             notify += f"\n<b>Mesaj:</b>\n{reply.body[:400]}"
             if len(reply.body) > 400:
                 notify += "..."
-            notify += f"\n\n<i>Yanitlamak icin:\nyanit {reply.reply_id} Merhaba, teklif icin...</i>"
+            notify += draft_hint
+            if not draft_hint:
+                notify += f"\n\n<i>Yanitlamak icin:\nyanit {reply.reply_id} Merhaba, teklif icin...</i>"
 
             await bus.send(Message(
                 sender=AgentName.INBOX_WATCHER,

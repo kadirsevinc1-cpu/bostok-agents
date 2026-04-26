@@ -494,6 +494,71 @@ async def handle_telegram_message(text: str):
         ))
         return
 
+    if cmd == "/rapor" or cmd.startswith("/rapor "):
+        days = 7
+        try:
+            days = int(text.split()[1]) if len(text.split()) > 1 else 7
+        except (ValueError, IndexError):
+            pass
+        from core.weekly_report import generate as gen_report
+        if bot:
+            await bot.send(gen_report(days=days))
+        return
+
+    if cmd.startswith("onayla "):
+        reply_id = text[len("onayla "):].strip().split()[0]
+        import json
+        from pathlib import Path
+        drafts_path = Path("memory/drafts.json")
+        if not drafts_path.exists():
+            if bot:
+                await bot.send("❌ Onaylanacak taslak bulunamadı.")
+            return
+        drafts = json.loads(drafts_path.read_text(encoding="utf-8"))
+        entry = drafts.get(reply_id)
+        if not entry:
+            if bot:
+                await bot.send(f"❌ <code>{reply_id}</code> ID'li taslak bulunamadı.")
+            return
+
+        inbox_path = Path("memory/inbox_emails.json")
+        inbox = json.loads(inbox_path.read_text(encoding="utf-8")) if inbox_path.exists() else {}
+        inbox_entry = inbox.get(reply_id)
+        if not inbox_entry:
+            if bot:
+                await bot.send(f"❌ Orijinal yanıt bulunamadı: <code>{reply_id}</code>")
+            return
+
+        from integrations.gmail import get_gmail
+        gmail = get_gmail()
+        if not gmail:
+            if bot:
+                await bot.send("❌ Gmail yapılandırılmamış.")
+            return
+
+        SIGNATURE = "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev"
+        full_body = entry["draft"] + SIGNATURE
+        to_email = inbox_entry["from_email"]
+        subject = inbox_entry.get("subject", "")
+        if not subject.lower().startswith("re:"):
+            subject = f"Re: {subject}"
+        in_reply_to = inbox_entry.get("matched_message_id", "")
+
+        ok = await gmail.send_reply(to_email, subject, full_body, in_reply_to=in_reply_to)
+        if ok:
+            # Taslağı sil
+            del drafts[reply_id]
+            drafts_path.write_text(json.dumps(drafts, ensure_ascii=False, indent=2), encoding="utf-8")
+            if bot:
+                await bot.send(
+                    f"✅ Taslak onaylandı ve gönderildi!\n"
+                    f"<b>Kime:</b> {inbox_entry.get('from_name', '')} &lt;{to_email}&gt;"
+                )
+        else:
+            if bot:
+                await bot.send("❌ Gönderim başarısız, log'ları kontrol edin.")
+        return
+
     if cmd == "/profil":
         from core.user_profile import format_profile_summary
         if bot:
@@ -529,6 +594,7 @@ async def handle_telegram_message(text: str):
                 "/durum — Sistem durumu (token, mail, demo)\n"
                 "/butce — Günlük token bütçesi\n"
                 "/istatistik — Kampanya istatistikleri\n"
+                "/rapor [gün] — Kampanya raporu (varsayılan: 7 gün)\n"
                 "/bilgi [sektör] — Sektör bilgi tabanı\n"
                 "/ogret [sektör]|[bilgi] — KB'ye bilgi ekle\n"
                 "/pattern [şehir] — Öğrenilen pattern'ler\n"
@@ -536,6 +602,7 @@ async def handle_telegram_message(text: str):
                 "/yardim — Bu yardım mesajı\n\n"
                 "<b>📬 Müşteri Yanıt Komutları:</b>\n"
                 "yanit {id} {mesaj} — Müşteriye mail yanıtı gönder\n"
+                "onayla {id} — Otomatik taslağı onayla ve gönder\n"
                 "revize {talimat} — Demo sitede değişiklik talep et\n\n"
                 "<b>👤 Profil Komutları:</b>\n"
                 "/profil — Kullanıcı profili ve tercihler\n"
@@ -660,7 +727,30 @@ async def main():
             except Exception:
                 pass
 
+    async def _weekly_report_loop():
+        """Her Pazartesi sabahı 08:00'de haftalık rapor gönder."""
+        import datetime as _dt
+        while True:
+            now = _dt.datetime.now()
+            # Bir sonraki Pazartesi 08:00'i hesapla
+            days_ahead = (7 - now.weekday()) % 7  # 0=Pazartesi
+            if days_ahead == 0 and now.hour >= 8:
+                days_ahead = 7
+            next_monday = now.replace(hour=8, minute=0, second=0, microsecond=0) + _dt.timedelta(days=days_ahead)
+            wait_secs = (next_monday - now).total_seconds()
+            await asyncio.sleep(wait_secs)
+            try:
+                from core.weekly_report import generate as gen_report
+                report_text = gen_report(days=7)
+                bot = get_bot()
+                if bot:
+                    await bot.send(report_text)
+                logger.info("Haftalik rapor gonderildi")
+            except Exception as e:
+                logger.warning(f"Haftalik rapor hatasi: {e}")
+
     tasks.append(_embed_loop())
+    tasks.append(_weekly_report_loop())
 
     try:
         await asyncio.gather(*tasks)
