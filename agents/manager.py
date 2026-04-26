@@ -144,6 +144,27 @@ class ManagerAgent(BaseAgent):
                 await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY, notify,
                                 {"requires_approval": bool(url)})
 
+        elif msg.type == MessageType.STATUS and msg.metadata.get("note_type") == "revizyon":
+            revision = msg.content
+            self.save_observation(f"Revize talebi: {revision}", importance=9.0)
+
+            if not self._current_site_dir:
+                await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
+                                "⚠️ Aktif proje yok — önce bir site oluşturun.")
+                return
+
+            await self.send(
+                AgentName.DEVELOPER, MessageType.TASK,
+                f"Mevcut siteyi revize et: {revision}",
+                {
+                    "site_dir": self._current_site_dir,
+                    "project_name": self._current_project_name,
+                    "revision": True,
+                },
+            )
+            await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
+                            f"🔧 Revize Developer'a iletildi: <i>{revision[:100]}</i>")
+
         elif msg.type == MessageType.STATUS and msg.metadata.get("user_note"):
             note_type = msg.metadata.get("note_type", "not")
             note = msg.content

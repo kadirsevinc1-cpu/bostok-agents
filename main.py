@@ -386,6 +386,75 @@ async def handle_telegram_message(text: str):
             await bot.send(msg)
         return
 
+    if cmd.startswith("yanit "):
+        parts = text[len("yanit "):].strip().split(None, 1)
+        if len(parts) < 2:
+            if bot:
+                await bot.send("⚠️ Kullanım: <code>yanit {reply_id} {mesaj}</code>")
+            return
+        reply_id, reply_text = parts[0].strip(), parts[1].strip()
+
+        import json
+        from pathlib import Path
+        inbox_path = Path("memory/inbox_emails.json")
+        if not inbox_path.exists():
+            if bot:
+                await bot.send("❌ Henüz yanıt gelen mail yok.")
+            return
+
+        inbox = json.loads(inbox_path.read_text(encoding="utf-8"))
+        entry = inbox.get(reply_id)
+        if not entry:
+            if bot:
+                await bot.send(f"❌ <code>{reply_id}</code> ID'li yanıt bulunamadı.")
+            return
+
+        from integrations.gmail import get_gmail
+        gmail = get_gmail()
+        if not gmail:
+            if bot:
+                await bot.send("❌ Gmail yapılandırılmamış.")
+            return
+
+        SIGNATURE = "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev"
+        full_body = reply_text + SIGNATURE
+        to_email = entry["from_email"]
+        subject = entry.get("subject", "")
+        if not subject.lower().startswith("re:"):
+            subject = f"Re: {subject}"
+        in_reply_to = entry.get("matched_message_id", "")
+
+        ok = await gmail.send_reply(to_email, subject, full_body, in_reply_to=in_reply_to)
+        if ok:
+            if bot:
+                await bot.send(
+                    f"✅ Yanıt gönderildi!\n"
+                    f"<b>Kime:</b> {entry.get('from_name', '')} &lt;{to_email}&gt;\n"
+                    f"<b>Konu:</b> {subject}"
+                )
+        else:
+            if bot:
+                await bot.send("❌ Yanıt gönderilemedi, log'ları kontrol edin.")
+        return
+
+    if cmd.startswith("revize "):
+        revision_text = text[len("revize "):].strip()
+        if not revision_text:
+            if bot:
+                await bot.send("⚠️ Kullanım: <code>revize {talimat}</code>\nÖrnek: <code>revize rengi kırmızı yap, logo büyüt</code>")
+            return
+
+        await bus.send(Message(
+            sender=AgentName.SYSTEM,
+            receiver=AgentName.MANAGER,
+            type=MessageType.STATUS,
+            content=revision_text,
+            metadata={"note_type": "revizyon"},
+        ))
+        if bot:
+            await bot.send("🔧 Revize talebi gönderildi, işleniyor...")
+        return
+
     if cmd.startswith("/bilgi"):
         sector = text[len("/bilgi"):].strip()
         await bus.send(Message(
@@ -437,6 +506,9 @@ async def handle_telegram_message(text: str):
                 "/pattern [şehir] — Öğrenilen pattern'ler\n"
                 "/haftalik — Haftalık öğrenme özeti\n"
                 "/yardim — Bu yardım mesajı\n\n"
+                "<b>📬 Müşteri Yanıt Komutları:</b>\n"
+                "yanit {id} {mesaj} — Müşteriye mail yanıtı gönder\n"
+                "revize {talimat} — Demo sitede değişiklik talep et\n\n"
                 "Veya doğrudan mesaj yaz: <i>İstanbul'daki kafeler için kampanya başlat</i>"
             )
         return

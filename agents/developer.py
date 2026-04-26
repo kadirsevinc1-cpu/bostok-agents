@@ -37,6 +37,13 @@ class DeveloperAgent(BaseAgent):
     async def _handle(self, msg: Message):
         from loguru import logger
         from core import memory
+
+        is_revision = msg.metadata.get("revision", False)
+
+        if is_revision:
+            await self._handle_revision(msg)
+            return
+
         from core.knowledge import get_template, detect_template, log_error
         from core.skills.video_finder import find_video, get_css_fallback_animation
 
@@ -91,6 +98,46 @@ class DeveloperAgent(BaseAgent):
         result = f"✅ Kod yazıldı!\nDosya: {output_file}\nSatır sayısı: {len(html.splitlines())}"
         await self.send(AgentName.MANAGER, MessageType.RESULT, result,
                        {"file_path": str(output_file), "project_name": project_name})
+
+    async def _handle_revision(self, msg: Message):
+        from loguru import logger
+        from core import memory
+
+        revision = msg.content
+        site_dir = msg.metadata.get("site_dir", "")
+        project_name = msg.metadata.get("project_name", "site")
+        logger.info(f"Revize uygulanıyor [{project_name}]: {revision[:60]}")
+
+        site_path = Path(site_dir) / "index.html" if site_dir else None
+        existing_html = ""
+        if site_path and site_path.exists():
+            existing_html = site_path.read_text(encoding="utf-8")
+        else:
+            logger.warning(f"Revize: mevcut dosya bulunamadı — {site_dir}")
+            await self.send(AgentName.MANAGER, MessageType.RESULT,
+                            "❌ Revize için mevcut site dosyası bulunamadı.",
+                            {"file_path": "", "project_name": project_name})
+            return
+
+        code = await self.ask(
+            f"Aşağıdaki HTML sitesine şu değişiklikleri uygula:\n\n"
+            f"DEĞİŞİKLİK TALEBİ: {revision}\n\n"
+            f"MEVCUT HTML ({len(existing_html)} karakter):\n{existing_html[:6000]}\n\n"
+            "Değişikliği uygula ve tam HTML dosyasını döndür. Sadece HTML kodu yaz."
+        )
+
+        html = self._extract_html(code)
+        if not html:
+            html = code
+
+        site_path.write_text(html, encoding="utf-8")
+        logger.info(f"Revize kaydedildi: {site_path}")
+        memory.add_task(f"Revize: {revision[:80]}", f"Dosya: {site_path}", "Developer")
+        self.save_observation(f"Revize uygulandı: {revision[:100]}", importance=8.0)
+
+        result = f"✅ Revize uygulandı!\nDosya: {site_path}\nDeğişiklik: {revision[:100]}"
+        await self.send(AgentName.MANAGER, MessageType.RESULT, result,
+                       {"file_path": str(site_path), "project_name": project_name})
 
     def _extract_html(self, text: str) -> str:
         # ```html ... ``` bloğunu çıkar
