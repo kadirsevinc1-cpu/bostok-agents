@@ -17,6 +17,7 @@ class AgentName(str, Enum):
     QA        = "QA"
     DEPLOY        = "Deploy"
     INBOX_WATCHER = "InboxTakip"
+    WHATSAPP  = "WhatsApp"
     BUDGET    = "Bütçe"
     REPORT    = "Rapor"
     FOLLOWUP  = "Takip"

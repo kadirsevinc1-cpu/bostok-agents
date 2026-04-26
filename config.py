@@ -38,6 +38,10 @@ class Settings(BaseSettings):
     serpapi_api_key:     str = Field("", env="SERPAPI_API_KEY")
     serper_api_key:      str = Field("", env="SERPER_API_KEY")
 
+    # WhatsApp (Green-API)
+    greenapi_instance_id: str = Field("", env="GREENAPI_INSTANCE_ID")
+    greenapi_api_token:   str = Field("", env="GREENAPI_API_TOKEN")
+
     # Telegram
     telegram_bot_token:  str = Field("", env="TELEGRAM_BOT_TOKEN")
     telegram_chat_id:    str = Field("", env="TELEGRAM_CHAT_ID")

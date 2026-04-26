@@ -191,6 +191,11 @@ class MarketingAgent(BaseAgent):
                 })
                 if ok:
                     sent += 1
+                    try:
+                        from core.performance_tracker import record_sent as _perf_sent
+                        _perf_sent(sector, location)
+                    except Exception:
+                        pass
                 else:
                     skipped += 1
                 await asyncio.sleep(8)  # spam önleme: mailler arası bekleme

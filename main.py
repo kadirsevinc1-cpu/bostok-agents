@@ -21,10 +21,12 @@ from agents.deploy import DeployAgent
 from agents.inbox_watcher import InboxWatcherAgent
 from agents.followup import FollowupAgent
 from agents.knowledge_agent import KnowledgeAgent
+from agents.whatsapp_agent import WhatsAppAgent
 from integrations.telegram import init_bot, get_bot
 from integrations.gmail import init_gmail
 from integrations.gmail_reader import init_reader
 from integrations.netlify import init_netlify
+from integrations.whatsapp import init_whatsapp
 
 
 def setup_logging():
@@ -494,6 +496,30 @@ async def handle_telegram_message(text: str):
         ))
         return
 
+    if cmd == "/performans":
+        from core.performance_tracker import format_report as perf_report
+        if bot:
+            await bot.send(perf_report())
+        return
+
+    if cmd.startswith("/wp "):
+        parts = text[len("/wp "):].strip().split(None, 1)
+        if not parts:
+            if bot:
+                await bot.send("⚠️ Kullanım: <code>/wp {sektör} {şehir}</code>\nÖrnek: <code>/wp restoran İstanbul</code>")
+            return
+        wp_sector   = parts[0]
+        wp_location = parts[1] if len(parts) > 1 else ""
+        await bus.send(Message(
+            sender=AgentName.SYSTEM, receiver=AgentName.WHATSAPP,
+            type=MessageType.TASK,
+            content=f"{wp_sector} {wp_location} WhatsApp kampanyası",
+            metadata={"sector": wp_sector, "location": wp_location, "languages": ["tr"]},
+        ))
+        if bot:
+            await bot.send(f"📱 WhatsApp kampanyası başlatıldı: <b>{wp_sector}</b> / {wp_location}")
+        return
+
     if cmd == "/rapor" or cmd.startswith("/rapor "):
         days = 7
         try:
@@ -595,6 +621,8 @@ async def handle_telegram_message(text: str):
                 "/butce — Günlük token bütçesi\n"
                 "/istatistik — Kampanya istatistikleri\n"
                 "/rapor [gün] — Kampanya raporu (varsayılan: 7 gün)\n"
+                "/performans — Sektör/şehir yanıt oranı analizi\n"
+                "/wp {sektör} {şehir} — WhatsApp kampanyası başlat\n"
                 "/bilgi [sektör] — Sektör bilgi tabanı\n"
                 "/ogret [sektör]|[bilgi] — KB'ye bilgi ekle\n"
                 "/pattern [şehir] — Öğrenilen pattern'ler\n"
@@ -666,6 +694,11 @@ async def main():
     else:
         logger.warning("Gmail bagli degil - sadece sablon modu")
 
+    # WhatsApp başlat
+    wa = init_whatsapp()
+    if wa:
+        logger.info("WhatsApp: Green-API bagli")
+
     # Telegram botu başlat
     bot = init_bot()
     if bot:
@@ -682,6 +715,7 @@ async def main():
         QuoteAgent(), ContentAgent(), DesignerAgent(),
         DeveloperAgent(), QAAgent(), DeployAgent(),
         InboxWatcherAgent(), FollowupAgent(), KnowledgeAgent(),
+        WhatsAppAgent(),
     ]
     logger.info(f"{len(agents)} agent baslatildi")
 

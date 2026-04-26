@@ -86,6 +86,12 @@ class InboxWatcherAgent(BaseAgent):
                         get_tracker().update(original_to, LeadStage.BOUNCED, f"Bounce from: {reply.from_email}")
                     except Exception:
                         pass
+                    try:
+                        from core.performance_tracker import record_bounce as perf_bounce
+                        si = reply.sent_info
+                        perf_bounce(si.get("sector", ""), si.get("location", ""))
+                    except Exception:
+                        pass
                 logger.info(f"Bounce tespit edildi, blackliste eklendi: {original_to} (gonden: {reply.from_email})")
                 continue
 
@@ -121,6 +127,13 @@ class InboxWatcherAgent(BaseAgent):
                 else:
                     tracker.update(reply.from_email, LeadStage.REPLIED,
                                    f"{analysis.intent.value}: {reply.subject[:60]}")
+            except Exception:
+                pass
+
+            # Performans takibi — yanıt kaydı
+            try:
+                from core.performance_tracker import record_reply as perf_reply
+                perf_reply(sector, location)
             except Exception:
                 pass
 
