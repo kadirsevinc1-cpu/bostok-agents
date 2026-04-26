@@ -1,0 +1,18 @@
+[Unit]
+Description=Bostok Agent Koyu
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=bostok
+WorkingDirectory=/opt/bostok_agents
+ExecStart=/opt/bostok_agents/.venv/bin/python main.py
+Restart=always
+RestartSec=10
+StandardOutput=append:/opt/bostok_agents/memory/bostok.log
+StandardError=append:/opt/bostok_agents/memory/bostok.log
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

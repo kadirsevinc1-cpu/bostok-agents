@@ -1,0 +1,35 @@
+# Bostok Agent Köyü — .env şablonu
+# Bu dosyayı .env olarak kopyala ve değerleri doldur:
+# cp deploy/env_template.txt .env && nano .env
+
+# LLM Providers (en az biri zorunlu)
+GROQ_API_KEY=
+CEREBRAS_API_KEY=
+GEMINI_API_KEY=
+MISTRAL_API_KEY=
+SAMBANOVA_API_KEY=
+OPENROUTER_API_KEY=
+
+# Telegram (zorunlu)
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+
+# Gmail (opsiyonel — mail göndermek için)
+GMAIL_USER=
+GMAIL_APP_PASSWORD=
+GMAIL_DAILY_LIMIT=50
+
+# Google Maps (opsiyonel — lead bulmak için)
+GOOGLE_MAPS_API_KEY=
+
+# WhatsApp Green-API (opsiyonel)
+GREENAPI_INSTANCE_ID=7107600579
+GREENAPI_API_TOKEN=
+
+# Deploy (opsiyonel)
+NETLIFY_TOKEN=
+NETLIFY_DEMO_SITE_ID=
+VERCEL_TOKEN=
+
+# Görsel
+PEXELS_API_KEY=
