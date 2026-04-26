@@ -20,6 +20,8 @@ Kurallar:
 
 LANG_NAMES = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca", "nl": "Flemenkçe", "fr": "Fransızca"}
 
+SIGNATURE = "\n\nSaygılar,\nKadir Şevinç - Bostok.dev\nhttps://bostok.dev"
+
 _WORKER_BASE = "https://bostok-demo.kadirsevinc1.workers.dev"
 _DEMO_URL_CACHE = None   # startup'ta Netlify URL buraya yüklenir
 
@@ -257,7 +259,7 @@ class MarketingAgent(BaseAgent):
             f"Dil kurallari: Mükemmel {lang_name} dil bilgisi kullan. "
             "Imla, noktalama ve gramer hatasi KESINLIKLE olmamali. "
             "Kurallar: isletme adini kullan, bostok.dev dogal tanit, "
-            "sonda https://bostok.dev linki ver, imza: Kadir Şevinç - Bostok.dev"
+            "sonda https://bostok.dev linki ver. İmza YAZMA, sona ekliyoruz."
         )
         result = await self.ask(prompt)
         subject = f"Web Siteniz Hakkinda — Bostok.dev"
@@ -270,6 +272,7 @@ class MarketingAgent(BaseAgent):
                 body = "\n".join(lines[i + 1:]).strip()
                 break
 
+        body = body.rstrip() + SIGNATURE
         return subject, body
 
     # ── Mail kalite kontrolü ─────────────────────────────────────
@@ -290,7 +293,7 @@ class MarketingAgent(BaseAgent):
             f"1. {lang_name} imla ve gramer hatalarini duzelt (en onemli adim)\n"
             "2. Spam tetikleyici ifadeleri kaldir (BUYUK HARF, !!!, 'ucretsiz kazan' vb.)\n"
             "3. https://bostok.dev linki yoksa ekle\n"
-            "4. Imza yoksa ekle: Kadir Şevinç - Bostok.dev\n"
+            "4. Imzayı DOKUNMA, biz ekliyoruz\n"
             "5. 150 kelimeyi asiyorsa kisalt\n\n"
             "Yanit SADECE su formatta olmali, baska hicbir sey yazma:\n"
             "DURUM: ONAYLANDI\n"

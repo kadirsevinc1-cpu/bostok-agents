@@ -16,6 +16,8 @@ SYSTEM = """Sen Bostok.dev ajansının takip uzmanısın.
 Görevin: Yanıt gelmemiş outreach maillerine kısa, samimi, baskısız takip maili yazmak.
 Asla ısrarcı veya agresif olma."""
 
+SIGNATURE = "\n\nSaygılar,\nKadir Şevinç - Bostok.dev\nhttps://bostok.dev"
+
 
 class FollowupAgent(BaseAgent):
     name = AgentName.FOLLOWUP
@@ -162,7 +164,7 @@ class FollowupAgent(BaseAgent):
                 f"{insight_ctx}"
                 f"Mükemmel {lang_name} dil bilgisiyle kısa, samimi, baskısız takip maili yaz. Max 80 kelime.\n"
                 "Ton: 'Sadece takip ediyorum, görme fırsatı buldunuz mu?' tarzında.\n"
-                "Sona https://bostok.dev linki ve imza ekle: Kadir Şevinç — Bostok.dev\n"
+                "Sona https://bostok.dev linki ver. İmza YAZMA, sona ekliyoruz.\n"
                 "Sadece mail gövdesini yaz, konu satırı yazma."
             )
         else:
@@ -172,7 +174,7 @@ class FollowupAgent(BaseAgent):
                 f"{insight_ctx}"
                 f"Mükemmel {lang_name} dil bilgisiyle kibarca kapanış maili yaz. Max 60 kelime.\n"
                 "Ton: 'Son kez yazıyorum, ilgi duymuyorsanız sorun değil, ihtiyaç olursa buradayım.'\n"
-                "Sona https://bostok.dev linki ve imza ekle: Kadir Şevinç — Bostok.dev\n"
+                "Sona https://bostok.dev linki ver. İmza YAZMA, sona ekliyoruz.\n"
                 "Sadece mail gövdesini yaz, konu satırı yazma."
             )
 
@@ -180,6 +182,7 @@ class FollowupAgent(BaseAgent):
             body = await self.ask(prompt)
             if len(body.strip()) < 20:
                 return False
+            body = body.rstrip() + SIGNATURE
             return await gmail.send_reply(to, subject, body, in_reply_to=original_msg_id)
         except Exception as e:
             logger.error(f"Followup mail hata [{to}]: {e}")
