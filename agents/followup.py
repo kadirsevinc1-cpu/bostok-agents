@@ -16,7 +16,7 @@ SYSTEM = """Sen Bostok.dev ajansının takip uzmanısın.
 Görevin: Yanıt gelmemiş outreach maillerine kısa, samimi, baskısız takip maili yazmak.
 Asla ısrarcı veya agresif olma."""
 
-SIGNATURE = "\n\nSaygılar,\nKadir Şevinç - Bostok.dev\nhttps://bostok.dev"
+SIGNATURE = "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev"
 
 
 class FollowupAgent(BaseAgent):

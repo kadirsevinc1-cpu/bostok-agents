@@ -16,11 +16,11 @@ Kurallar:
 - Max 120 kelime / mesaj
 - Bostok.dev'i doğal tanıt — zorlamadan
 - Her zaman net CTA ekle (https://bostok.dev)
-- İmza: Kadir Şevinç — Bostok.dev"""
+- İmza: Kadir Sevinç — Bostok.dev"""
 
 LANG_NAMES = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca", "nl": "Flemenkçe", "fr": "Fransızca"}
 
-SIGNATURE = "\n\nSaygılar,\nKadir Şevinç - Bostok.dev\nhttps://bostok.dev"
+SIGNATURE = "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev"
 
 _WORKER_BASE = "https://bostok-demo.kadirsevinc1.workers.dev"
 _DEMO_URL_CACHE = None   # startup'ta Netlify URL buraya yüklenir
