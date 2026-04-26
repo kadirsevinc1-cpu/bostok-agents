@@ -6,7 +6,6 @@ Kurulum:
 3. .env'e ekle: GREENAPI_INSTANCE_ID ve GREENAPI_API_TOKEN
 """
 import re
-import asyncio
 import aiohttp
 from loguru import logger
 
@@ -29,18 +28,35 @@ def _format_phone(raw: str) -> str | None:
 
 
 class WhatsAppClient:
+    # Ücretsiz plan: sadece 3 farklı numaraya mesaj gönderilebilir.
+    # Ücretli plana geçince FREE_TIER_CONTACT_LIMIT'i kaldır veya yükselt.
+    FREE_TIER_CONTACT_LIMIT = 3
+
     def __init__(self, instance_id: str, token: str):
         self._id    = instance_id
         self._token = token
-        self._sent_today = 0
-        self._daily_limit = 100  # güvenli eşik — ban riskini azalt
+        self._sent_today   = 0
+        self._daily_limit  = 100
+        self._sent_numbers: set[str] = set()  # ücretsiz plan: 3 farklı numara
 
     def can_send(self) -> bool:
-        return self._sent_today < self._daily_limit
+        if self._sent_today >= self._daily_limit:
+            return False
+        return True
+
+    def can_send_to(self, phone: str) -> bool:
+        """Ücretsiz planda 3 farklı numaraya kadar."""
+        chat_id = _format_phone(phone)
+        if not chat_id:
+            return False
+        if chat_id in self._sent_numbers:
+            return True  # daha önce gönderdiğimiz numaraya tekrar gönderebiliriz
+        return len(self._sent_numbers) < self.FREE_TIER_CONTACT_LIMIT
 
     @property
     def stats(self) -> str:
-        return f"WA bugün: {self._sent_today}/{self._daily_limit}"
+        return (f"WA bugün: {self._sent_today}/{self._daily_limit} | "
+                f"benzersiz numara: {len(self._sent_numbers)}/{self.FREE_TIER_CONTACT_LIMIT} (ücretsiz plan)")
 
     async def send(self, phone: str, message: str) -> bool:
         chat_id = _format_phone(phone)
@@ -49,6 +65,9 @@ class WhatsAppClient:
             return False
         if not self.can_send():
             logger.warning("WA: Günlük limit doldu")
+            return False
+        if not self.can_send_to(phone):
+            logger.warning(f"WA: Ücretsiz plan 3 numara limiti doldu — {phone}")
             return False
 
         url = f"{_BASE}/waInstance{self._id}/sendMessage/{self._token}"
@@ -62,6 +81,7 @@ class WhatsAppClient:
                         data = await resp.json()
                         if data.get("idMessage"):
                             self._sent_today += 1
+                            self._sent_numbers.add(chat_id)
                             logger.info(f"WA gönderildi: {chat_id}")
                             return True
                     body = await resp.text()
