@@ -2,6 +2,7 @@
 import asyncio
 import json
 import os
+import re
 import smtplib
 import uuid
 from datetime import date, datetime
@@ -114,12 +115,31 @@ class GmailSender:
             return False
         try:
             msg_id = f"<{uuid.uuid4().hex}@bostok.dev>"
-            msg = MIMEMultipart()
-            msg["From"] = self._user
+            msg = MIMEMultipart("alternative")
+            msg["From"] = f"Kadir Sevinç <{self._user}>"
             msg["To"] = to
             msg["Subject"] = subject
             msg["Message-ID"] = msg_id
+            msg["Reply-To"] = self._user
+            msg["List-Unsubscribe"] = f"<mailto:{self._user}?subject=unsubscribe>"
+            msg["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
+
+            # Plain text (spam filtreler için gerekli)
             msg.attach(MIMEText(body, "plain", "utf-8"))
+
+            # HTML versiyonu — satır sonlarını <br> yap, link'leri tıklanabilir hale getir
+            html_body = body.replace("\n", "<br>\n")
+            html_body = re.sub(
+                r'(https?://[^\s<>"]+)',
+                r'<a href="\1">\1</a>',
+                html_body
+            )
+            html_body = (
+                f'<html><body style="font-family:Arial,sans-serif;font-size:14px;'
+                f'color:#222;max-width:600px;margin:0 auto;padding:20px">'
+                f'{html_body}</body></html>'
+            )
+            msg.attach(MIMEText(html_body, "html", "utf-8"))
             loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, self._smtp_send, to, msg.as_string())
             self._today_count += 1

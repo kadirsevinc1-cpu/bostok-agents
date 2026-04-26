@@ -228,8 +228,12 @@ class MarketingAgent(BaseAgent):
         }
         if getattr(lead, "rating", None):
             params["r"] = str(lead.rating)
+        if getattr(lead, "review_count", None):
+            params["rc"] = str(lead.review_count)
         if getattr(lead, "phone", None):
             params["p"] = lead.phone
+        if getattr(lead, "website", None):
+            params["w"] = "1" if lead.has_website else "0"
         base = _get_demo_base()
         return f"{base}/?{urllib.parse.urlencode(params, quote_via=urllib.parse.quote)}"
 

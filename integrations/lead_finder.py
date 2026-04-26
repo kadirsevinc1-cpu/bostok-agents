@@ -137,17 +137,47 @@ async def _maps_leads(sector: str, location: str, api_key: str) -> list[Lead]:
     return leads
 
 
-async def _find_email_no_website(session: aiohttp.ClientSession, name: str, location: str) -> str:
-    """Web sitesi olmayan işletme için SerpApi veya direkt arama üzerinden email bul."""
+MAILTO_RE = re.compile(r'mailto:([A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,6})', re.IGNORECASE)
+COMMON_PREFIXES = ["info", "iletisim", "contact", "hello", "merhaba", "destek", "support", "bilgi"]
+
+
+def _extract_emails(html: str) -> list[str]:
+    """mailto: linklerini önce dene (daha güvenilir), sonra regex."""
+    found = []
+    for m in MAILTO_RE.findall(html):
+        if _valid_email(m):
+            found.append(m.lower())
+    if not found:
+        for m in EMAIL_RE.findall(html):
+            if _valid_email(m):
+                found.append(m.lower())
+    return found
+
+
+def _guess_domain_emails(website: str) -> list[str]:
+    """Web sitesi domain'inden yaygın prefix'lerle email tahmin et."""
+    try:
+        from urllib.parse import urlparse
+        domain = urlparse(website).netloc.lstrip("www.")
+        if not domain or len(domain) < 4:
+            return []
+        return [f"{p}@{domain}" for p in COMMON_PREFIXES]
+    except Exception:
+        return []
+
+
+async def _search_email(session: aiohttp.ClientSession, name: str, location: str) -> str:
+    """SerpApi → Serper.dev → Google scrape sırasıyla email ara."""
     try:
         from config import settings
         serpapi_key = getattr(settings, "serpapi_api_key", "")
+        serper_key  = getattr(settings, "serper_api_key", "")
     except Exception:
-        serpapi_key = ""
+        serpapi_key = serper_key = ""
 
-    query = f'"{name}" {location} "@gmail" OR "@hotmail" OR "@yahoo" OR "iletisim" OR "e-posta"'
+    query = f'"{name}" {location} email OR "@gmail" OR "@hotmail" OR "iletisim"'
 
-    # 1. SerpApi — güvenilir, captcha yok
+    # 1. SerpApi
     if serpapi_key:
         try:
             async with session.get(
@@ -161,14 +191,34 @@ async def _find_email_no_website(session: aiohttp.ClientSession, name: str, loca
                         r.get("snippet", "") + " " + r.get("title", "")
                         for r in data.get("organic_results", [])
                     )
-                    for match in EMAIL_RE.findall(text):
-                        if _valid_email(match):
-                            logger.debug(f"SerpApi email bulundu: {match} [{name}]")
-                            return match.lower()
+                    for m in _extract_emails(text):
+                        logger.debug(f"SerpApi email: {m} [{name}]")
+                        return m
         except Exception as e:
-            logger.debug(f"SerpApi email hata [{name}]: {e}")
+            logger.debug(f"SerpApi hata [{name}]: {e}")
 
-    # 2. Fallback: direkt Google scrape (daha az güvenilir)
+    # 2. Serper.dev
+    if serper_key:
+        try:
+            async with session.post(
+                "https://google.serper.dev/search",
+                json={"q": query, "num": 10, "hl": "tr"},
+                headers={"X-API-KEY": serper_key, "Content-Type": "application/json"},
+                timeout=aiohttp.ClientTimeout(total=12),
+            ) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    text = " ".join(
+                        r.get("snippet", "") + " " + r.get("title", "")
+                        for r in data.get("organic", [])
+                    )
+                    for m in _extract_emails(text):
+                        logger.debug(f"Serper email: {m} [{name}]")
+                        return m
+        except Exception as e:
+            logger.debug(f"Serper hata [{name}]: {e}")
+
+    # 3. Direkt Google scrape
     search_url = "https://www.google.com/search?q=" + urllib.parse.quote(query)
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"}
@@ -179,18 +229,22 @@ async def _find_email_no_website(session: aiohttp.ClientSession, name: str, loca
             allow_redirects=True,
         ) as resp:
             text = await resp.text(errors="ignore")
-            for match in EMAIL_RE.findall(text):
-                if _valid_email(match):
-                    return match.lower()
+            for m in _extract_emails(text):
+                return m
     except Exception as e:
-        logger.debug(f"Google scrape email hata [{name}]: {e}")
+        logger.debug(f"Google scrape hata [{name}]: {e}")
 
     return ""
 
 
+async def _find_email_no_website(session: aiohttp.ClientSession, name: str, location: str) -> str:
+    return await _search_email(session, name, location)
+
+
 async def _scrape_email(session: aiohttp.ClientSession, url: str) -> str:
-    """Web sitesi olan işletmenin contact sayfasından email çek."""
-    contact_paths = ["", "/contact", "/iletisim", "/about", "/hakkimizda", "/kontakt", "/impressum"]
+    """Web sitesi olan işletmenin sayfalarından email çek; bulamazsa domain tahmini."""
+    contact_paths = ["", "/contact", "/iletisim", "/about", "/hakkimizda",
+                     "/kontakt", "/impressum", "/bize-ulasin", "/en/contact"]
     for path in contact_paths:
         try:
             target = url.rstrip("/") + path
@@ -198,14 +252,21 @@ async def _scrape_email(session: aiohttp.ClientSession, url: str) -> str:
                 target,
                 timeout=aiohttp.ClientTimeout(total=8),
                 allow_redirects=True,
+                headers={"User-Agent": "Mozilla/5.0"},
             ) as resp:
-                content_type = resp.headers.get("Content-Type", "")
-                if "html" not in content_type:
+                if "html" not in resp.headers.get("Content-Type", ""):
                     continue
                 text = await resp.text(errors="ignore")
-                for match in EMAIL_RE.findall(text):
-                    if _valid_email(match):
-                        return match.lower()
+                emails = _extract_emails(text)
+                if emails:
+                    return emails[0]
         except Exception:
             pass
+
+    # Bulunamadı → domain'den tahmin et
+    guesses = _guess_domain_emails(url)
+    if guesses:
+        logger.debug(f"Domain tahmini kullanıldı: {guesses[0]} [{url}]")
+        return guesses[0]
+
     return ""
