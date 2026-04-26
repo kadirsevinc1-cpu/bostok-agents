@@ -90,6 +90,9 @@ class GmailSender:
         self._reset_if_new_day()
         return f"Bugun: {self._today_count}/{self._limit} mail gonderildi"
 
+    def is_sent(self, email: str) -> bool:
+        return email.strip().lower() in self._sent
+
     def can_send(self) -> bool:
         self._reset_if_new_day()
         return self._today_count < self._limit

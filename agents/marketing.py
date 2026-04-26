@@ -154,12 +154,22 @@ class MarketingAgent(BaseAgent):
         logger.info(f"Lead skorlama: {len(leads)} aktif lead")
 
         sent = skipped = no_email = 0
+        from integrations.gmail import load_bounced
+        bounced_set = load_bounced()
 
         for lead in leads:
             if not gmail.can_send():
                 break
             if not lead.email:
                 no_email += 1
+                continue
+
+            # Erken çık — zaten gönderildi veya bounce listesinde
+            if gmail.is_sent(lead.email):
+                skipped += 1
+                continue
+            if lead.email.strip().lower() in bounced_set:
+                skipped += 1
                 continue
 
             seo = None
