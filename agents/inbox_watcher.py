@@ -77,6 +77,23 @@ class InboxWatcherAgent(BaseAgent):
             except Exception:
                 pass
 
+            # KB'ye pattern kaydet
+            try:
+                from core.sector_kb import get_kb
+                lang = reply.sent_info.get("lang", "tr")
+                positive_intents = {"ready", "meeting", "interested"}
+                negative_intents = {"negative", "unsubscribe"}
+                if analysis.intent.value in positive_intents:
+                    desc = (f"{sector}/{location}: '{analysis.summary[:100]}' — "
+                            f"niyet={analysis.intent.value}")
+                    get_kb().add_pattern("positive", sector, location, lang, desc)
+                elif analysis.intent.value in negative_intents:
+                    desc = (f"{sector}/{location}: '{analysis.summary[:100]}' — "
+                            f"niyet={analysis.intent.value}")
+                    get_kb().add_pattern("negative", sector, location, lang, desc)
+            except Exception:
+                pass
+
             if analysis.intent.value == "unsubscribe":
                 logger.info(f"Abonelik iptali: {reply.from_email}")
 

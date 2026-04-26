@@ -20,6 +20,7 @@ from agents.qa import QAAgent
 from agents.deploy import DeployAgent
 from agents.inbox_watcher import InboxWatcherAgent
 from agents.followup import FollowupAgent
+from agents.knowledge_agent import KnowledgeAgent
 from integrations.telegram import init_bot, get_bot
 from integrations.gmail import init_gmail
 from integrations.gmail_reader import init_reader
@@ -385,6 +386,45 @@ async def handle_telegram_message(text: str):
             await bot.send(msg)
         return
 
+    if cmd.startswith("/bilgi"):
+        sector = text[len("/bilgi"):].strip()
+        await bus.send(Message(
+            sender=AgentName.SYSTEM, receiver=AgentName.KNOWLEDGE,
+            type=MessageType.STATUS,
+            content=sector or "genel",
+            metadata={"cmd": "bilgi"},
+        ))
+        return
+
+    if cmd.startswith("/ogret"):
+        knowledge = text[len("/ogret"):].strip()
+        await bus.send(Message(
+            sender=AgentName.SYSTEM, receiver=AgentName.KNOWLEDGE,
+            type=MessageType.STATUS,
+            content=knowledge,
+            metadata={"cmd": "ogret"},
+        ))
+        return
+
+    if cmd.startswith("/pattern"):
+        location = text[len("/pattern"):].strip()
+        await bus.send(Message(
+            sender=AgentName.SYSTEM, receiver=AgentName.KNOWLEDGE,
+            type=MessageType.STATUS,
+            content=location or "",
+            metadata={"cmd": "pattern"},
+        ))
+        return
+
+    if cmd == "/haftalik":
+        await bus.send(Message(
+            sender=AgentName.SYSTEM, receiver=AgentName.KNOWLEDGE,
+            type=MessageType.STATUS,
+            content="",
+            metadata={"cmd": "haftalik"},
+        ))
+        return
+
     if cmd == "/yardim" or cmd == "/help":
         if bot:
             await bot.send(
@@ -392,6 +432,10 @@ async def handle_telegram_message(text: str):
                 "/durum — Sistem durumu (token, mail, demo)\n"
                 "/butce — Günlük token bütçesi\n"
                 "/istatistik — Kampanya istatistikleri\n"
+                "/bilgi [sektör] — Sektör bilgi tabanı\n"
+                "/ogret [sektör]|[bilgi] — KB'ye bilgi ekle\n"
+                "/pattern [şehir] — Öğrenilen pattern'ler\n"
+                "/haftalik — Haftalık öğrenme özeti\n"
                 "/yardim — Bu yardım mesajı\n\n"
                 "Veya doğrudan mesaj yaz: <i>İstanbul'daki kafeler için kampanya başlat</i>"
             )
@@ -467,7 +511,7 @@ async def main():
         ManagerAgent(), AnalystAgent(), MarketingAgent(),
         QuoteAgent(), ContentAgent(), DesignerAgent(),
         DeveloperAgent(), QAAgent(), DeployAgent(),
-        InboxWatcherAgent(), FollowupAgent(),
+        InboxWatcherAgent(), FollowupAgent(), KnowledgeAgent(),
     ]
     logger.info(f"{len(agents)} agent baslatildi")
 

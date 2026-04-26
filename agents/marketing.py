@@ -261,6 +261,14 @@ class MarketingAgent(BaseAgent):
             "Kurallar: isletme adini kullan, bostok.dev dogal tanit, "
             "sonda https://bostok.dev linki ver. İmza YAZMA, sona ekliyoruz."
         )
+        # KB'den sektör + dil bilgisi çek
+        try:
+            from core.sector_kb import get_kb
+            kb_ctx = get_kb().get_context(lead.sector, lead.location, lang)
+            if kb_ctx:
+                prompt = f"[Bilgi tabanı]\n{kb_ctx}\n\n" + prompt
+        except Exception:
+            pass
         result = await self.ask(prompt)
         subject = f"Web Siteniz Hakkinda — Bostok.dev"
         body = result

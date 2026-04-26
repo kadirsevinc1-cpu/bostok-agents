@@ -15,11 +15,12 @@ class AgentName(str, Enum):
     DESIGNER  = "Tasarımcı"
     DEVELOPER = "Developer"
     QA        = "QA"
-    DEPLOY         = "Deploy"
-    INBOX_WATCHER  = "InboxTakip"
+    DEPLOY        = "Deploy"
+    INBOX_WATCHER = "InboxTakip"
     BUDGET    = "Bütçe"
     REPORT    = "Rapor"
     FOLLOWUP  = "Takip"
+    KNOWLEDGE = "Bilgi"
     SYSTEM    = "Sistem"
 
 
