@@ -494,6 +494,34 @@ async def handle_telegram_message(text: str):
         ))
         return
 
+    if cmd == "/profil":
+        from core.user_profile import format_profile_summary
+        if bot:
+            await bot.send(format_profile_summary())
+        return
+
+    if cmd.startswith("/profil set "):
+        # Basit alan güncelleme: /profil set notes Yeni not metni
+        rest = text[len("/profil set "):].strip()
+        parts = rest.split(None, 1)
+        if len(parts) < 2:
+            if bot:
+                await bot.send("⚠️ Kullanım: <code>/profil set {alan} {değer}</code>\nÖrnek: <code>/profil set notes Yeni notum</code>")
+            return
+        field_key, field_val = parts[0], parts[1]
+        from core.user_profile import get_profile, save_profile
+        profile = get_profile()
+        # Sadece üst düzey string alanları destekle
+        if field_key in profile and isinstance(profile[field_key], str):
+            profile[field_key] = field_val
+            save_profile(profile)
+            if bot:
+                await bot.send(f"✅ Profil güncellendi: <b>{field_key}</b> = {field_val[:100]}")
+        else:
+            if bot:
+                await bot.send(f"❌ Alan bulunamadı veya desteklenmiyor: <code>{field_key}</code>")
+        return
+
     if cmd == "/yardim" or cmd == "/help":
         if bot:
             await bot.send(
@@ -509,6 +537,9 @@ async def handle_telegram_message(text: str):
                 "<b>📬 Müşteri Yanıt Komutları:</b>\n"
                 "yanit {id} {mesaj} — Müşteriye mail yanıtı gönder\n"
                 "revize {talimat} — Demo sitede değişiklik talep et\n\n"
+                "<b>👤 Profil Komutları:</b>\n"
+                "/profil — Kullanıcı profili ve tercihler\n"
+                "/profil set {alan} {değer} — Profil güncelle\n\n"
                 "Veya doğrudan mesaj yaz: <i>İstanbul'daki kafeler için kampanya başlat</i>"
             )
         return

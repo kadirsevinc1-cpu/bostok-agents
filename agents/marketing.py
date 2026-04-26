@@ -7,7 +7,10 @@ from agents.base import BaseAgent
 from core.message_bus import AgentName, MessageType, Message
 
 
-SYSTEM = """Sen Bostok.dev web ajansının Pazarlama agent'ısın.
+def _build_system() -> str:
+    from core.user_profile import get_context
+    profile_ctx = get_context("marketing")
+    base = """Sen Bostok.dev web ajansının Pazarlama agent'ısın.
 
 Bostok.dev: Profesyonel web tasarım ve geliştirme ajansı. https://bostok.dev
 
@@ -17,6 +20,10 @@ Kurallar:
 - Bostok.dev'i doğal tanıt — zorlamadan
 - Her zaman net CTA ekle (https://bostok.dev)
 - İmza: Kadir Sevinç — Bostok.dev"""
+    return f"{profile_ctx}\n\n{base}" if profile_ctx else base
+
+
+SYSTEM = _build_system()
 
 LANG_NAMES = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca", "nl": "Flemenkçe", "fr": "Fransızca"}
 
@@ -93,6 +100,13 @@ class MarketingAgent(BaseAgent):
 
         # Lead bul (Google Maps API varsa gerçek, yoksa boş)
         leads = await self._find_leads(sector, location)
+
+        # Otomatik onay: eşik altında ise send_emails'i otomatik aç
+        if not send_emails and leads:
+            from core.user_profile import auto_approve_threshold
+            if len(leads) <= auto_approve_threshold():
+                logger.info(f"Otomatik onay: {len(leads)} lead ≤ eşik, kampanya başlatılıyor")
+                send_emails = True
 
         if send_emails and leads:
             result = await self._run_campaign(leads, sector, location, languages)

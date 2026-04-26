@@ -15,6 +15,8 @@ env/
 memory/*.log
 memory/*.json
 memory/seen_reply_uids.txt
+# Profil yapılandırma dosyası takip edilsin
+!memory/user_profile.json
 
 # IDE
 .vscode/

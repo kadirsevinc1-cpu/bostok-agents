@@ -12,9 +12,16 @@ SENT_IDS_FILE = Path("memory/sent_message_ids.json")
 INBOX_FILE    = Path("memory/inbox_emails.json")
 FOLLOWUP_LOG  = Path("memory/followup_log.json")
 
-SYSTEM = """Sen Bostok.dev ajansının takip uzmanısın.
+def _build_system() -> str:
+    from core.user_profile import get_context
+    profile_ctx = get_context("followup")
+    base = """Sen Bostok.dev ajansının takip uzmanısın.
 Görevin: Yanıt gelmemiş outreach maillerine kısa, samimi, baskısız takip maili yazmak.
 Asla ısrarcı veya agresif olma."""
+    return f"{profile_ctx}\n\n{base}" if profile_ctx else base
+
+
+SYSTEM = _build_system()
 
 SIGNATURE = "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev"
 

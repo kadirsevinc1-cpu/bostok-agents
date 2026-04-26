@@ -1,0 +1,55 @@
+{
+  "owner": {
+    "name": "Kadir Sevinç",
+    "email": "kadirsevinc1@gmail.com",
+    "signature": "Saygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "agency": "Bostok.dev",
+    "agency_url": "https://bostok.dev"
+  },
+
+  "campaign": {
+    "default_languages": ["tr", "en"],
+    "daily_mail_limit": 50,
+    "mail_interval_seconds": 8,
+    "auto_followup": true,
+    "followup_after_days": 4,
+    "max_followups_per_lead": 2
+  },
+
+  "sectors": {
+    "high_priority": [
+      "diş kliniği", "hukuk bürosu", "güzellik salonu",
+      "yazılım", "e-ticaret", "fintech", "klinik", "avukat"
+    ],
+    "medium_priority": [
+      "restoran", "kafe", "otel", "muhasebe", "mimar"
+    ],
+    "low_priority": [
+      "çiçekçi", "eczane", "fırın"
+    ]
+  },
+
+  "tone": {
+    "style": "profesyonel ve samimi",
+    "max_words_per_mail": 130,
+    "avoid": [
+      "çok ucuz", "bedava", "garanti kazanç",
+      "hemen tıkla", "acele et", "son şans"
+    ],
+    "cta_link": "https://bostok.dev"
+  },
+
+  "approval": {
+    "auto_approve_campaigns_under_n_leads": 20,
+    "require_approval_for_deploy": false,
+    "notify_on_every_reply": true,
+    "notify_on_bounce": true
+  },
+
+  "focus_cities": [
+    "İstanbul", "Ankara", "İzmir", "Bursa", "Antalya",
+    "Konya", "Adana", "Gaziantep", "Kayseri", "Eskişehir"
+  ],
+
+  "notes": "Bostok.dev profesyonel web ajansı. Hedef: Türkiye'deki küçük-orta işletmelere web sitesi ve dijital varlık hizmetleri sunmak. Öncelik sektörler yüksek değerli (diş, hukuk, güzellik). Rakip avantaj: kişiselleştirilmiş yaklaşım, hızlı teslimat."
+}

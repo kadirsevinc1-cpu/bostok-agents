@@ -2,7 +2,10 @@ from agents.base import BaseAgent
 from core.message_bus import AgentName, MessageType, Message
 
 
-SYSTEM = """Sen Bostok.dev web ajansının Yönetici agent'ısın.
+def _build_system() -> str:
+    from core.user_profile import get_context
+    profile_ctx = get_context("manager")
+    base = """Sen Bostok.dev web ajansının Yönetici agent'ısın.
 
 Bostok.dev hakkında: Profesyonel web tasarım ve geliştirme ajansı. https://bostok.dev
 
@@ -20,6 +23,10 @@ Kurallar:
 - Her adımı hafızaya kaydet
 - Müşteriye Türkçe ve profesyonel ilet
 - Kararlarını kısa gerekçeyle açıkla"""
+    return f"{profile_ctx}\n\n{base}" if profile_ctx else base
+
+
+SYSTEM = _build_system()
 
 
 class ManagerAgent(BaseAgent):
