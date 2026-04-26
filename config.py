@@ -73,7 +73,10 @@ class Settings(BaseSettings):
         ]
         for attr, key in pairs:
             if not getattr(self, attr):
-                val = keyring.get_password("bostok_agents", key)
+                try:
+                    val = keyring.get_password("bostok_agents", key)
+                except Exception:
+                    val = None
                 if val:
                     object.__setattr__(self, attr, val)
 
