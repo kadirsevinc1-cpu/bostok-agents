@@ -5,7 +5,7 @@ Wants=network-online.target
 
 [Service]
 Type=simple
-User=bostok
+User=kadirsevinc1
 WorkingDirectory=/opt/bostok_agents
 ExecStart=/opt/bostok_agents/.venv/bin/python main.py
 Restart=always
