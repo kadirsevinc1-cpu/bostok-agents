@@ -68,8 +68,10 @@ class Settings(BaseSettings):
             ("gmail_app_password",  "gmail_app_password"),
             ("google_maps_api_key", "google_maps_api_key"),
             ("pexels_api_key",      "pexels_api_key"),
-            ("serpapi_api_key",     "serpapi_api_key"),
-            ("serper_api_key",      "serper_api_key"),
+            ("serpapi_api_key",      "serpapi_api_key"),
+            ("serper_api_key",       "serper_api_key"),
+            ("greenapi_instance_id", "greenapi_instance_id"),
+            ("greenapi_api_token",   "greenapi_api_token"),
         ]
         for attr, key in pairs:
             if not getattr(self, attr):

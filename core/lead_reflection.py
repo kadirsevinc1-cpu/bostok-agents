@@ -1,11 +1,35 @@
 """Lead reflection — 5+ event sonrası lead davranış pattern'ini sentezle."""
+import json
+import os
 from datetime import datetime
+from pathlib import Path
+
 from loguru import logger
 
 REFLECTION_EVENT_THRESHOLD = 5
 REFLECTION_COOLDOWN_HOURS = 24
 
-_last_reflection: dict[str, datetime] = {}
+_REFLECTION_STATE_FILE = Path("memory/reflection_state.json")
+
+
+def _load_reflection_state() -> dict[str, str]:
+    if _REFLECTION_STATE_FILE.exists():
+        try:
+            return json.loads(_REFLECTION_STATE_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def _save_reflection_state(state: dict[str, str]):
+    _REFLECTION_STATE_FILE.parent.mkdir(exist_ok=True)
+    tmp = _REFLECTION_STATE_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(state, ensure_ascii=False), encoding="utf-8")
+    os.replace(tmp, _REFLECTION_STATE_FILE)
+
+
+# ISO string olarak persist — restart'ta korunur
+_last_reflection: dict[str, str] = _load_reflection_state()
 
 
 async def maybe_reflect(email: str) -> str | None:
@@ -15,9 +39,14 @@ async def maybe_reflect(email: str) -> str | None:
     if not rec or len(rec.events) < REFLECTION_EVENT_THRESHOLD:
         return None
 
-    last = _last_reflection.get(email)
-    if last and (datetime.now() - last).total_seconds() < REFLECTION_COOLDOWN_HOURS * 3600:
-        return None
+    last_str = _last_reflection.get(email)
+    if last_str:
+        try:
+            last = datetime.fromisoformat(last_str)
+            if (datetime.now() - last).total_seconds() < REFLECTION_COOLDOWN_HOURS * 3600:
+                return None
+        except Exception:
+            pass
 
     events_text = "\n".join(
         f"- [{e['ts'][:10]}] {e['type']}: {e['note']}"
@@ -45,7 +74,8 @@ async def maybe_reflect(email: str) -> str | None:
                 "lead_insight",
                 importance=8.5,
             )
-            _last_reflection[email] = datetime.now()
+            _last_reflection[email] = datetime.now().isoformat()
+            _save_reflection_state(_last_reflection)
             logger.info(f"Lead reflection üretildi: {email}")
             return insight
     except Exception as e:

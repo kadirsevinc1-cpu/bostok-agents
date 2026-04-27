@@ -68,6 +68,7 @@ class LeadStateTracker:
             type=stage.value,
             note=note[:200] if note else "",
         )))
+        rec.events = rec.events[-20:]  # Son 20 event yeterli
         self._save()
         logger.debug(f"Lead state: {key} {old_stage} → {stage.value}")
 

@@ -52,6 +52,28 @@ class GmailReader:
         with SEEN_UIDS_FILE.open("a", encoding="utf-8") as f:
             f.write(uid + "\n")
 
+    def _trim_seen_uids(self, max_lines: int = 30000):
+        """Dosya çok büyüdüyse eski UID'leri temizle (son max_lines satırı koru)."""
+        if not SEEN_UIDS_FILE.exists():
+            return
+        lines = SEEN_UIDS_FILE.read_text(encoding="utf-8").splitlines()
+        if len(lines) > max_lines:
+            SEEN_UIDS_FILE.write_text("\n".join(lines[-max_lines:]) + "\n", encoding="utf-8")
+            logger.debug(f"seen_uids trimmed: {len(lines)} → {max_lines}")
+
+    def _cleanup_inbox(self, days: int = 90):
+        """90 günden eski inbox kayıtlarını sil."""
+        emails = self._load_inbox_emails()
+        if len(emails) < 200:
+            return
+        cutoff = (datetime.now() - timedelta(days=days)).isoformat()
+        cleaned = {k: v for k, v in emails.items() if v.get("received_at", "9999") >= cutoff}
+        if len(cleaned) < len(emails):
+            INBOX_EMAILS_FILE.write_text(
+                json.dumps(cleaned, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+            logger.info(f"Inbox cleanup: {len(emails) - len(cleaned)} eski kayıt silindi")
+
     def _load_inbox_emails(self) -> dict:
         if INBOX_EMAILS_FILE.exists():
             try:
@@ -177,6 +199,8 @@ class GmailReader:
         except Exception as e:
             logger.error(f"Gmail IMAP hatasi: {e}")
 
+        self._trim_seen_uids()
+        self._cleanup_inbox()
         return replies
 
 

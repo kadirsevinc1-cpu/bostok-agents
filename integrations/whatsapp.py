@@ -5,12 +5,30 @@ Kurulum:
 2. Yeni instance oluştur → telefonu bağla (QR kod ile)
 3. .env'e ekle: GREENAPI_INSTANCE_ID ve GREENAPI_API_TOKEN
 """
+import json
 import re
+from pathlib import Path
+
 import aiohttp
 from loguru import logger
 
 _BASE = "https://api.green-api.com"
 _instance: "WhatsAppClient | None" = None
+_WA_SENT_FILE = Path("memory/wa_sent_numbers.json")
+
+
+def _load_wa_sent() -> set[str]:
+    if _WA_SENT_FILE.exists():
+        try:
+            return set(json.loads(_WA_SENT_FILE.read_text(encoding="utf-8")))
+        except Exception:
+            pass
+    return set()
+
+
+def _save_wa_sent(numbers: set[str]):
+    _WA_SENT_FILE.parent.mkdir(exist_ok=True)
+    _WA_SENT_FILE.write_text(json.dumps(list(numbers), ensure_ascii=False), encoding="utf-8")
 
 
 def _format_phone(raw: str) -> str | None:
@@ -37,7 +55,7 @@ class WhatsAppClient:
         self._token = token
         self._sent_today   = 0
         self._daily_limit  = 100
-        self._sent_numbers: set[str] = set()  # ücretsiz plan: 3 farklı numara
+        self._sent_numbers: set[str] = _load_wa_sent()  # dosyadan yükle — restart'ta korunur
 
     def can_send(self) -> bool:
         if self._sent_today >= self._daily_limit:
@@ -82,6 +100,7 @@ class WhatsAppClient:
                         if data.get("idMessage"):
                             self._sent_today += 1
                             self._sent_numbers.add(chat_id)
+                            _save_wa_sent(self._sent_numbers)
                             logger.info(f"WA gönderildi: {chat_id}")
                             return True
                     body = await resp.text()

@@ -353,7 +353,7 @@ async def handle_telegram_message(text: str):
             msg = (
                 f"<b>Sistem Durumu</b>\n\n"
                 f"<b>LLM:</b> {b['requests']} istek, {b['tokens_used']:,} token kullanıldı\n"
-                f"<b>Bütçe:</b> {'⛔ BLOKE' if b['blocked'] else '✅ Normal'} ({b['tokens_used']/20000:.1f}%)\n\n"
+                f"<b>Bütçe:</b> {'⛔ BLOKE' if b['blocked'] else '✅ Normal'} ({b['tokens_used']/50000:.1f}%)\n\n"
                 f"<b>Mail:</b>\n"
                 f"  • Gönderilen: {sent}\n"
                 f"  • Gelen yanıt: {inbox}\n"

@@ -39,8 +39,14 @@ class KnowledgeAgent(BaseAgent):
             await self._handle(msg)
             return
 
-        # Periyodik yansıma — 6 saatte bir
-        await asyncio.sleep(self._reflection_interval)
+        # Periyodik yansıma — 6 saatte bir (30s parçalarda uyur → graceful shutdown)
+        slept = 0
+        while slept < self._reflection_interval:
+            if not self.running:
+                return
+            chunk = min(30, self._reflection_interval - slept)
+            await asyncio.sleep(chunk)
+            slept += chunk
         await self._periodic_reflection()
 
     # ── Mesaj işleme ──────────────────────────────────────────────

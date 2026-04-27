@@ -4,11 +4,84 @@ Hedef: Web sitesi OLMAYAN işletmeler — bunlar web tasarım hizmetine ihtiyaç
 Email bulma: Facebook sayfası veya Google arama sonuçları üzerinden.
 """
 import asyncio
+import json
+import os
 import re
+import socket
 import urllib.parse
-import aiohttp
 from dataclasses import dataclass
+from datetime import datetime
+from pathlib import Path
+
+import aiohttp
 from loguru import logger
+
+LEADS_CACHE_FILE = Path("memory/leads_cache.json")
+LEADS_CACHE_TTL_DAYS = 7
+
+
+def _cache_key(sector: str, location: str) -> str:
+    return f"{sector.lower().strip()}|{location.lower().strip()}"
+
+
+def _load_leads_cache() -> dict:
+    if LEADS_CACHE_FILE.exists():
+        try:
+            return json.loads(LEADS_CACHE_FILE.read_text(encoding="utf-8"))
+        except Exception:
+            pass
+    return {}
+
+
+def _save_leads_cache(data: dict):
+    LEADS_CACHE_FILE.parent.mkdir(exist_ok=True)
+    tmp = LEADS_CACHE_FILE.with_suffix(".tmp")
+    tmp.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    os.replace(tmp, LEADS_CACHE_FILE)
+
+
+def _get_cached_leads(sector: str, location: str):
+    cache = _load_leads_cache()
+    entry = cache.get(_cache_key(sector, location))
+    if not entry:
+        return None
+    try:
+        cached_at = datetime.fromisoformat(entry["cached_at"])
+        if (datetime.now() - cached_at).days >= LEADS_CACHE_TTL_DAYS:
+            return None
+    except Exception:
+        return None
+    try:
+        return [Lead(**lead) for lead in entry["leads"]]
+    except Exception:
+        return None
+
+
+def _set_cached_leads(sector: str, location: str, leads):
+    cache = _load_leads_cache()
+    cache[_cache_key(sector, location)] = {
+        "cached_at": datetime.now().isoformat(),
+        "leads": [
+            {
+                "name": l.name, "location": l.location, "sector": l.sector,
+                "phone": l.phone, "email": l.email, "has_website": l.has_website,
+                "website": l.website, "maps_url": l.maps_url,
+                "rating": l.rating, "review_count": l.review_count,
+            }
+            for l in leads
+        ],
+    }
+    _save_leads_cache(cache)
+
+
+async def _domain_exists(domain: str) -> bool:
+    """Domain A kaydı var mı kontrol et (tamamen sahte domain'leri filtreler)."""
+    try:
+        loop = asyncio.get_running_loop()
+        await loop.run_in_executor(None, socket.gethostbyname, domain)
+        return True
+    except socket.gaierror:
+        return False
 
 MAPS_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json"
 MAPS_DETAIL_URL = "https://maps.googleapis.com/maps/api/place/details/json"
@@ -49,9 +122,16 @@ class Lead:
 
 
 async def find_leads(sector: str, location: str, api_key: str = "") -> list[Lead]:
+    cached = _get_cached_leads(sector, location)
+    if cached is not None:
+        logger.info(f"Leads cache hit: {len(cached)} lead — {sector}/{location}")
+        return cached
     if not api_key:
         return []
-    return await _maps_leads(sector, location, api_key)
+    leads = await _maps_leads(sector, location, api_key)
+    if leads:
+        _set_cached_leads(sector, location, leads)
+    return leads
 
 
 async def _maps_leads(sector: str, location: str, api_key: str) -> list[Lead]:
@@ -263,10 +343,18 @@ async def _scrape_email(session: aiohttp.ClientSession, url: str) -> str:
         except Exception:
             pass
 
-    # Bulunamadı → domain'den tahmin et
+    # Bulunamadı → domain'den tahmin et (sadece domain gerçekten varsa)
     guesses = _guess_domain_emails(url)
     if guesses:
-        logger.debug(f"Domain tahmini kullanıldı: {guesses[0]} [{url}]")
-        return guesses[0]
+        try:
+            from urllib.parse import urlparse as _up
+            domain = _up(url).netloc.lstrip("www.")
+            if domain and await _domain_exists(domain):
+                logger.debug(f"Domain tahmini kullanıldı: {guesses[0]} [{url}]")
+                return guesses[0]
+            else:
+                logger.debug(f"Domain DNS'de yok, tahmin atlandı: {domain}")
+        except Exception:
+            pass
 
     return ""

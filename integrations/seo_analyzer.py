@@ -13,6 +13,40 @@ META_DESC_RE   = re.compile(r'<meta[^>]+name=["\']description["\'][^>]+content=[
 CONTACT_RE     = re.compile(r'href=["\'][^"\']*(?:contact|iletisim|kontakt|impressum|about|hakkimizda)[^"\']*["\']', re.I)
 SOCIAL_RE      = re.compile(r'href=["\'][^"\']*(?:facebook\.com|instagram\.com|twitter\.com|linkedin\.com|youtube\.com)[^"\']*["\']', re.I)
 
+# Teknoloji tespiti
+_TECH_PATTERNS = [
+    (r'wp-content|wp-includes|wordpress', "WordPress"),
+    (r'wix\.com|wixstatic\.com', "Wix"),
+    (r'squarespace\.com|sqsp\.net|squarespace-cdn', "Squarespace"),
+    (r'webflow\.io|webflow\.com/js', "Webflow"),
+    (r'cdn\.shopify\.com|myshopify\.com', "Shopify"),
+    (r'sites\.google\.com|gstatic\.com/sites', "Google Sites"),
+    (r'weebly\.com', "Weebly"),
+    (r'jimdo\.com', "Jimdo"),
+]
+
+_ANALYTICS_RE = re.compile(
+    r'gtag\(|GoogleAnalyticsObject|fbq\(|_fbq|gtm\.js|analytics\.js|plausible\.io|clarity\.ms',
+    re.IGNORECASE,
+)
+
+_BOOKING_PATTERNS = [
+    (r'yemeksepeti\.com', "Yemeksepeti"),
+    (r'getirfood|getir\.com', "Getir"),
+    (r'trendyolyemek|ty\.gl', "Trendyol Yemek"),
+    (r'calendly\.com', "Calendly"),
+    (r'acuityscheduling\.com', "Acuity"),
+    (r'booking\.com', "Booking.com"),
+    (r'airbnb\.com', "Airbnb"),
+    (r'fresha\.com|booksy\.com|treatwell\.com', "Randevu Sistemi"),
+    (r'opentable\.com', "OpenTable"),
+    (r'ubereats\.com', "Uber Eats"),
+    (r'simplybook\.me', "SimplyBook"),
+]
+
+_COPYRIGHT_RE = re.compile(r'©\s*(\d{4})|[Cc]opyright[^<]{0,20}?(\d{4})', re.IGNORECASE)
+_PHONE_RE = re.compile(r'tel:\+?[\d\-\s\(\)]{7,}|\b0\s*[2-5]\d[\s\-]?\d{3}[\s\-]?\d{2}[\s\-]?\d{2}\b')
+
 
 @dataclass
 class SEOReport:
@@ -26,6 +60,13 @@ class SEOReport:
     has_meta_description: bool = False
     has_contact_page: bool = False
     has_social_links: bool = False
+    # Yeni alanlar
+    tech_stack: str = ""
+    copyright_year: int = 0
+    has_analytics: bool = False
+    has_booking: bool = False
+    booking_platform: str = ""
+    has_phone_on_site: bool = False
     error: str = ""
     issues: list[str] = field(default_factory=list)
     positives: list[str] = field(default_factory=list)
@@ -36,6 +77,12 @@ class SEOReport:
         if self.response_time > 0:
             sp = "🐢" if self.response_time > 3.5 else ("⚠️" if self.response_time > 1.5 else "⚡")
             lines.append(f"{sp} Yanıt: {self.response_time:.1f} sn")
+        if self.tech_stack:
+            lines.append(f"🔧 Platform: {self.tech_stack}")
+        if self.copyright_year and self.copyright_year < 2023:
+            lines.append(f"📅 Son güncelleme tahmini: {self.copyright_year}")
+        if self.booking_platform:
+            lines.append(f"🔗 Entegrasyon: {self.booking_platform}")
         lines.append("")
         for p in self.positives:
             lines.append(f"✅ {p}")
@@ -46,10 +93,29 @@ class SEOReport:
         return "\n".join(lines)
 
     def for_email_prompt(self) -> str:
-        """Email yazımı için kısa sorun özeti."""
-        if not self.issues:
-            return ""
-        return "Mevcut site sorunları: " + "; ".join(self.issues[:4])
+        """Email yazımı için kişiselleştirilmiş site özeti — token harcanmaz."""
+        parts = []
+        if self.issues:
+            parts.append("Teknik sorunlar: " + "; ".join(self.issues[:3]))
+        tech_info = []
+        if self.tech_stack:
+            tech_info.append(f"Platform: {self.tech_stack}")
+        if self.copyright_year and self.copyright_year < 2023:
+            tech_info.append(f"son güncelleme ~{self.copyright_year}")
+        if tech_info:
+            parts.append(" | ".join(tech_info))
+        gaps = []
+        if not self.has_analytics:
+            gaps.append("ziyaretçi takibi yok")
+        if self.booking_platform:
+            gaps.append(f"{self.booking_platform} entegrasyonu mevcut")
+        elif not self.has_booking:
+            gaps.append("online rezervasyon/sipariş yok")
+        if not self.has_phone_on_site:
+            gaps.append("telefon sitede görünmüyor")
+        if gaps:
+            parts.append("Eksikler: " + "; ".join(gaps))
+        return " | ".join(parts) if parts else ""
 
 
 async def analyze(url: str) -> SEOReport:
@@ -117,6 +183,42 @@ async def analyze(url: str) -> SEOReport:
             report.positives.append("Sosyal medya bağlantısı var")
         else:
             report.issues.append("Sosyal medya bağlantısı yok")
+
+        # Teknoloji tespiti
+        for pattern, name in _TECH_PATTERNS:
+            if re.search(pattern, html, re.IGNORECASE):
+                report.tech_stack = name
+                break
+        if not report.tech_stack:
+            report.tech_stack = "Custom"
+
+        # Telif hakkı yılı (site yaşı tahmini)
+        year_m = _COPYRIGHT_RE.search(html)
+        if year_m:
+            try:
+                report.copyright_year = int(year_m.group(1) or year_m.group(2))
+            except (ValueError, TypeError):
+                pass
+
+        # Analytics / takip kodu
+        report.has_analytics = bool(_ANALYTICS_RE.search(html))
+        if report.has_analytics:
+            report.positives.append("Ziyaretçi takibi var")
+        else:
+            report.issues.append("Ziyaretçi takibi yok (Analytics eksik)")
+
+        # Rezervasyon / sipariş platformu
+        for pattern, name in _BOOKING_PATTERNS:
+            if re.search(pattern, html, re.IGNORECASE):
+                report.has_booking = True
+                report.booking_platform = name
+                report.positives.append(f"Platform: {name}")
+                break
+
+        # Telefon numarası sitede görünür mü?
+        report.has_phone_on_site = bool(_PHONE_RE.search(html))
+        if not report.has_phone_on_site:
+            report.issues.append("Telefon numarası sitede görünmüyor")
 
     except aiohttp.ClientSSLError:
         report.issues.append("SSL sertifikası geçersiz")
