@@ -147,7 +147,6 @@ class MarketingAgent(BaseAgent):
             return f"Gunluk mail limiti doldu. {gmail.stats}"
 
         from core.skills.lead_scorer import sort_leads_by_score
-        from core.skills.email_ab import pick_better_subject
 
         # Leadleri puana göre sırala — yüksek potansiyelli önce
         leads = sort_leads_by_score(leads)
@@ -185,16 +184,10 @@ class MarketingAgent(BaseAgent):
                 if not gmail.can_send():
                     break
                 subject, body = await self._write_email(lead, lang, seo)
-                body = await self._qa_email(subject, body, lang)
                 if not body:
-                    logger.warning(f"Mail kalite kontrolden gecemedi, atlandi: {lead.email} [{lang}]")
+                    logger.warning(f"Mail uretimi basarisiz, atlandi: {lead.email} [{lang}]")
                     skipped += 1
                     continue
-
-                # A/B konu satırı — ~100 token, daha yüksek açılma oranı
-                better = await pick_better_subject(lead.name, sector, lang, body[:200])
-                if better:
-                    subject = better
 
                 ok = await gmail.send(lead.email, subject, body, lead_info={
                     "name": lead.name, "sector": sector, "location": location, "lang": lang,
@@ -252,6 +245,9 @@ class MarketingAgent(BaseAgent):
         return ""
 
     async def _write_email(self, lead, lang: str, seo=None) -> tuple[str, str]:
+        """
+        Mail yaz, dil/kalite denetle ve en iyi konu satırını seç — tek LLM çağrısında.
+        """
         lang_name = LANG_NAMES.get(lang, lang)
 
         if lead.has_website:
@@ -286,14 +282,18 @@ class MarketingAgent(BaseAgent):
             f"{lang_name} dilinde profesyonel soguk e-posta yaz.\n\n"
             f"Durum: {offer}\n\n"
             f"{demo_instruction}"
-            "Format:\n"
-            "Konu: [kisa konu satiri]\n\n"
-            "[Mail metni — max 130 kelime]\n\n"
-            f"Dil kurallari: Mükemmel {lang_name} dil bilgisi kullan. "
-            "Imla, noktalama ve gramer hatasi KESINLIKLE olmamali. "
-            "Kurallar: isletme adini kullan, bostok.dev dogal tanit, "
-            "sonda https://bostok.dev linki ver. İmza YAZMA, sona ekliyoruz."
+            f"Dil kurallari: Mükemmel {lang_name} kullan — imla/gramer/noktalama hatası OLMAMALI. "
+            "Spam tetikleyici ifade ve BUYUK HARF kullanma. "
+            "Isletme adini kullan, bostok.dev dogal tanit, sonda https://bostok.dev linki ver. "
+            "Imza YAZMA, sona ekliyoruz. Max 130 kelime.\n\n"
+            "Yanit SADECE su formatta olmali, baska hicbir sey yazma:\n"
+            "KONU_A: [birinci konu satiri alternatifi]\n"
+            "KONU_B: [ikinci konu satiri alternatifi — daha merak uyandirici]\n"
+            "SECILEN_KONU: [acilma orani daha yuksek olani buraya yaz]\n"
+            "MAIL:\n"
+            "[mail metni]"
         )
+
         # KB'den sektör + dil bilgisi çek
         try:
             from core.sector_kb import get_kb
@@ -302,66 +302,37 @@ class MarketingAgent(BaseAgent):
                 prompt = f"[Bilgi tabanı]\n{kb_ctx}\n\n" + prompt
         except Exception:
             pass
+
         result = await self.ask(prompt)
+
         subject = f"Web Siteniz Hakkinda — Bostok.dev"
         body = result
 
         lines = result.strip().splitlines()
+        mail_start = None
         for i, line in enumerate(lines):
-            if line.lower().startswith("konu:"):
-                subject = line[5:].strip()
-                body = "\n".join(lines[i + 1:]).strip()
-                break
+            stripped = line.strip()
+            upper = stripped.upper()
+            if upper.startswith("SECILEN_KONU:"):
+                subject = stripped[len("SECILEN_KONU:"):].strip()
+            elif upper.startswith("MAIL:"):
+                mail_start = i + 1
+
+        if mail_start is not None:
+            body = "\n".join(lines[mail_start:]).strip()
+        elif not any(l.strip().upper().startswith("SECILEN_KONU:") for l in lines):
+            # Eski format fallback: KONU: satırına bak
+            for i, line in enumerate(lines):
+                if line.lower().startswith("konu:"):
+                    subject = line[5:].strip()
+                    body = "\n".join(lines[i + 1:]).strip()
+                    break
+
+        if not body or len(body) < 20:
+            return subject, ""
 
         body = body.rstrip() + SIGNATURE
         return subject, body
-
-    # ── Mail kalite kontrolü ─────────────────────────────────────
-
-    async def _qa_email(self, subject: str, body: str, lang: str) -> str:
-        """
-        Maili dil ve ton açısından kontrol et.
-        Sorun varsa düzeltilmiş versiyonu döndür.
-        Düzeltilemezse boş string döndür (mail gönderilmez).
-        """
-        from loguru import logger
-
-        lang_name = LANG_NAMES.get(lang, lang)
-        prompt = (
-            f"Asagidaki soguk satis mailini {lang_name} dil kurallari acisindan denetle ve MUTLAKA duzelt.\n\n"
-            f"KONU: {subject}\n\nMAIL:\n{body}\n\n"
-            "Gorev:\n"
-            f"1. {lang_name} imla ve gramer hatalarini duzelt (en onemli adim)\n"
-            "2. Spam tetikleyici ifadeleri kaldir (BUYUK HARF, !!!, 'ucretsiz kazan' vb.)\n"
-            "3. https://bostok.dev linki yoksa ekle\n"
-            "4. Imzayı DOKUNMA, biz ekliyoruz\n"
-            "5. 150 kelimeyi asiyorsa kisalt\n\n"
-            "Yanit SADECE su formatta olmali, baska hicbir sey yazma:\n"
-            "DURUM: ONAYLANDI\n"
-            "DUZELTILMIS_MAIL:\n"
-            "[duzeltilmis veya onaylanmis mail metni buraya — sadece body]"
-        )
-
-        try:
-            result = await self.ask(prompt)
-
-            # DUZELTILMIS_MAIL: etiketi ile ayristir
-            marker = "DUZELTILMIS_MAIL:"
-            if marker in result.upper():
-                idx = result.upper().index(marker)
-                corrected_body = result[idx + len(marker):].strip()
-                if corrected_body and len(corrected_body) > 20:
-                    if "ONAYLANDI" not in result.upper()[:idx]:
-                        logger.info(f"Mail QA duzeltildi: {subject[:50]}")
-                    return corrected_body
-
-            # Marker yoksa orijinal gonder ama logla
-            logger.warning(f"Mail QA format hatasi, orijinal gonderiliyor: {subject[:50]}")
-            return body
-
-        except Exception as e:
-            logger.warning(f"Mail QA hata: {e} — orijinal gonderiliyor")
-            return body
 
     # ── Demo kampanya (Gmail yok / lead yok) ─────────────────────
 
