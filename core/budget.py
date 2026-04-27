@@ -11,8 +11,8 @@ from loguru import logger
 BUDGET_FILE = Path(__file__).parent.parent / "memory" / "budget.json"
 
 # Günlük limitleri — ücretsiz tier için token limitleri
-DAILY_TOKEN_LIMIT = 2_000_000  # Tüm providerların toplamı (Groq+Cerebras+Gemini+...)
-HOURLY_TOKEN_LIMIT = 150_000   # Aşırı harcamayı önle
+DAILY_TOKEN_LIMIT = 5_000_000  # Tüm providerların toplamı (Groq+Cerebras+Gemini+...)
+HOURLY_TOKEN_LIMIT = 300_000   # Aşırı harcamayı önle
 
 
 class BudgetController:
