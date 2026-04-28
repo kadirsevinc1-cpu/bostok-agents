@@ -126,9 +126,28 @@ async def find_leads(sector: str, location: str, api_key: str = "") -> list[Lead
     if cached is not None:
         logger.info(f"Leads cache hit: {len(cached)} lead — {sector}/{location}")
         return cached
-    if not api_key:
-        return []
-    leads = await _maps_leads(sector, location, api_key)
+
+    leads: list[Lead] = []
+
+    # Kaynak 1: Google Maps API
+    if api_key:
+        maps_leads = await _maps_leads(sector, location, api_key)
+        leads.extend(maps_leads)
+
+    # Kaynak 2: Dizin scraper (her zaman çalışır — Maps API olmasa bile)
+    try:
+        from integrations.chamber_scraper import scrape_directory
+        chamber_leads = await scrape_directory(sector, location)
+        existing_names = {l.name.lower() for l in leads}
+        for cl in chamber_leads:
+            if cl.name.lower() not in existing_names:
+                leads.append(cl)
+                existing_names.add(cl.name.lower())
+        if chamber_leads:
+            logger.info(f"Dizin scraper {len(chamber_leads)} firma ekledi — toplam: {len(leads)}")
+    except Exception as e:
+        logger.debug(f"Chamber scraper atlandi: {e}")
+
     if leads:
         _set_cached_leads(sector, location, leads)
     return leads

@@ -620,6 +620,31 @@ async def handle_telegram_message(text: str):
             await bot.send(f"📱 WhatsApp kampanyası başlatıldı: <b>{wp_sector}</b> / {wp_location}")
         return
 
+    if cmd.startswith("/dizin "):
+        parts = text[len("/dizin "):].strip().split(None, 1)
+        if len(parts) < 2:
+            if bot:
+                await bot.send("⚠️ Kullanım: <code>/dizin {sektör} {şehir}</code>\nÖrnek: <code>/dizin restoran Istanbul</code>")
+            return
+        d_sector, d_location = parts[0], parts[1]
+        if bot:
+            await bot.send(f"🔍 Dizin taranıyor: <b>{d_sector}</b> / {d_location}...")
+        try:
+            from integrations.chamber_scraper import scrape_directory
+            d_leads = await scrape_directory(d_sector, d_location)
+            with_email = [l for l in d_leads if l.email]
+            names = "\n".join(f"  • {l.name} — {l.email or '(email yok)'}" for l in d_leads[:10])
+            await bot.send(
+                f"📋 <b>Dizin Sonucu</b> ({d_sector}/{d_location})\n\n"
+                f"Bulunan: {len(d_leads)} firma, {len(with_email)} email\n\n"
+                f"{names}"
+                + (f"\n  ... ve {len(d_leads)-10} firma daha" if len(d_leads) > 10 else "")
+            )
+        except Exception as e:
+            if bot:
+                await bot.send(f"❌ Dizin scraping hatası: {e}")
+        return
+
     if cmd == "/wa-rapor":
         from core.monthly_wa_selector import get_monthly_wa_stats
         if bot:
@@ -730,6 +755,7 @@ async def handle_telegram_message(text: str):
                 "/performans — Sektör/şehir yanıt oranı analizi\n"
                 "/wp {sektör} {şehir} — WhatsApp kampanyası başlat\n"
                 "/wa-rapor — Aylık WA kampanya geçmişi\n"
+                "/dizin {sektör} {şehir} — Dizin scraper'ı manuel tetikle\n"
                 "/bilgi [sektör] — Sektör bilgi tabanı\n"
                 "/ogret [sektör]|[bilgi] — KB'ye bilgi ekle\n"
                 "/pattern [şehir] — Öğrenilen pattern'ler\n"
