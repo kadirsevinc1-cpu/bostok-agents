@@ -243,6 +243,14 @@ class MarketingAgent(BaseAgent):
                     skipped += 1
                 await asyncio.sleep(8)  # spam önleme: mailler arası bekleme
 
+        # Tüm leadler atlandıysa (sıfır yeni gönderim) → tükendi olarak işaretle
+        if sent == 0 and (skipped > 0 or no_email > 0):
+            try:
+                from core.campaign_state import mark_exhausted
+                mark_exhausted(sector, location)
+            except Exception:
+                pass
+
         return (
             f"Kampanya tamamlandi [{sector}/{location}]:\n"
             f"- Gonderilen: {sent}\n"

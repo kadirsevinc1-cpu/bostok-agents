@@ -17,7 +17,7 @@ import aiohttp
 from loguru import logger
 
 LEADS_CACHE_FILE = Path("memory/leads_cache.json")
-LEADS_CACHE_TTL_DAYS = 7
+LEADS_CACHE_TTL_DAYS = 30
 
 
 def _cache_key(sector: str, location: str) -> str:

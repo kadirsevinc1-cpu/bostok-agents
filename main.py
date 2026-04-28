@@ -341,7 +341,11 @@ async def marketing_scheduler():
             + (f" ...+{total - 4}" if total > 4 else "")
         )
 
+        from core.campaign_state import is_exhausted
         for loc_idx, location in enumerate(campaign["locations"], 1):
+            if is_exhausted(campaign["sector"], location):
+                logger.debug(f"  [{loc_idx}/{total}] Atlandi (tukendi): {campaign['sector']}/{location}")
+                continue
             logger.info(
                 f"  [{loc_idx}/{total}] {campaign['sector']} — {location}"
             )
@@ -439,6 +443,12 @@ async def handle_telegram_message(text: str):
             except Exception:
                 lead_lines = "  Veri okunamadı"
 
+            try:
+                from core.campaign_state import exhausted_count
+                exhausted = exhausted_count()
+            except Exception:
+                exhausted = 0
+
             msg = (
                 f"<b>Sistem Durumu</b>\n\n"
                 f"<b>LLM:</b> {b['requests']} istek, {b['tokens_used']:,} token kullanıldı\n"
@@ -448,6 +458,7 @@ async def handle_telegram_message(text: str):
                 f"  • Gelen yanıt: {inbox}\n"
                 f"  • Bounce (geçersiz): {bounced}\n\n"
                 f"<b>Lead Aşamaları:</b>\n{lead_lines}\n\n"
+                f"<b>Kampanya:</b> 201 kombinasyon, {exhausted} tükendi (90g atlanacak)\n\n"
                 f"<b>Demo site:</b> {demo_src}\n{demo[:60]}"
             )
             await bot.send(msg)
