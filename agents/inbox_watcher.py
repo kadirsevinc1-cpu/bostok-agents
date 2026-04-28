@@ -39,6 +39,7 @@ async def _generate_draft(body: str, from_name: str, lead_name: str,
 
 def _save_draft(reply_id: str, draft_text: str) -> None:
     import json as _json
+    import os as _os
     data: dict = {}
     if DRAFTS_FILE.exists():
         try:
@@ -49,7 +50,10 @@ def _save_draft(reply_id: str, draft_text: str) -> None:
         "draft": draft_text,
         "created_at": __import__("datetime").datetime.now().isoformat(),
     }
-    DRAFTS_FILE.write_text(_json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    DRAFTS_FILE.parent.mkdir(exist_ok=True)
+    tmp = DRAFTS_FILE.with_suffix(".tmp")
+    tmp.write_text(_json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    _os.replace(tmp, DRAFTS_FILE)
 
 
 class InboxWatcherAgent(BaseAgent):
@@ -78,7 +82,8 @@ class InboxWatcherAgent(BaseAgent):
             from integrations.gmail import is_bounce, record_bounce
             if is_bounce(reply.from_email):
                 # Orijinal alıcıyı sent_info'dan çıkar ve blacklist'e ekle
-                original_to = reply.sent_info.get("to", "")
+                sent_info_safe = reply.sent_info or {}
+                original_to = sent_info_safe.get("to", "").lower()
                 if original_to:
                     record_bounce(original_to)
                     try:

@@ -210,6 +210,11 @@ class MarketingAgent(BaseAgent):
                 skipped += 1
                 continue
 
+            # Dil döngüsünden önce dedup kontrolü — birden fazla dil varsa tekrar gönderme
+            if gmail.is_sent(lead.email):
+                skipped += 1
+                continue
+
             seo = None
             if lead.has_website and lead.website:
                 try:

@@ -123,7 +123,9 @@ class GmailSender:
             return False
         try:
             from integrations.email_validator import is_valid as _email_valid
-            if not _email_valid(to):
+            _ev_loop = asyncio.get_running_loop()
+            _ev_valid = await _ev_loop.run_in_executor(None, _email_valid, to)
+            if not _ev_valid:
                 return False
         except Exception:
             pass
@@ -242,7 +244,7 @@ class GmailPool:
         return any(s.can_send() for s in self._senders)
 
     def is_sent(self, email: str) -> bool:
-        return self._senders[0].is_sent(email) if self._senders else False
+        return any(s.is_sent(email) for s in self._senders) if self._senders else False
 
     @property
     def stats(self) -> str:

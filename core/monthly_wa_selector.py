@@ -55,7 +55,7 @@ def select_monthly_wa_leads(top_n: int = 3) -> list:
             all_wa_emailed.add(entry.get("email", "").lower())
 
     candidates = []
-    for email, rec in tracker._leads.items():
+    for email, rec in list(tracker._leads.items()):
         if email in all_wa_emailed:
             continue
         if rec.stage in ("bounced", "unsubscribed", "closed_lost", "closed_won"):

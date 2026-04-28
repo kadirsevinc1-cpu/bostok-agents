@@ -59,10 +59,13 @@ def mark_exhausted(sector: str, location: str):
 
 def exhausted_count() -> int:
     data = _load()
-    active = sum(
-        1 for ts in data.values()
-        if datetime.now() - datetime.fromisoformat(ts) < timedelta(days=_REVISIT_DAYS)
-    )
+    active = 0
+    for ts in data.values():
+        try:
+            if datetime.now() - datetime.fromisoformat(ts) < timedelta(days=_REVISIT_DAYS):
+                active += 1
+        except (ValueError, TypeError):
+            pass
     return active
 
 
