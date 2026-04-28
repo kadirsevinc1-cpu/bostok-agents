@@ -137,6 +137,13 @@ class InboxWatcherAgent(BaseAgent):
             except Exception:
                 pass
 
+            # A/B takibi — hangi konu yanıt aldı
+            try:
+                from core.ab_tracker import record_reply as ab_reply
+                ab_reply(reply.matched_message_id)
+            except Exception:
+                pass
+
             # KB'ye pattern kaydet
             try:
                 from core.sector_kb import get_kb

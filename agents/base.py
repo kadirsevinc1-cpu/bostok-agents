@@ -1,6 +1,9 @@
 import asyncio
+import datetime as _dt
 from loguru import logger
 from core.message_bus import bus, AgentName, Message, MessageType
+
+_AGENT_REGISTRY: dict[str, "BaseAgent"] = {}
 
 
 class BaseAgent:
@@ -10,6 +13,8 @@ class BaseAgent:
 
     def __init__(self):
         self.running = False
+        self.last_heartbeat: _dt.datetime = _dt.datetime.now()
+        self.loop_count: int = 0
 
     def memory_context(self, query: str = "") -> str:
         from core import memory
@@ -55,11 +60,14 @@ class BaseAgent:
 
     async def run(self):
         self.running = True
+        _AGENT_REGISTRY[self.name.value] = self
         logger.info(f"{self.name.value} başlatıldı")
         crash_count = 0
         while self.running:
             try:
                 await self.loop()
+                self.last_heartbeat = _dt.datetime.now()
+                self.loop_count += 1
                 crash_count = 0
             except Exception as e:
                 crash_count += 1

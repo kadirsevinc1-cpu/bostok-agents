@@ -354,6 +354,15 @@ class MarketingAgent(BaseAgent):
         except Exception:
             pass
 
+        # A/B geçmiş verisi — iyi çalışan konu pattern'leri
+        try:
+            from core.ab_tracker import get_prompt_hint
+            ab_hint = get_prompt_hint(lead.sector, lang)
+            if ab_hint:
+                prompt = f"[A/B Geçmiş]\n{ab_hint}\n\n" + prompt
+        except Exception:
+            pass
+
         result = await self.ask(prompt)
 
         subject = f"Web Siteniz Hakkinda — Bostok.dev"

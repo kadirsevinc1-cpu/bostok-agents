@@ -15,6 +15,17 @@ SENT_LOG      = Path("memory/sent_emails.txt")
 SENT_IDS_FILE = Path("memory/sent_message_ids.json")
 BOUNCE_LOG    = Path("memory/bounced_emails.txt")
 
+
+def _warmup_limit(account_age_days: int, configured_limit: int) -> int:
+    """Hesap yaşına göre günlük limit uygula (spam önleme)."""
+    if account_age_days < 7:
+        return min(20, configured_limit)
+    if account_age_days < 14:
+        return min(50, configured_limit)
+    if account_age_days < 30:
+        return min(150, configured_limit)
+    return configured_limit
+
 _BOUNCE_SENDERS = {
     "mailer-daemon", "postmaster", "noreply@", "no-reply@",
     "mail-daemon", "delivery-failure", "bounce",
@@ -134,10 +145,17 @@ class GmailSender:
                 r'<a href="\1">\1</a>',
                 html_body
             )
+            # Tracking pixel
+            try:
+                from integrations.tracking_server import get_tracking_url
+                pixel_url = get_tracking_url(msg_id)
+                pixel_tag = f'<img src="{pixel_url}" width="1" height="1" style="display:none" alt=""/>' if pixel_url else ""
+            except Exception:
+                pixel_tag = ""
             html_body = (
                 f'<html><body style="font-family:Arial,sans-serif;font-size:14px;'
                 f'color:#222;max-width:600px;margin:0 auto;padding:20px">'
-                f'{html_body}</body></html>'
+                f'{html_body}{pixel_tag}</body></html>'
             )
             msg.attach(MIMEText(html_body, "html", "utf-8"))
             loop = asyncio.get_running_loop()
@@ -145,6 +163,12 @@ class GmailSender:
             self._today_count += 1
             self._record_sent(to)
             self._save_message_id(msg_id, to, subject, lead_info or {})
+            try:
+                from core.ab_tracker import record_sent as ab_sent
+                info = lead_info or {}
+                ab_sent(msg_id, subject, info.get("sector", ""), info.get("lang", ""))
+            except Exception:
+                pass
             logger.info(f"Mail gonderildi: {to} ({self._today_count}/{self._limit})")
             try:
                 from core.lead_state import get_tracker, LeadStage
@@ -193,24 +217,90 @@ class GmailSender:
             srv.sendmail(self._user, to, raw)
 
 
-_sender: GmailSender | None = None
+class GmailPool:
+    """Round-robin ile birden fazla Gmail hesabı yönetir."""
+
+    def __init__(self, senders: list[GmailSender]):
+        self._senders = senders
+        self._idx = 0
+
+    def _next(self) -> GmailSender | None:
+        for _ in range(len(self._senders)):
+            s = self._senders[self._idx % len(self._senders)]
+            self._idx += 1
+            if s.can_send():
+                return s
+        return None
+
+    def can_send(self) -> bool:
+        return any(s.can_send() for s in self._senders)
+
+    def is_sent(self, email: str) -> bool:
+        return self._senders[0].is_sent(email) if self._senders else False
+
+    @property
+    def stats(self) -> str:
+        return " | ".join(
+            f"{s._user.split('@')[0]}: {s._today_count}/{s._limit}"
+            for s in self._senders
+        )
+
+    async def send(self, to: str, subject: str, body: str, lead_info: dict = None) -> bool:
+        s = self._next()
+        if not s:
+            logger.warning("Tüm Gmail hesapları limitinde")
+            return False
+        return await s.send(to, subject, body, lead_info)
+
+    async def send_reply(self, to: str, subject: str, body: str, in_reply_to: str = "") -> bool:
+        s = self._next() or (self._senders[0] if self._senders else None)
+        if not s:
+            return False
+        return await s.send_reply(to, subject, body, in_reply_to)
 
 
-def init_gmail() -> GmailSender | None:
+_sender: GmailSender | GmailPool | None = None
+
+
+def init_gmail() -> GmailSender | GmailPool | None:
     global _sender
     try:
         from config import settings
-        user = getattr(settings, "gmail_user", "")
-        pwd  = getattr(settings, "gmail_app_password", "")
-        limit = int(getattr(settings, "gmail_daily_limit", 500))
-        if user and pwd:
-            _sender = GmailSender(user, pwd, daily_limit=limit)
-            logger.info(f"Gmail hazir: {user} (gunluk limit: {limit})")
-            return _sender
+        senders = []
+        accounts = [
+            (getattr(settings, "gmail_user", ""),
+             getattr(settings, "gmail_app_password", ""),
+             int(getattr(settings, "gmail_daily_limit", 500)),
+             int(getattr(settings, "gmail_account_age_days", 365))),
+            (getattr(settings, "gmail_user_2", ""),
+             getattr(settings, "gmail_app_password_2", ""),
+             int(getattr(settings, "gmail_daily_limit_2", 500)),
+             int(getattr(settings, "gmail_account_age_days_2", 365))),
+            (getattr(settings, "gmail_user_3", ""),
+             getattr(settings, "gmail_app_password_3", ""),
+             int(getattr(settings, "gmail_daily_limit_3", 500)),
+             int(getattr(settings, "gmail_account_age_days_3", 365))),
+        ]
+        for user, pwd, limit, age_days in accounts:
+            if user and pwd:
+                effective = _warmup_limit(age_days, limit)
+                s = GmailSender(user, pwd, daily_limit=effective)
+                senders.append(s)
+                warmup_note = f" [ısınma: {effective}/{limit}]" if effective < limit else ""
+                logger.info(f"Gmail hazir: {user} (limit: {effective}{warmup_note})")
+
+        if not senders:
+            return None
+        if len(senders) == 1:
+            _sender = senders[0]
+        else:
+            _sender = GmailPool(senders)
+            logger.info(f"Gmail havuzu: {len(senders)} hesap")
+        return _sender
     except Exception as e:
         logger.warning(f"Gmail init hata: {e}")
     return None
 
 
-def get_gmail() -> GmailSender | None:
+def get_gmail() -> GmailSender | GmailPool | None:
     return _sender

@@ -620,6 +620,21 @@ async def handle_telegram_message(text: str):
             await bot.send(f"📱 WhatsApp kampanyası başlatıldı: <b>{wp_sector}</b> / {wp_location}")
         return
 
+    if cmd == "/agents":
+        if bot:
+            import datetime as _dt
+            from agents.base import _AGENT_REGISTRY
+            now = _dt.datetime.now()
+            lines = []
+            for name, agent in sorted(_AGENT_REGISTRY.items()):
+                diff = (now - agent.last_heartbeat).total_seconds()
+                icon = "✅" if diff < 120 else ("⚠️" if diff < 600 else "❌")
+                lines.append(f"{icon} <b>{name}</b> — {int(diff)}s önce aktif, {agent.loop_count:,} loop")
+            from integrations.tracking_server import _public_url
+            dashboard_line = f"\n\n🌐 Dashboard: {_public_url}/dashboard" if _public_url else ""
+            await bot.send("<b>Agent Durumu</b>\n\n" + "\n".join(lines) + dashboard_line)
+        return
+
     if cmd.startswith("/dizin "):
         parts = text[len("/dizin "):].strip().split(None, 1)
         if len(parts) < 2:
@@ -756,6 +771,7 @@ async def handle_telegram_message(text: str):
                 "/wp {sektör} {şehir} — WhatsApp kampanyası başlat\n"
                 "/wa-rapor — Aylık WA kampanya geçmişi\n"
                 "/dizin {sektör} {şehir} — Dizin scraper'ı manuel tetikle\n"
+                "/agents — Tüm agent'ların sağlık durumu\n"
                 "/bilgi [sektör] — Sektör bilgi tabanı\n"
                 "/ogret [sektör]|[bilgi] — KB'ye bilgi ekle\n"
                 "/pattern [şehir] — Öğrenilen pattern'ler\n"
@@ -777,6 +793,20 @@ async def handle_telegram_message(text: str):
             await bot.send(msg)
 
     await route_user_message(text, send_fn)
+
+
+async def _detect_public_ip() -> str:
+    import aiohttp
+    for url in ["https://api.ipify.org", "https://ifconfig.me/ip", "https://ipecho.net/plain"]:
+        try:
+            async with aiohttp.ClientSession() as s:
+                async with s.get(url, timeout=aiohttp.ClientTimeout(total=5)) as r:
+                    ip = (await r.text()).strip()
+                    if ip and "." in ip:
+                        return ip
+        except Exception:
+            pass
+    return ""
 
 
 async def _wait_for_internet(timeout: int = 120):
@@ -826,6 +856,18 @@ async def main():
         logger.info("Gmail inbox takibi aktif")
     else:
         logger.warning("Gmail bagli degil - sadece sablon modu")
+
+    # Tracking sunucusu başlat (port 8080)
+    from integrations.tracking_server import start as tracking_start, set_public_url
+    tracking_port = 8080
+    public_ip = await _detect_public_ip()
+    if public_ip:
+        tracking_url = f"http://{public_ip}:{tracking_port}"
+        set_public_url(tracking_url)
+        from integrations.gmail import get_gmail  # henüz init edilmedi, sonra set edilecek
+        logger.info(f"Dashboard: {tracking_url}/dashboard")
+    else:
+        logger.warning("Public IP tespit edilemedi, tracking devre dışı")
 
     # WhatsApp başlat
     wa = init_whatsapp()
@@ -951,6 +993,34 @@ async def main():
     tasks.append(_embed_loop())
     tasks.append(_weekly_report_loop())
     tasks.append(_monthly_wa_loop())
+    tasks.append(asyncio.create_task(tracking_start(port=tracking_port)))
+
+    async def _health_monitor():
+        """Agent'ları izle, 10 dakika sessiz kalırsa Telegram'a uyarı gönder."""
+        import datetime as _dt
+        alerted: set[str] = set()
+        while True:
+            await asyncio.sleep(120)
+            try:
+                from agents.base import _AGENT_REGISTRY
+                now = _dt.datetime.now()
+                for name, agent in _AGENT_REGISTRY.items():
+                    diff = (now - agent.last_heartbeat).total_seconds()
+                    if diff > 600 and name not in alerted:
+                        alerted.add(name)
+                        _bot = get_bot()
+                        if _bot:
+                            await _bot.send(
+                                f"⚠️ <b>Agent Uyarısı</b>\n"
+                                f"<b>{name}</b> {int(diff//60)} dakikadır sessiz!\n"
+                                f"Sistem çalışıyor ama bu agent yanıt vermiyor."
+                            )
+                    elif diff < 300 and name in alerted:
+                        alerted.discard(name)
+            except Exception:
+                pass
+
+    tasks.append(_health_monitor())
 
     try:
         await asyncio.gather(*tasks)

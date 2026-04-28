@@ -23,10 +23,21 @@ class Settings(BaseSettings):
     netlify_token:          str = Field("", env="NETLIFY_TOKEN")
     netlify_demo_site_id:   str = Field("", env="NETLIFY_DEMO_SITE_ID")
 
-    # Gmail (uygulama sifresi ile)
-    gmail_user:          str = Field("", env="GMAIL_USER")
-    gmail_app_password:  str = Field("", env="GMAIL_APP_PASSWORD")
-    gmail_daily_limit:   int = Field(500, env="GMAIL_DAILY_LIMIT")
+    # Gmail — 3 hesaba kadar desteklenir (GMAIL_ACCOUNT_AGE_DAYS: hesap kaç günlük, ısınma için)
+    gmail_user:               str = Field("", env="GMAIL_USER")
+    gmail_app_password:       str = Field("", env="GMAIL_APP_PASSWORD")
+    gmail_daily_limit:        int = Field(500, env="GMAIL_DAILY_LIMIT")
+    gmail_account_age_days:   int = Field(365, env="GMAIL_ACCOUNT_AGE_DAYS")
+
+    gmail_user_2:             str = Field("", env="GMAIL_USER_2")
+    gmail_app_password_2:     str = Field("", env="GMAIL_APP_PASSWORD_2")
+    gmail_daily_limit_2:      int = Field(500, env="GMAIL_DAILY_LIMIT_2")
+    gmail_account_age_days_2: int = Field(365, env="GMAIL_ACCOUNT_AGE_DAYS_2")
+
+    gmail_user_3:             str = Field("", env="GMAIL_USER_3")
+    gmail_app_password_3:     str = Field("", env="GMAIL_APP_PASSWORD_3")
+    gmail_daily_limit_3:      int = Field(500, env="GMAIL_DAILY_LIMIT_3")
+    gmail_account_age_days_3: int = Field(365, env="GMAIL_ACCOUNT_AGE_DAYS_3")
 
     # Google Maps Places API (lead finder icin - opsiyonel)
     google_maps_api_key: str = Field("", env="GOOGLE_MAPS_API_KEY")
