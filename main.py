@@ -416,9 +416,9 @@ async def handle_telegram_message(text: str):
 
     if cmd == "/durum":
         if bot:
-            from integrations.vercel import get_vercel_url
             from agents.marketing import _get_demo_base, _WORKER_BASE
-            demo = _get_demo_base()
+            _durum_loop = asyncio.get_running_loop()
+            demo = await _durum_loop.run_in_executor(None, _get_demo_base)
             demo_src = "Vercel" if "vercel.app" in demo else ("Worker" if demo == _WORKER_BASE else "Netlify")
             bounced = len(load_bounced())
             from pathlib import Path
@@ -678,7 +678,12 @@ async def handle_telegram_message(text: str):
         return
 
     if cmd.startswith("onayla "):
-        reply_id = text[len("onayla "):].strip().split()[0]
+        _onayla_parts = text[len("onayla "):].strip().split()
+        if not _onayla_parts:
+            if bot:
+                await bot.send("⚠️ Kullanım: <code>onayla {id}</code>")
+            return
+        reply_id = _onayla_parts[0]
         import json
         from pathlib import Path
         drafts_path = Path("memory/drafts.json")
