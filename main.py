@@ -120,6 +120,68 @@ CAMPAIGNS = [
     {"sector": "tekstil",          "locations": ["Istanbul", "Bursa", "Denizli", "Gaziantep", "Tekirdag"],        "langs": ["tr", "en"]},
     {"sector": "depo ve lojistik", "locations": ["Istanbul", "Ankara", "Izmir", "Kocaeli", "Tekirdag", "Sakarya"], "langs": ["tr"]},
 
+    # ── Türkiye — Tarım & Hayvancılık ────────────────────────────
+    {"sector": "tarim makineleri",      "locations": ["Konya", "Ankara", "Bursa", "Adana", "Samsun", "Sakarya", "Corum", "Tekirdag"], "langs": ["tr"]},
+    {"sector": "hayvancılık",           "locations": ["Konya", "Erzurum", "Samsun", "Trabzon", "Sivas", "Ordu", "Rize", "Kars", "Diyarbakir"], "langs": ["tr"]},
+    {"sector": "su urunleri",           "locations": ["Trabzon", "Rize", "Ordu", "Samsun", "Mersin", "Antalya", "Izmir", "Mugla"], "langs": ["tr"]},
+    {"sector": "seracılık",             "locations": ["Antalya", "Mersin", "Adana", "Izmir", "Mugla", "Hatay"], "langs": ["tr"]},
+
+    # ── Türkiye — Gıda & İçecek Üretimi ──────────────────────────
+    {"sector": "gida uretimi",          "locations": ["Istanbul", "Bursa", "Konya", "Ankara", "Izmir", "Adana", "Gaziantep", "Tekirdag", "Sakarya", "Kayseri"], "langs": ["tr"]},
+    {"sector": "icecek uretimi",        "locations": ["Istanbul", "Bursa", "Ankara", "Izmir", "Adana", "Tekirdag", "Sakarya"], "langs": ["tr"]},
+
+    # ── Türkiye — Mobilya & Ahşap ─────────────────────────────────
+    {"sector": "mobilya uretimi",       "locations": ["Istanbul", "Bursa", "Kayseri", "Ankara", "Izmir", "Konya", "Tekirdag", "Sakarya"], "langs": ["tr"]},
+    {"sector": "ahsap isleme",          "locations": ["Bursa", "Istanbul", "Kayseri", "Trabzon", "Rize", "Artvin", "Sakarya", "Duzce"], "langs": ["tr"]},
+
+    # ── Türkiye — Ambalaj & Plastik & Kimya ──────────────────────
+    {"sector": "ambalaj sanayi",        "locations": ["Istanbul", "Bursa", "Kocaeli", "Izmir", "Tekirdag", "Sakarya", "Ankara", "Gaziantep"], "langs": ["tr"]},
+    {"sector": "plastik uretimi",       "locations": ["Istanbul", "Bursa", "Kocaeli", "Izmir", "Gaziantep", "Tekirdag", "Sakarya", "Ankara"], "langs": ["tr"]},
+    {"sector": "kozmetik uretimi",      "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Tekirdag", "Kocaeli"], "langs": ["tr"]},
+    {"sector": "matbaa",                "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Kayseri", "Samsun", "Tekirdag"], "langs": ["tr"]},
+
+    # ── Türkiye — Metal & Makine & Seramik ───────────────────────
+    {"sector": "metal isleme",          "locations": ["Istanbul", "Bursa", "Kocaeli", "Ankara", "Izmir", "Konya", "Gaziantep", "Tekirdag", "Sakarya", "Kahramanmaras"], "langs": ["tr"]},
+    {"sector": "aluminyum uretimi",     "locations": ["Istanbul", "Bursa", "Kocaeli", "Izmir", "Tekirdag", "Sakarya", "Ankara"], "langs": ["tr"]},
+    {"sector": "seramik uretimi",       "locations": ["Istanbul", "Izmir", "Kutahya", "Bilecik", "Bursa", "Canakkale", "Eskisehir"], "langs": ["tr"]},
+    {"sector": "makine uretimi",        "locations": ["Istanbul", "Bursa", "Ankara", "Izmir", "Konya", "Kocaeli", "Gaziantep", "Sakarya", "Eskisehir"], "langs": ["tr"]},
+    {"sector": "mucevher",              "locations": ["Istanbul", "Ankara", "Izmir", "Trabzon", "Rize", "Kayseri"], "langs": ["tr"]},
+
+    # ── Türkiye — Enerji & Çevre ──────────────────────────────────
+    {"sector": "gunes enerjisi",        "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Konya", "Adana", "Bursa", "Gaziantep", "Diyarbakir", "Sanliurfa", "Kayseri"], "langs": ["tr"]},
+    {"sector": "geri donusum",          "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Kocaeli", "Tekirdag", "Sakarya", "Samsun"], "langs": ["tr"]},
+    {"sector": "atik yonetimi",         "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Kocaeli", "Samsun", "Antalya"], "langs": ["tr"]},
+
+    # ── Türkiye — Lojistik & Kargo ────────────────────────────────
+    {"sector": "kargo hizmetleri",      "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Tekirdag", "Sakarya"], "langs": ["tr"]},
+    {"sector": "kurye hizmetleri",      "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Antalya"], "langs": ["tr"]},
+
+    # ── Türkiye — Danışmanlık & İK ────────────────────────────────
+    {"sector": "danismanlik",           "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Antalya", "Tekirdag"], "langs": ["tr"]},
+    {"sector": "insan kaynaklari",      "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Kocaeli", "Adana", "Antalya"], "langs": ["tr"]},
+
+    # ── Türkiye — Sağlık (Ek) ─────────────────────────────────────
+    {"sector": "laboraturvar",          "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Kayseri", "Samsun", "Antalya"], "langs": ["tr"]},
+    {"sector": "saglik turizmi",        "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana"], "langs": ["tr", "en"]},
+    {"sector": "yasli bakım evi",       "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Antalya", "Kayseri", "Samsun"], "langs": ["tr"]},
+    {"sector": "medikal cihaz",         "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Kocaeli", "Antalya"], "langs": ["tr"]},
+
+    # ── Türkiye — Turizm & Etkinlik ───────────────────────────────
+    {"sector": "tur operatoru",         "locations": ["Istanbul", "Antalya", "Izmir", "Cappadocia", "Bodrum", "Trabzon", "Erzurum", "Mugla"], "langs": ["tr", "en"]},
+    {"sector": "etkinlik organizasyon", "locations": ["Istanbul", "Ankara", "Izmir", "Antalya", "Bursa", "Adana", "Samsun"], "langs": ["tr"]},
+
+    # ── Türkiye — Güvenlik & Tesis ────────────────────────────────
+    {"sector": "guvenlik sirketi",      "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Tekirdag", "Sakarya", "Diyarbakir", "Antalya"], "langs": ["tr"]},
+    {"sector": "tesis yonetimi",        "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Kocaeli", "Adana", "Mersin", "Antalya"], "langs": ["tr"]},
+
+    # ── Türkiye — Reklam & Yazılım ────────────────────────────────
+    {"sector": "reklam ajansi",         "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Antalya", "Kayseri"], "langs": ["tr"]},
+    {"sector": "yazilim gelistirme",    "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Kocaeli", "Eskisehir", "Samsun", "Antalya"], "langs": ["tr"]},
+
+    # ── Türkiye — Teknik & Ev Hizmetleri ──────────────────────────
+    {"sector": "teknik servis",         "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Samsun", "Kayseri", "Tekirdag", "Sakarya", "Antalya"], "langs": ["tr"]},
+    {"sector": "ev hizmetleri",         "locations": ["Istanbul", "Ankara", "Izmir", "Bursa", "Adana", "Antalya", "Kayseri"], "langs": ["tr"]},
+
     # ── Almanya & Avusturya & İsviçre ─────────────────────────────
     {"sector": "restaurant",       "locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart", "Nuremberg", "Dresden", "Leipzig", "Bremen", "Hannover", "Dortmund"], "langs": ["tr", "de"]},
     {"sector": "friseur",          "locations": ["Berlin", "Hamburg", "Dusseldorf", "Frankfurt", "Stuttgart", "Nuremberg", "Leipzig", "Bremen", "Hannover", "Dortmund"], "langs": ["tr", "de"]},
@@ -132,6 +194,15 @@ CAMPAIGNS = [
     {"sector": "fahrschule",       "locations": ["Berlin", "Hamburg", "Munich", "Frankfurt", "Nuremberg", "Leipzig", "Hannover", "Cologne"], "langs": ["de"]},
     {"sector": "tierarzt",         "locations": ["Berlin", "Hamburg", "Munich", "Vienna", "Nuremberg", "Leipzig", "Frankfurt", "Hannover"], "langs": ["de"]},
     {"sector": "manufacturing",    "locations": ["Stuttgart", "Munich", "Frankfurt", "Dusseldorf", "Nuremberg", "Hannover", "Dortmund", "Leipzig"], "langs": ["de"]},
+    {"sector": "mobelwerk",        "locations": ["Stuttgart", "Munich", "Frankfurt", "Cologne", "Nuremberg", "Leipzig", "Hannover"], "langs": ["de"]},
+    {"sector": "metallverarbeitung","locations": ["Stuttgart", "Munich", "Frankfurt", "Dusseldorf", "Nuremberg", "Hannover", "Dortmund", "Cologne"], "langs": ["de"]},
+    {"sector": "druckerei",        "locations": ["Berlin", "Hamburg", "Munich", "Frankfurt", "Stuttgart", "Nuremberg", "Leipzig", "Cologne"], "langs": ["de"]},
+    {"sector": "kosmetikstudio",   "locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart", "Dusseldorf"], "langs": ["de"]},
+    {"sector": "pflegedienst",     "locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart", "Nuremberg", "Hannover"], "langs": ["de"]},
+    {"sector": "logistik",         "locations": ["Hamburg", "Cologne", "Frankfurt", "Stuttgart", "Munich", "Dortmund", "Hannover", "Bremen"], "langs": ["de"]},
+    {"sector": "sicherheitsdienst","locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Dortmund"], "langs": ["de"]},
+    {"sector": "solarenergie",     "locations": ["Munich", "Stuttgart", "Frankfurt", "Cologne", "Nuremberg", "Hamburg", "Berlin"], "langs": ["de"]},
+    {"sector": "veranstaltungsservice", "locations": ["Berlin", "Hamburg", "Munich", "Cologne", "Frankfurt", "Stuttgart"], "langs": ["de"]},
 
     # ── Hollanda & Belçika ────────────────────────────────────────
     {"sector": "restaurant",       "locations": ["Amsterdam", "Rotterdam", "The Hague", "Brussels", "Antwerp"],   "langs": ["en", "nl"]},
@@ -150,6 +221,15 @@ CAMPAIGNS = [
     {"sector": "driving school",   "locations": ["London", "Birmingham", "Manchester", "Liverpool", "Sheffield", "Bristol", "Newcastle"], "langs": ["en"]},
     {"sector": "barber shop",      "locations": ["London", "Manchester", "Birmingham", "Liverpool", "Sheffield", "Bristol", "Newcastle", "Nottingham"], "langs": ["en"]},
     {"sector": "florist",          "locations": ["London", "Manchester", "Edinburgh", "Liverpool", "Sheffield", "Bristol", "Newcastle"], "langs": ["en"]},
+    {"sector": "courier service",  "locations": ["London", "Manchester", "Birmingham", "Leeds", "Liverpool", "Bristol", "Sheffield"], "langs": ["en"]},
+    {"sector": "security company", "locations": ["London", "Manchester", "Birmingham", "Leeds", "Liverpool", "Bristol"], "langs": ["en"]},
+    {"sector": "care home",        "locations": ["London", "Manchester", "Birmingham", "Leeds", "Liverpool", "Sheffield", "Bristol", "Newcastle"], "langs": ["en"]},
+    {"sector": "printing company", "locations": ["London", "Manchester", "Birmingham", "Leeds", "Liverpool", "Bristol"], "langs": ["en"]},
+    {"sector": "marketing agency", "locations": ["London", "Manchester", "Birmingham", "Leeds", "Bristol", "Edinburgh"], "langs": ["en"]},
+    {"sector": "tour operator",    "locations": ["London", "Manchester", "Edinburgh", "Bristol", "Liverpool"], "langs": ["en"]},
+    {"sector": "solar energy",     "locations": ["London", "Manchester", "Birmingham", "Leeds", "Bristol", "Cardiff", "Edinburgh"], "langs": ["en"]},
+    {"sector": "event planning",   "locations": ["London", "Manchester", "Birmingham", "Leeds", "Liverpool", "Bristol"], "langs": ["en"]},
+    {"sector": "catering company", "locations": ["London", "Manchester", "Birmingham", "Leeds", "Liverpool", "Bristol"], "langs": ["en"]},
 
     # ── Amerika (USA) ─────────────────────────────────────────────
     {"sector": "restaurant",       "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Miami", "Phoenix", "Dallas", "San Diego", "San Antonio", "San Jose"], "langs": ["en"]},
@@ -170,6 +250,15 @@ CAMPAIGNS = [
     {"sector": "florist",          "locations": ["New York", "Los Angeles", "Chicago", "Miami"],                                                                        "langs": ["en"]},
     {"sector": "pet shop",         "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Miami"],                                                             "langs": ["en"]},
     {"sector": "manufacturing",    "locations": ["Detroit", "Chicago", "Houston", "Dallas", "Los Angeles"],                                                             "langs": ["en"]},
+    {"sector": "solar energy",     "locations": ["Los Angeles", "Phoenix", "Dallas", "Miami", "Atlanta", "Denver", "Las Vegas", "Austin", "San Diego"], "langs": ["en"]},
+    {"sector": "marketing agency", "locations": ["New York", "Los Angeles", "Chicago", "Miami", "Atlanta", "Dallas", "Austin", "Seattle"],              "langs": ["en"]},
+    {"sector": "event planning",   "locations": ["New York", "Los Angeles", "Chicago", "Miami", "Las Vegas", "Atlanta", "Dallas", "Houston"],           "langs": ["en"]},
+    {"sector": "tour operator",    "locations": ["New York", "Los Angeles", "Miami", "Las Vegas", "Orlando", "San Francisco", "Nashville"],             "langs": ["en"]},
+    {"sector": "catering company", "locations": ["New York", "Los Angeles", "Chicago", "Miami", "Houston", "Dallas", "Atlanta"],                        "langs": ["en"]},
+    {"sector": "courier service",  "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Dallas", "Miami", "Atlanta"],                        "langs": ["en"]},
+    {"sector": "security company", "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Dallas", "Miami", "Atlanta"],                        "langs": ["en"]},
+    {"sector": "care home",        "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Miami", "Atlanta", "Phoenix"],                       "langs": ["en"]},
+    {"sector": "printing company", "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Dallas", "Atlanta"],                                 "langs": ["en"]},
 
     # ── Kanada ────────────────────────────────────────────────────
     {"sector": "restaurant",       "locations": ["Toronto", "Vancouver", "Montreal", "Calgary", "Ottawa", "Edmonton"], "langs": ["en"]},
