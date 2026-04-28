@@ -121,6 +121,12 @@ class GmailSender:
         if to in load_bounced():
             logger.debug(f"Bounce listesinde, atlanıyor: {to}")
             return False
+        try:
+            from integrations.email_validator import is_valid as _email_valid
+            if not _email_valid(to):
+                return False
+        except Exception:
+            pass
         if not self.can_send():
             logger.warning(f"Gunluk mail limiti doldu: {self._limit}")
             return False

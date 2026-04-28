@@ -852,7 +852,10 @@ async def main():
     gmail = init_gmail()
     if gmail:
         logger.info(f"Gmail hazir: {gmail.stats}")
-        init_reader(gmail._user, gmail._password)
+        from integrations.gmail import GmailPool
+        _r_user = gmail._senders[0]._user if isinstance(gmail, GmailPool) else gmail._user
+        _r_pass = gmail._senders[0]._password if isinstance(gmail, GmailPool) else gmail._password
+        init_reader(_r_user, _r_pass)
         logger.info("Gmail inbox takibi aktif")
     else:
         logger.warning("Gmail bagli degil - sadece sablon modu")
