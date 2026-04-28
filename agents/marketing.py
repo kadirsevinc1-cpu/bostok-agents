@@ -191,6 +191,7 @@ class MarketingAgent(BaseAgent):
 
                 ok = await gmail.send(lead.email, subject, body, lead_info={
                     "name": lead.name, "sector": sector, "location": location, "lang": lang,
+                    "phone": getattr(lead, "phone", ""),
                 })
                 if ok:
                     sent += 1

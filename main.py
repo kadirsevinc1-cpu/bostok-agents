@@ -520,6 +520,12 @@ async def handle_telegram_message(text: str):
             await bot.send(f"📱 WhatsApp kampanyası başlatıldı: <b>{wp_sector}</b> / {wp_location}")
         return
 
+    if cmd == "/wa-rapor":
+        from core.monthly_wa_selector import get_monthly_wa_stats
+        if bot:
+            await bot.send(get_monthly_wa_stats())
+        return
+
     if cmd == "/rapor" or cmd.startswith("/rapor "):
         days = 7
         try:
@@ -623,6 +629,7 @@ async def handle_telegram_message(text: str):
                 "/rapor [gün] — Kampanya raporu (varsayılan: 7 gün)\n"
                 "/performans — Sektör/şehir yanıt oranı analizi\n"
                 "/wp {sektör} {şehir} — WhatsApp kampanyası başlat\n"
+                "/wa-rapor — Aylık WA kampanya geçmişi\n"
                 "/bilgi [sektör] — Sektör bilgi tabanı\n"
                 "/ogret [sektör]|[bilgi] — KB'ye bilgi ekle\n"
                 "/pattern [şehir] — Öğrenilen pattern'ler\n"
@@ -761,6 +768,38 @@ async def main():
             except Exception:
                 pass
 
+    async def _monthly_wa_loop():
+        """Her ayın son günü saat 10:00'da aylık WA kampanyasını başlat."""
+        import datetime as _dt
+        import calendar
+        while True:
+            now = _dt.datetime.now()
+            last_day = calendar.monthrange(now.year, now.month)[1]
+            target = now.replace(day=last_day, hour=10, minute=0, second=0, microsecond=0)
+            if now >= target:
+                # Bu ay zaten geçti — bir sonraki ayın son gününe atla
+                if now.month == 12:
+                    next_year, next_month = now.year + 1, 1
+                else:
+                    next_year, next_month = now.year, now.month + 1
+                last_day_next = calendar.monthrange(next_year, next_month)[1]
+                target = target.replace(year=next_year, month=next_month, day=last_day_next)
+            wait_secs = (target - now).total_seconds()
+            logger.info(f"Aylık WA kampanyası: {target.strftime('%Y-%m-%d %H:%M')} tarihinde çalışacak ({wait_secs/3600:.1f}h)")
+            await asyncio.sleep(wait_secs)
+            try:
+                from core.message_bus import Message, MessageType, AgentName
+                await bus.send(Message(
+                    sender=AgentName.SYSTEM,
+                    receiver=AgentName.WHATSAPP,
+                    type=MessageType.TASK,
+                    content="Aylık WhatsApp kampanyası",
+                    metadata={"campaign_type": "monthly"},
+                ))
+                logger.info("Aylık WA kampanyası başlatıldı")
+            except Exception as e:
+                logger.warning(f"Aylık WA kampanya hatası: {e}")
+
     async def _weekly_report_loop():
         """Her Pazartesi sabahı 08:00'de haftalık rapor gönder."""
         import datetime as _dt
@@ -785,6 +824,7 @@ async def main():
 
     tasks.append(_embed_loop())
     tasks.append(_weekly_report_loop())
+    tasks.append(_monthly_wa_loop())
 
     try:
         await asyncio.gather(*tasks)

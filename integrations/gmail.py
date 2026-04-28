@@ -150,7 +150,7 @@ class GmailSender:
                 from core.lead_state import get_tracker, LeadStage
                 info = lead_info or {}
                 tracker = get_tracker()
-                tracker.upsert(to, name=info.get("name", ""), sector=info.get("sector", ""), location=info.get("location", ""))
+                tracker.upsert(to, name=info.get("name", ""), sector=info.get("sector", ""), location=info.get("location", ""), phone=info.get("phone", ""))
                 tracker.update(to, LeadStage.CONTACTED, f"Konu: {subject[:80]}")
             except Exception:
                 pass

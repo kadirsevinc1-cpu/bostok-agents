@@ -36,6 +36,7 @@ class LeadRecord:
     sector: str
     location: str
     stage: str = LeadStage.NEW
+    phone: str = ""
     events: list = field(default_factory=list)
     created_at: str = field(default_factory=lambda: datetime.now().isoformat())
     updated_at: str = field(default_factory=lambda: datetime.now().isoformat())
@@ -46,11 +47,14 @@ class LeadStateTracker:
         self._leads: dict[str, LeadRecord] = {}
         self._load()
 
-    def upsert(self, email: str, name: str = "", sector: str = "", location: str = "") -> LeadRecord:
-        """Lead yoksa oluştur, varsa güncelleme yapma."""
+    def upsert(self, email: str, name: str = "", sector: str = "", location: str = "", phone: str = "") -> LeadRecord:
+        """Lead yoksa oluştur, varsa telefon numarasını güncelle."""
         key = email.strip().lower()
         if key not in self._leads:
-            self._leads[key] = LeadRecord(email=key, name=name, sector=sector, location=location)
+            self._leads[key] = LeadRecord(email=key, name=name, sector=sector, location=location, phone=phone)
+            self._save()
+        elif phone and not self._leads[key].phone:
+            self._leads[key].phone = phone
             self._save()
         return self._leads[key]
 
