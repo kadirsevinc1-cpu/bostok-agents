@@ -29,6 +29,45 @@ LANG_NAMES = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca", "nl": "Flem
 
 SIGNATURE = "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev"
 
+import re as _re
+
+_STRIP_PATTERNS = [
+    # İmza benzeri satırlar
+    _re.compile(r'(?i)^(saygılar|saygılarımla|best regards|kind regards|regards|mit freundlichen grüßen|cordialmente|cordialement|vriendelijke groeten)[,.\s]*$'),
+    # İsim / ajans referansı
+    _re.compile(r'(?i)kadir\s*sevin[cç]'),
+    _re.compile(r'(?i)bostok\.dev'),
+    _re.compile(r'https?://bostok\.dev\S*'),
+    # Otomatik gönderim notu
+    _re.compile(r'(?i)(bu (e-?)?mail|this (e-?)?mail|diese (e-?)?mail).{0,60}(otomatik|automat|agent|ajans)'),
+    _re.compile(r'(?i)(otomatik|automat).{0,60}(gönder|sent|versand)'),
+    # Ayraçlar
+    _re.compile(r'^[-_]{3,}$'),
+]
+
+
+def _strip_auto_content(body: str) -> str:
+    """LLM'nin yazdığı imzayı ve otomasyon notlarını gövdeden temizle."""
+    lines = body.splitlines()
+    cut = len(lines)
+    for i in range(len(lines) - 1, max(len(lines) - 10, -1), -1):
+        stripped = lines[i].strip()
+        if not stripped:
+            cut = i
+            continue
+        if any(p.search(stripped) for p in _STRIP_PATTERNS):
+            cut = i
+        else:
+            break
+    return "\n".join(lines[:cut]).rstrip()
+
+
+def _clean_subject(subject: str) -> str:
+    """Konu satırından yüzdelik oran ve açıklama parantezlerini temizle."""
+    subject = _re.sub(r'\s*\([^)]{0,60}(%|açılma|rate|öneril)[^)]{0,60}\)', '', subject, flags=_re.IGNORECASE)
+    subject = _re.sub(r'\s*\[[^\]]{0,60}(%|açılma|rate)[^\]]{0,60}\]', '', subject, flags=_re.IGNORECASE)
+    return subject.strip()
+
 _WORKER_BASE = "https://bostok-demo.kadirsevinc1.workers.dev"
 _DEMO_URL_CACHE = None   # startup'ta Netlify URL buraya yüklenir
 
@@ -286,11 +325,14 @@ class MarketingAgent(BaseAgent):
             f"Dil kurallari: Mükemmel {lang_name} kullan — imla/gramer/noktalama hatası OLMAMALI. "
             "Spam tetikleyici ifade ve BUYUK HARF kullanma. "
             "Isletme adini kullan, bostok.dev dogal tanit, sonda https://bostok.dev linki ver. "
-            "Imza YAZMA, sona ekliyoruz. Max 130 kelime.\n\n"
+            "Mailin sonunda, imzadan once su hizmet ozetini dile cevirerek tek satir ekle: "
+            "'Web tasarim, SEO optimizasyonu, e-ticaret cozumleri ve kurumsal kimlik hizmetlerimiz icin bostok.dev adresini ziyaret edebilirsiniz.' "
+            "KESINLIKLE yazma: imza (isim/selamlama), otomatik gonderim notu, ajans/bot aciklamasi, yuzdelik oran. "
+            "Max 150 kelime.\n\n"
             "Yanit SADECE su formatta olmali, baska hicbir sey yazma:\n"
-            "KONU_A: [birinci konu satiri alternatifi]\n"
-            "KONU_B: [ikinci konu satiri alternatifi — daha merak uyandirici]\n"
-            "SECILEN_KONU: [acilma orani daha yuksek olani buraya yaz]\n"
+            "KONU_A: [birinci konu satiri — sade]\n"
+            "KONU_B: [ikinci konu satiri — merak uyandirici]\n"
+            "SECILEN_KONU: [acilma orani daha yuksek olani — sadece konu metni, aciklama veya yuzde ekleme]\n"
             "MAIL:\n"
             "[mail metni]"
         )
@@ -315,24 +357,23 @@ class MarketingAgent(BaseAgent):
             stripped = line.strip()
             upper = stripped.upper()
             if upper.startswith("SECILEN_KONU:"):
-                subject = stripped[len("SECILEN_KONU:"):].strip()
+                subject = _clean_subject(stripped[len("SECILEN_KONU:"):].strip())
             elif upper.startswith("MAIL:"):
                 mail_start = i + 1
 
         if mail_start is not None:
             body = "\n".join(lines[mail_start:]).strip()
         elif not any(l.strip().upper().startswith("SECILEN_KONU:") for l in lines):
-            # Eski format fallback: KONU: satırına bak
             for i, line in enumerate(lines):
                 if line.lower().startswith("konu:"):
-                    subject = line[5:].strip()
+                    subject = _clean_subject(line[5:].strip())
                     body = "\n".join(lines[i + 1:]).strip()
                     break
 
         if not body or len(body) < 20:
             return subject, ""
 
-        body = body.rstrip() + SIGNATURE
+        body = _strip_auto_content(body) + SIGNATURE
         return subject, body
 
     # ── Demo kampanya (Gmail yok / lead yok) ─────────────────────
