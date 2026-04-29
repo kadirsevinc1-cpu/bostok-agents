@@ -342,6 +342,7 @@ async def marketing_scheduler():
         )
 
         from core.campaign_state import is_exhausted
+        sent_count = 0
         for loc_idx, location in enumerate(campaign["locations"], 1):
             if is_exhausted(campaign["sector"], location):
                 logger.debug(f"  [{loc_idx}/{total}] Atlandi (tukendi): {campaign['sector']}/{location}")
@@ -361,10 +362,15 @@ async def marketing_scheduler():
                     "send_emails": True,
                 },
             ))
+            sent_count += 1
             await asyncio.sleep(10)  # Kampanyalar arasi bekleme
 
-        logger.info(f"[Kampanya tamamlandi] {campaign['sector']} — 1 saat bekleniyor")
-        await asyncio.sleep(3600)  # 1 saat
+        if sent_count > 0:
+            logger.info(f"[Kampanya tamamlandi] {campaign['sector']} — {sent_count} lokasyon gonderildi, 1 saat bekleniyor")
+            await asyncio.sleep(3600)
+        else:
+            logger.debug(f"[Kampanya atlandi] {campaign['sector']} — tum lokasyonlar tukendi, sonraki kampanyaya geciliyor")
+            await asyncio.sleep(2)
 
 
 async def notify_handler(msg: Message):
