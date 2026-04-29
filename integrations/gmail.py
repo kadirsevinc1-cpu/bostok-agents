@@ -54,10 +54,14 @@ def load_bounced() -> set:
 
 
 class GmailSender:
-    def __init__(self, user: str, app_password: str, daily_limit: int = 25):
+    def __init__(self, user: str, app_password: str, daily_limit: int = 25,
+                 smtp_host: str = "smtp.gmail.com", smtp_port: int = 465, use_tls: bool = True):
         self._user = user
         self._password = app_password
         self._limit = daily_limit
+        self._smtp_host = smtp_host
+        self._smtp_port = smtp_port
+        self._use_tls = use_tls
         self._count_file = Path(f"memory/gmail_count_{user.split('@')[0]}.json")
         self._today_count, self._last_date = self._load_count()
         self._sent: set[str] = self._load_sent()
@@ -241,9 +245,16 @@ class GmailSender:
             return False
 
     def _smtp_send(self, to: str, raw: str):
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=30) as srv:
-            srv.login(self._user, self._password)
-            srv.sendmail(self._user, to, raw)
+        if self._use_tls:
+            with smtplib.SMTP_SSL(self._smtp_host, self._smtp_port, timeout=30) as srv:
+                srv.login(self._user, self._password)
+                srv.sendmail(self._user, to, raw)
+        else:
+            with smtplib.SMTP(self._smtp_host, self._smtp_port, timeout=30) as srv:
+                srv.ehlo()
+                srv.starttls()
+                srv.login(self._user, self._password)
+                srv.sendmail(self._user, to, raw)
 
 
 class GmailPool:
@@ -318,13 +329,29 @@ def init_gmail() -> GmailSender | GmailPool | None:
                 warmup_note = f" [ısınma: {effective}/{limit}]" if effective < limit else ""
                 logger.info(f"Gmail hazir: {user} (limit: {effective}{warmup_note})")
 
+        # Outlook hesapları
+        outlook_accounts = [
+            (getattr(settings, "outlook_user", ""),
+             getattr(settings, "outlook_app_password", ""),
+             int(getattr(settings, "outlook_daily_limit", 300))),
+            (getattr(settings, "outlook_user_2", ""),
+             getattr(settings, "outlook_app_password_2", ""),
+             int(getattr(settings, "outlook_daily_limit_2", 300))),
+        ]
+        for user, pwd, limit in outlook_accounts:
+            if user and pwd:
+                s = GmailSender(user, pwd, daily_limit=limit,
+                                smtp_host="smtp-mail.outlook.com", smtp_port=587, use_tls=False)
+                senders.append(s)
+                logger.info(f"Outlook hazir: {user} (limit: {limit})")
+
         if not senders:
             return None
         if len(senders) == 1:
             _sender = senders[0]
         else:
             _sender = GmailPool(senders)
-            logger.info(f"Gmail havuzu: {len(senders)} hesap")
+            logger.info(f"Mail havuzu: {len(senders)} hesap")
         return _sender
     except Exception as e:
         logger.warning(f"Gmail init hata: {e}")

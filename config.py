@@ -39,6 +39,15 @@ class Settings(BaseSettings):
     gmail_daily_limit_3:      int = Field(500, env="GMAIL_DAILY_LIMIT_3")
     gmail_account_age_days_3: int = Field(365, env="GMAIL_ACCOUNT_AGE_DAYS_3")
 
+    # Outlook — 2 hesaba kadar desteklenir
+    outlook_user:             str = Field("", env="OUTLOOK_USER")
+    outlook_app_password:     str = Field("", env="OUTLOOK_APP_PASSWORD")
+    outlook_daily_limit:      int = Field(300, env="OUTLOOK_DAILY_LIMIT")
+
+    outlook_user_2:           str = Field("", env="OUTLOOK_USER_2")
+    outlook_app_password_2:   str = Field("", env="OUTLOOK_APP_PASSWORD_2")
+    outlook_daily_limit_2:    int = Field(300, env="OUTLOOK_DAILY_LIMIT_2")
+
     # Google Maps Places API (lead finder icin - opsiyonel)
     google_maps_api_key: str = Field("", env="GOOGLE_MAPS_API_KEY")
 
