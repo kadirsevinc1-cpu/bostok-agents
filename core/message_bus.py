@@ -20,9 +20,10 @@ class AgentName(str, Enum):
     WHATSAPP  = "WhatsApp"
     BUDGET    = "Bütçe"
     REPORT    = "Rapor"
-    FOLLOWUP  = "Takip"
-    KNOWLEDGE = "Bilgi"
-    SYSTEM    = "Sistem"
+    FOLLOWUP   = "Takip"
+    KNOWLEDGE  = "Bilgi"
+    LEAD_SCOUT = "LeadScout"
+    SYSTEM     = "Sistem"
 
 
 class MessageType(str, Enum):

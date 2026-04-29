@@ -191,12 +191,18 @@ class MarketingAgent(BaseAgent):
         leads = sort_leads_by_score(leads)
         logger.info(f"Lead skorlama: {len(leads)} aktif lead")
 
-        # İş saati kontrolü — Pzt-Cum 09:00-18:00 UTC dışında gönderme
+        # İş saati kontrolü — hedef lokasyonun yerel saatine göre Pzt-Cum 09:00-18:00
+        from core.timezone_utils import is_business_hours, get_utc_offset
         import datetime as _dt
         _now = _dt.datetime.utcnow()
-        if _now.weekday() >= 5 or not (9 <= _now.hour < 18):
-            logger.info(f"Mesai saati dışı ({_now.strftime('%a %H:%M')} UTC), kampanya ertelendi")
-            return f"Mesai saati dışı — kampanya ertelendi [{sector}/{location}]"
+        if not is_business_hours(location, _now):
+            _offset = get_utc_offset(location)
+            _local_hour = (_now.hour + _offset) % 24
+            logger.info(
+                f"Mesai saati disi [{location} UTC{_offset:+d} => yerel {_local_hour:02d}:xx "
+                f"{_now.strftime('%a')}], kampanya ertelendi"
+            )
+            return f"Mesai saati disi — kampanya ertelendi [{sector}/{location}]"
 
         sent = skipped = no_email = 0
         from integrations.gmail import load_bounced
