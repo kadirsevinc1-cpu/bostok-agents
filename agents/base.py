@@ -65,8 +65,8 @@ class BaseAgent:
         crash_count = 0
         while self.running:
             try:
-                await self.loop()
                 self.last_heartbeat = _dt.datetime.now()
+                await self.loop()
                 self.loop_count += 1
                 crash_count = 0
             except Exception as e:

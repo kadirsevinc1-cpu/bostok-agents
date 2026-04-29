@@ -7,6 +7,7 @@ Görevleri:
 3. Telegram komutlarını işler: /bilgi, /ogret, /pattern, /haftalik
 """
 import asyncio
+import datetime as _dt
 from loguru import logger
 from agents.base import BaseAgent
 from core.message_bus import AgentName, MessageType, Message, bus
@@ -46,6 +47,7 @@ class KnowledgeAgent(BaseAgent):
                 return
             chunk = min(30, self._reflection_interval - slept)
             await asyncio.sleep(chunk)
+            self.last_heartbeat = _dt.datetime.now()
             slept += chunk
         await self._periodic_reflection()
 
@@ -106,6 +108,7 @@ class KnowledgeAgent(BaseAgent):
                 if context and len(context.strip()) > 40:
                     kb.mark_seeded(sector, context.strip())
                     logger.info(f"KnowledgeAgent: '{sector}' tohumlandı")
+                self.last_heartbeat = _dt.datetime.now()
                 await asyncio.sleep(3)
             except Exception as e:
                 logger.debug(f"Seed hata [{sector}]: {e}")

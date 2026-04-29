@@ -37,6 +37,7 @@ class FollowupAgent(BaseAgent):
         for _ in range(2880):
             if not self.running:
                 break
+            self.last_heartbeat = datetime.now()
             await asyncio.sleep(30)
 
     async def _check_and_send(self):

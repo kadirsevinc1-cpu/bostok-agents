@@ -1,5 +1,6 @@
 """InboxWatcher — Gmail inbox'ı 5 dakikada bir kontrol eder, bizim outreach maillerimize gelen yanıtları Telegram'a bildirir."""
 import asyncio
+import datetime as _dt
 from loguru import logger
 from agents.base import BaseAgent
 from core.message_bus import AgentName, MessageType, Message, bus
@@ -210,4 +211,8 @@ class InboxWatcherAgent(BaseAgent):
             ))
             logger.info(f"Yanit bildirimi gonderildi: {reply.from_email} [{reply.reply_id}]")
 
-        await asyncio.sleep(300)
+        for _ in range(10):
+            if not self.running:
+                return
+            self.last_heartbeat = _dt.datetime.now()
+            await asyncio.sleep(30)
