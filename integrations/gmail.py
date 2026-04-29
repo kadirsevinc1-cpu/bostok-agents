@@ -58,9 +58,27 @@ class GmailSender:
         self._user = user
         self._password = app_password
         self._limit = daily_limit
-        self._today_count = 0
-        self._last_date = date.today()
+        self._count_file = Path(f"memory/gmail_count_{user.split('@')[0]}.json")
+        self._today_count, self._last_date = self._load_count()
         self._sent: set[str] = self._load_sent()
+
+    def _load_count(self) -> tuple[int, date]:
+        if self._count_file.exists():
+            try:
+                data = json.loads(self._count_file.read_text(encoding="utf-8"))
+                saved_date = date.fromisoformat(data["date"])
+                if saved_date == date.today():
+                    logger.info(f"Gmail sayac yuklendi: {data['count']} mail bugun gonderildi ({self._user if hasattr(self, '_user') else ''})")
+                    return data["count"], saved_date
+            except Exception:
+                pass
+        return 0, date.today()
+
+    def _save_count(self):
+        self._count_file.parent.mkdir(exist_ok=True)
+        tmp = self._count_file.with_suffix(".tmp")
+        tmp.write_text(json.dumps({"date": self._last_date.isoformat(), "count": self._today_count}), encoding="utf-8")
+        os.replace(tmp, self._count_file)
 
     def _load_sent(self) -> set[str]:
         if SENT_LOG.exists():
@@ -96,6 +114,7 @@ class GmailSender:
         if today != self._last_date:
             self._today_count = 0
             self._last_date = today
+            self._save_count()
 
     @property
     def stats(self) -> str:
@@ -169,6 +188,7 @@ class GmailSender:
             loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, self._smtp_send, to, msg.as_string())
             self._today_count += 1
+            self._save_count()
             self._record_sent(to)
             self._save_message_id(msg_id, to, subject, lead_info or {})
             try:
@@ -213,6 +233,7 @@ class GmailSender:
             loop = asyncio.get_running_loop()
             await loop.run_in_executor(None, self._smtp_send, to.strip(), msg.as_string())
             self._today_count += 1
+            self._save_count()
             logger.info(f"Yanit gonderildi: {to} ({self._today_count}/{self._limit})")
             return True
         except Exception as e:

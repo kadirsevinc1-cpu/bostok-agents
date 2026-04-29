@@ -326,9 +326,17 @@ CAMPAIGNS = [
 async def marketing_scheduler():
     """Her 4 saatte bir farkli sektörde pazarlama kampanyası baslatir."""
     await asyncio.sleep(45)  # Sistem tam baslasin
-    logger.info("Pazarlama zamanlayici basladi")
 
-    campaign_idx = 0
+    import json as _json
+    from pathlib import Path as _Path
+    _idx_file = _Path("memory/campaign_idx.json")
+    try:
+        campaign_idx = _json.loads(_idx_file.read_text(encoding="utf-8")) if _idx_file.exists() else 0
+        logger.info(f"Pazarlama zamanlayici basladi — index: {campaign_idx} ({campaign_idx % len(CAMPAIGNS) + 1}/{len(CAMPAIGNS)})")
+    except Exception:
+        campaign_idx = 0
+        logger.info("Pazarlama zamanlayici basladi")
+
     while True:
         campaign = CAMPAIGNS[campaign_idx % len(CAMPAIGNS)]
         campaign_idx += 1
@@ -341,6 +349,7 @@ async def marketing_scheduler():
             + (f" ...+{total - 4}" if total > 4 else "")
         )
 
+        _idx_file.write_text(_json.dumps(campaign_idx), encoding="utf-8")
         from core.campaign_state import is_exhausted
         sent_count = 0
         for loc_idx, location in enumerate(campaign["locations"], 1):
