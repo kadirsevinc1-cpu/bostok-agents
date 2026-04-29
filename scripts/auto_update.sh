@@ -11,38 +11,37 @@ log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] [auto_update] $1"
 }
 
-start_main() {
-    cd "$PROJECT_DIR"
-    # Virtualenv varsa aktive et
-    if [ -f "venv/bin/activate" ]; then
-        source venv/bin/activate
-    elif [ -f ".venv/bin/activate" ]; then
-        source .venv/bin/activate
-    fi
-    nohup python main.py >> "$LOG_FILE" 2>&1 &
-    NEW_PID=$!
-    echo "$NEW_PID" > "$PID_FILE"
-    log "main.py baslatildi (PID: $NEW_PID)"
+_use_systemd() {
+    systemctl is-active bostok.service --quiet 2>/dev/null && return 0
+    systemctl is-enabled bostok.service --quiet 2>/dev/null && return 0
+    return 1
 }
 
 restart_main() {
-    if [ -f "$PID_FILE" ]; then
-        OLD_PID=$(cat "$PID_FILE")
-        if kill -0 "$OLD_PID" 2>/dev/null; then
-            log "Eski surec durduruluyor (PID: $OLD_PID)..."
-            kill -TERM "$OLD_PID"
-            # En fazla 15 saniye bekle
-            for i in $(seq 1 15); do
-                sleep 1
-                kill -0 "$OLD_PID" 2>/dev/null || break
-            done
-            # Hala calısıyorsa zorla kapat
-            kill -0 "$OLD_PID" 2>/dev/null && kill -KILL "$OLD_PID" 2>/dev/null
+    if _use_systemd; then
+        log "Systemd servisi yeniden baslatiliyor..."
+        sudo systemctl restart bostok.service
+    else
+        if [ -f "$PID_FILE" ]; then
+            OLD_PID=$(cat "$PID_FILE")
+            if kill -0 "$OLD_PID" 2>/dev/null; then
+                log "Eski surec durduruluyor (PID: $OLD_PID)..."
+                kill -TERM "$OLD_PID"
+                for i in $(seq 1 15); do
+                    sleep 1
+                    kill -0 "$OLD_PID" 2>/dev/null || break
+                done
+                kill -0 "$OLD_PID" 2>/dev/null && kill -KILL "$OLD_PID" 2>/dev/null
+            fi
+            rm -f "$PID_FILE"
         fi
-        rm -f "$PID_FILE"
+        sleep 2
+        cd "$PROJECT_DIR"
+        [ -f ".venv/bin/activate" ] && source .venv/bin/activate
+        nohup python main.py >> "$LOG_FILE" 2>&1 &
+        echo $! > "$PID_FILE"
+        log "main.py baslatildi (PID: $(cat $PID_FILE))"
     fi
-    sleep 2
-    start_main
 }
 
 cd "$PROJECT_DIR"
@@ -68,17 +67,19 @@ while true; do
         fi
     fi
 
-    # main.py sureci olmusse yeniden basalt
-    if [ -f "$PID_FILE" ]; then
-        CURRENT_PID=$(cat "$PID_FILE")
-        if ! kill -0 "$CURRENT_PID" 2>/dev/null; then
-            log "main.py sureci olmus (PID: $CURRENT_PID), yeniden baslatiliyor..."
-            rm -f "$PID_FILE"
-            start_main
+    # main.py sureci olmusse yeniden basalt (systemd yoksa)
+    if ! _use_systemd; then
+        if [ -f "$PID_FILE" ]; then
+            CURRENT_PID=$(cat "$PID_FILE")
+            if ! kill -0 "$CURRENT_PID" 2>/dev/null; then
+                log "main.py sureci olmus (PID: $CURRENT_PID), yeniden baslatiliyor..."
+                rm -f "$PID_FILE"
+                restart_main
+            fi
+        else
+            log "PID dosyasi yok, main.py baslatiliyor..."
+            restart_main
         fi
-    else
-        log "PID dosyasi yok, main.py baslatiliyor..."
-        start_main
     fi
 
     sleep 300  # 5 dakika bekle
