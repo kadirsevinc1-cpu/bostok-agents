@@ -83,6 +83,25 @@ async def _domain_exists(domain: str) -> bool:
     except socket.gaierror:
         return False
 
+
+def _check_mx(domain: str) -> bool:
+    """MX kaydı kontrolü — thread'de çalışır."""
+    try:
+        import dns.resolver
+        dns.resolver.resolve(domain, "MX")
+        return True
+    except Exception:
+        return False
+
+
+async def _has_mx(domain: str) -> bool:
+    """Domain'de MX kaydı var mı? Yoksa email sunucusu yok demektir."""
+    try:
+        loop = asyncio.get_running_loop()
+        return await loop.run_in_executor(None, _check_mx, domain)
+    except Exception:
+        return False
+
 MAPS_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json"
 MAPS_DETAIL_URL = "https://maps.googleapis.com/maps/api/place/details/json"
 EMAIL_RE = re.compile(r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,6}\b')
@@ -362,17 +381,17 @@ async def _scrape_email(session: aiohttp.ClientSession, url: str) -> str:
         except Exception:
             pass
 
-    # Bulunamadı → domain'den tahmin et (sadece domain gerçekten varsa)
+    # Bulunamadı → domain'den tahmin et (MX kaydı varsa)
     guesses = _guess_domain_emails(url)
     if guesses:
         try:
             from urllib.parse import urlparse as _up
             domain = _up(url).netloc.lstrip("www.")
-            if domain and await _domain_exists(domain):
-                logger.debug(f"Domain tahmini kullanıldı: {guesses[0]} [{url}]")
+            if domain and await _has_mx(domain):
+                logger.debug(f"Domain MX onaylı, tahmin kullanıldı: {guesses[0]} [{url}]")
                 return guesses[0]
             else:
-                logger.debug(f"Domain DNS'de yok, tahmin atlandı: {domain}")
+                logger.debug(f"Domain MX kaydı yok, tahmin atlandı: {domain}")
         except Exception:
             pass
 
