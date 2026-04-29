@@ -16,6 +16,7 @@ class LeadStage(str, Enum):
     FOLLOWED_UP  = "followed_up"     # 1. takip gönderildi
     FOLLOWED_UP2 = "followed_up2"    # 2. takip gönderildi
     REPLIED      = "replied"         # Yanıt geldi
+    PROPOSAL_SENT = "proposal_sent"  # Otomatik teklif gönderildi
     BOUNCED      = "bounced"         # Mail bounce etti
     UNSUBSCRIBED = "unsubscribed"    # Abonelik iptali
     CLOSED_WON   = "closed_won"      # Müşteri oldu

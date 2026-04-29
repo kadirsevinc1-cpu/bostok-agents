@@ -185,6 +185,54 @@ class InboxWatcherAgent(BaseAgent):
                         f"\n✏️ Düzenlemek için: <code>yanit {reply.reply_id} kendi mesajın</code>"
                     )
 
+            # Yüksek niyet → otomatik teklif gönder
+            proposal_hint = ""
+            if analysis.intent.value in ("ready", "meeting", "interested"):
+                try:
+                    from core.skills.proposal_writer import write_proposal
+                    from integrations.gmail import get_gmail
+                    lang = sent.get("lang", "tr")
+                    has_website = bool(sent.get("has_website", False))
+                    biz_name = lead_name or reply.from_name or reply.from_email.split("@")[0]
+                    prop_subject, prop_body = await write_proposal(
+                        lead_name=biz_name,
+                        sector=sector,
+                        location=location,
+                        has_website=has_website,
+                        lang=lang,
+                        reply_body=reply.body,
+                    )
+                    if prop_body:
+                        gmail = get_gmail()
+                        if gmail and gmail.can_send():
+                            sent_ok = await gmail.send_reply(
+                                reply.from_email,
+                                prop_subject,
+                                prop_body,
+                                in_reply_to=reply.matched_message_id,
+                            )
+                            if sent_ok:
+                                proposal_hint = (
+                                    f"\n\n📨 <b>Teklif otomatik gönderildi!</b>\n"
+                                    f"<b>Konu:</b> {prop_subject}\n"
+                                    f"<i>{prop_body[:250]}...</i>"
+                                )
+                                try:
+                                    from core.lead_state import get_tracker, LeadStage
+                                    get_tracker().update(reply.from_email, LeadStage.PROPOSAL_SENT,
+                                                         f"Teklif: {prop_subject[:80]}")
+                                except Exception:
+                                    pass
+                            else:
+                                proposal_hint = "\n\n⚠️ Teklif oluşturuldu ama gönderilemedi (limit?)"
+                        else:
+                            proposal_hint = "\n\n⚠️ Teklif oluşturuldu ama mail limiti doldu"
+                    else:
+                        proposal_hint = "\n\n⚠️ Teklif oluşturulamadı"
+                except Exception as _pe:
+                    logger.error(f"Otomatik teklif hatasi: {_pe}")
+                    proposal_hint = f"\n\n⚠️ Teklif hatası: {_pe}"
+
             notify = (
                 f"{intent_emoji} <b>Yeni Yanit!</b> [ID: {reply.reply_id}]\n"
                 f"<b>Niyet:</b> {analysis.summary}\n"
@@ -200,7 +248,8 @@ class InboxWatcherAgent(BaseAgent):
             if len(reply.body) > 400:
                 notify += "..."
             notify += draft_hint
-            if not draft_hint:
+            notify += proposal_hint
+            if not draft_hint and not proposal_hint:
                 notify += f"\n\n<i>Yanitlamak icin:\nyanit {reply.reply_id} Merhaba, teklif icin...</i>"
 
             await bus.send(Message(
