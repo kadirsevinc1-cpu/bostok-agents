@@ -121,9 +121,28 @@ class MarketingAgent(BaseAgent):
     system_prompt = SYSTEM
     max_tokens = 2000
 
+    def __init__(self):
+        super().__init__()
+        self._paused = False
+
     async def loop(self):
         msg = await self.receive(timeout=1.0)
         if not msg:
+            return
+        from core.message_bus import MessageType as MT
+        if msg.type == MT.PAUSE:
+            self._paused = True
+            from loguru import logger
+            logger.info("MarketingAgent duraklatildi (Manager komutu)")
+            return
+        if msg.type == MT.RESUME:
+            self._paused = False
+            from loguru import logger
+            logger.info("MarketingAgent devam ettiriliyor (Manager komutu)")
+            return
+        if self._paused:
+            from loguru import logger
+            logger.debug("MarketingAgent duraklatildi, gorev atlaniyor")
             return
         await self._handle(msg)
 
@@ -183,6 +202,9 @@ class MarketingAgent(BaseAgent):
         if not gmail:
             return f"Gmail yapilandirilmamis — {len(leads)} lead bulundu ama mail atilamadi."
         if not gmail.can_send():
+            await self.send(AgentName.MANAGER, MessageType.CAMPAIGN_STATUS,
+                            f"mail_limit_hit:{sector}/{location}",
+                            {"event": "mail_limit_hit", "sector": sector, "location": location})
             return f"Gunluk mail limiti doldu. {gmail.stats}"
 
         from core.skills.lead_scorer import sort_leads_by_score

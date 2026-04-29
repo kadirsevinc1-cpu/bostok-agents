@@ -27,8 +27,11 @@ class AgentName(str, Enum):
 
 
 class MessageType(str, Enum):
-    TASK           = "task"
-    RESULT         = "result"
+    TASK            = "task"
+    RESULT          = "result"
+    PAUSE           = "pause"
+    RESUME          = "resume"
+    CAMPAIGN_STATUS = "campaign_status"
     STATUS         = "status"
     CLIENT_REQUEST = "client_request"
     USER_NOTIFY    = "user_notify"

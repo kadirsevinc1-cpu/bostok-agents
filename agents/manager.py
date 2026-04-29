@@ -1,5 +1,11 @@
+import asyncio
+import json as _json
+from pathlib import Path as _Path
+from loguru import logger
 from agents.base import BaseAgent
 from core.message_bus import AgentName, MessageType, Message
+
+_IDX_FILE = _Path("memory/campaign_idx.json")
 
 
 def _build_system() -> str:
@@ -36,15 +42,107 @@ class ManagerAgent(BaseAgent):
 
     def __init__(self):
         super().__init__()
-        # Mevcut proje bilgisi — Developer sonucundan gelir, Deploy'a iletilir
         self._current_site_dir: str = ""
         self._current_project_name: str = ""
+        self._marketing_paused: bool = False
+        self._mail_limit_hit_today: bool = False
+
+    async def run(self):
+        """BaseAgent.run() + arka planda kampanya scheduler başlat."""
+        asyncio.create_task(self._campaign_scheduler())
+        await super().run()
 
     async def loop(self):
         msg = await self.receive(timeout=1.0)
         if not msg:
             return
         await self._process(msg)
+
+    # ── Kampanya Scheduler ────────────────────────────────────────
+
+    async def _campaign_scheduler(self):
+        """main.py'den taşındı — Manager kampanyaları kendisi yönetir."""
+        from core.campaigns import CAMPAIGNS
+        from core.campaign_state import is_exhausted
+        import datetime as _dt
+
+        await asyncio.sleep(50)  # Tüm agentler başlasın
+
+        campaign_idx = 0
+        try:
+            campaign_idx = int(_json.loads(_IDX_FILE.read_text(encoding="utf-8"))) if _IDX_FILE.exists() else 0
+            logger.info(f"Kampanya scheduler baslatildi — idx={campaign_idx} ({campaign_idx % len(CAMPAIGNS) + 1}/{len(CAMPAIGNS)})")
+        except Exception:
+            logger.info("Kampanya scheduler baslatildi — idx=0")
+
+        while self.running:
+            # Günlük limit sıfırlandı mı kontrol et
+            _now = _dt.datetime.utcnow()
+            if _now.hour == 0 and self._mail_limit_hit_today:
+                self._mail_limit_hit_today = False
+                if self._marketing_paused:
+                    await self._resume_marketing("Yeni gün — günlük mail limiti sıfırlandı")
+
+            if self._marketing_paused:
+                await asyncio.sleep(60)
+                continue
+
+            campaign = CAMPAIGNS[campaign_idx % len(CAMPAIGNS)]
+            campaign_idx += 1
+            total = len(campaign["locations"])
+
+            try:
+                _IDX_FILE.parent.mkdir(exist_ok=True)
+                _IDX_FILE.write_text(_json.dumps(campaign_idx), encoding="utf-8")
+            except Exception:
+                pass
+
+            logger.info(
+                f"[Manager→Kampanya {campaign_idx}/{len(CAMPAIGNS)}] "
+                f"{campaign['sector'].upper()} — {total} lokasyon"
+            )
+
+            sent_count = 0
+            for loc_idx, location in enumerate(campaign["locations"], 1):
+                if not self.running:
+                    return
+                if self._marketing_paused:
+                    break
+                if is_exhausted(campaign["sector"], location):
+                    logger.debug(f"  [{loc_idx}/{total}] Atlandi (tukendi): {campaign['sector']}/{location}")
+                    continue
+
+                logger.info(f"  [{loc_idx}/{total}] Gonderiliyor: {campaign['sector']} — {location}")
+                await self.send(
+                    AgentName.MARKETING, MessageType.TASK,
+                    f"{location}'daki {campaign['sector']} isletmelerine web sitesi teklifi hazirla",
+                    {
+                        "sector": campaign["sector"],
+                        "location": location,
+                        "languages": campaign["langs"],
+                        "send_emails": True,
+                    },
+                )
+                sent_count += 1
+                await asyncio.sleep(10)
+
+            if sent_count > 0:
+                logger.info(f"[Manager] {campaign['sector']} — {sent_count} lokasyon gonderildi, 10 dk bekleniyor")
+                await asyncio.sleep(600)
+            else:
+                await asyncio.sleep(2)
+
+    async def _pause_marketing(self, reason: str):
+        if not self._marketing_paused:
+            self._marketing_paused = True
+            await self.send(AgentName.MARKETING, MessageType.PAUSE, reason)
+            logger.warning(f"Marketing DURDURULDU: {reason}")
+
+    async def _resume_marketing(self, reason: str):
+        if self._marketing_paused:
+            self._marketing_paused = False
+            await self.send(AgentName.MARKETING, MessageType.RESUME, reason)
+            logger.info(f"Marketing DEVAM EDiYOR: {reason}")
 
     async def _process(self, msg: Message):
         from loguru import logger
@@ -186,6 +284,14 @@ class ManagerAgent(BaseAgent):
             await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
                             "Onay alindi! Site yayinda.")
             self.save_observation("Site yayina alindi", importance=9.0)
+
+        elif msg.type == MessageType.CAMPAIGN_STATUS:
+            event = msg.metadata.get("event", "")
+            if event == "mail_limit_hit":
+                self._mail_limit_hit_today = True
+                await self._pause_marketing("Günlük mail limiti doldu")
+                await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
+                                "📭 <b>Günlük mail limiti doldu.</b> Marketing durduruldu, yarın otomatik devam eder.")
 
         elif msg.type == MessageType.BUDGET_ALERT:
             await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,

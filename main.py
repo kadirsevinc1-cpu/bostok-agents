@@ -57,64 +57,6 @@ async def budget_monitor():
 
 
 
-async def marketing_scheduler():
-    """Her 4 saatte bir farkli sektörde pazarlama kampanyası baslatir."""
-    await asyncio.sleep(45)  # Sistem tam baslasin
-
-    import json as _json
-    from pathlib import Path as _Path
-    _idx_file = _Path("memory/campaign_idx.json")
-    try:
-        campaign_idx = _json.loads(_idx_file.read_text(encoding="utf-8")) if _idx_file.exists() else 0
-        logger.info(f"Pazarlama zamanlayici basladi — index: {campaign_idx} ({campaign_idx % len(CAMPAIGNS) + 1}/{len(CAMPAIGNS)})")
-    except Exception:
-        campaign_idx = 0
-        logger.info("Pazarlama zamanlayici basladi")
-
-    while True:
-        campaign = CAMPAIGNS[campaign_idx % len(CAMPAIGNS)]
-        campaign_idx += 1
-        total = len(campaign["locations"])
-
-        logger.info(
-            f"[Kampanya {campaign_idx}/{len(CAMPAIGNS)}] "
-            f"{campaign['sector'].upper()} — {total} lokasyon: "
-            f"{', '.join(campaign['locations'][:4])}"
-            + (f" ...+{total - 4}" if total > 4 else "")
-        )
-
-        _idx_file.write_text(_json.dumps(campaign_idx), encoding="utf-8")
-        from core.campaign_state import is_exhausted
-        sent_count = 0
-        for loc_idx, location in enumerate(campaign["locations"], 1):
-            if is_exhausted(campaign["sector"], location):
-                logger.debug(f"  [{loc_idx}/{total}] Atlandi (tukendi): {campaign['sector']}/{location}")
-                continue
-            logger.info(
-                f"  [{loc_idx}/{total}] {campaign['sector']} — {location}"
-            )
-            await bus.send(Message(
-                sender=AgentName.SYSTEM,
-                receiver=AgentName.MARKETING,
-                type=MessageType.TASK,
-                content=f"{location}'daki {campaign['sector']} isletmelerine web sitesi teklifi hazirla",
-                metadata={
-                    "sector": campaign["sector"],
-                    "location": location,
-                    "languages": campaign["langs"],
-                    "send_emails": True,
-                },
-            ))
-            sent_count += 1
-            await asyncio.sleep(10)  # Kampanyalar arasi bekleme
-
-        if sent_count > 0:
-            logger.info(f"[Kampanya tamamlandi] {campaign['sector']} — {sent_count} lokasyon gonderildi, 10 dakika bekleniyor")
-            await asyncio.sleep(600)
-        else:
-            logger.debug(f"[Kampanya atlandi] {campaign['sector']} — tum lokasyonlar tukendi, sonraki kampanyaya geciliyor")
-            await asyncio.sleep(2)
-
 
 async def notify_handler(msg: Message):
     """Bildirimleri hem konsola bas hem Telegram'a gönder."""
@@ -660,7 +602,6 @@ async def main():
 
     tasks = [asyncio.create_task(a.run()) for a in agents]
     tasks.append(asyncio.create_task(budget_monitor()))
-    tasks.append(asyncio.create_task(marketing_scheduler()))
 
     # Telegram polling başlat
     if bot:
