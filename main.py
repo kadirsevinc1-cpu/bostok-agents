@@ -366,8 +366,8 @@ async def marketing_scheduler():
             await asyncio.sleep(10)  # Kampanyalar arasi bekleme
 
         if sent_count > 0:
-            logger.info(f"[Kampanya tamamlandi] {campaign['sector']} — {sent_count} lokasyon gonderildi, 1 saat bekleniyor")
-            await asyncio.sleep(3600)
+            logger.info(f"[Kampanya tamamlandi] {campaign['sector']} — {sent_count} lokasyon gonderildi, 10 dakika bekleniyor")
+            await asyncio.sleep(600)
         else:
             logger.debug(f"[Kampanya atlandi] {campaign['sector']} — tum lokasyonlar tukendi, sonraki kampanyaya geciliyor")
             await asyncio.sleep(2)
