@@ -835,6 +835,13 @@ async def _wait_for_internet(timeout: int = 120):
 
 async def main():
     setup_logging()
+    # PID dosyası yaz — auto_update.sh bu dosyayı kullanarak süreci yönetir
+    import os as _os
+    from pathlib import Path as _Path
+    _pid_file = _Path("memory/main.pid")
+    _pid_file.parent.mkdir(exist_ok=True)
+    _pid_file.write_text(str(_os.getpid()))
+    logger.info(f"PID: {_os.getpid()} → memory/main.pid")
     logger.info("Bostok Agent Koyu baslatiliyor...")
     await _wait_for_internet()
     logger.info(budget.report())
