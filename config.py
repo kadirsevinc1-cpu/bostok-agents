@@ -44,9 +44,12 @@ class Settings(BaseSettings):
     outlook_app_password:     str = Field("", env="OUTLOOK_APP_PASSWORD")
     outlook_daily_limit:      int = Field(300, env="OUTLOOK_DAILY_LIMIT")
 
-    outlook_user_2:           str = Field("", env="OUTLOOK_USER_2")
-    outlook_app_password_2:   str = Field("", env="OUTLOOK_APP_PASSWORD_2")
-    outlook_daily_limit_2:    int = Field(300, env="OUTLOOK_DAILY_LIMIT_2")
+    outlook_account_age_days:   int = Field(0, env="OUTLOOK_ACCOUNT_AGE_DAYS")
+
+    outlook_user_2:             str = Field("", env="OUTLOOK_USER_2")
+    outlook_app_password_2:     str = Field("", env="OUTLOOK_APP_PASSWORD_2")
+    outlook_daily_limit_2:      int = Field(300, env="OUTLOOK_DAILY_LIMIT_2")
+    outlook_account_age_days_2: int = Field(0, env="OUTLOOK_ACCOUNT_AGE_DAYS_2")
 
     # Google Maps Places API (lead finder icin - opsiyonel)
     google_maps_api_key: str = Field("", env="GOOGLE_MAPS_API_KEY")

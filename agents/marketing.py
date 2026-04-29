@@ -191,6 +191,13 @@ class MarketingAgent(BaseAgent):
         leads = sort_leads_by_score(leads)
         logger.info(f"Lead skorlama: {len(leads)} aktif lead")
 
+        # İş saati kontrolü — Pzt-Cum 09:00-18:00 UTC dışında gönderme
+        import datetime as _dt
+        _now = _dt.datetime.utcnow()
+        if _now.weekday() >= 5 or not (9 <= _now.hour < 18):
+            logger.info(f"Mesai saati dışı ({_now.strftime('%a %H:%M')} UTC), kampanya ertelendi")
+            return f"Mesai saati dışı — kampanya ertelendi [{sector}/{location}]"
+
         sent = skipped = no_email = 0
         from integrations.gmail import load_bounced
         bounced_set = load_bounced()
@@ -246,7 +253,7 @@ class MarketingAgent(BaseAgent):
                         pass
                 else:
                     skipped += 1
-                await asyncio.sleep(8)  # spam önleme: mailler arası bekleme
+                await asyncio.sleep(45)  # spam önleme: mailler arası bekleme
 
         # Tüm leadler atlandıysa (sıfır yeni gönderim) → tükendi olarak işaretle
         if sent == 0 and (skipped > 0 or no_email > 0):

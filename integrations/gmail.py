@@ -333,17 +333,21 @@ def init_gmail() -> GmailSender | GmailPool | None:
         outlook_accounts = [
             (getattr(settings, "outlook_user", ""),
              getattr(settings, "outlook_app_password", ""),
-             int(getattr(settings, "outlook_daily_limit", 300))),
+             int(getattr(settings, "outlook_daily_limit", 300)),
+             int(getattr(settings, "outlook_account_age_days", 0))),
             (getattr(settings, "outlook_user_2", ""),
              getattr(settings, "outlook_app_password_2", ""),
-             int(getattr(settings, "outlook_daily_limit_2", 300))),
+             int(getattr(settings, "outlook_daily_limit_2", 300)),
+             int(getattr(settings, "outlook_account_age_days_2", 0))),
         ]
-        for user, pwd, limit in outlook_accounts:
+        for user, pwd, limit, age_days in outlook_accounts:
             if user and pwd:
-                s = GmailSender(user, pwd, daily_limit=limit,
+                effective = _warmup_limit(age_days, limit)
+                s = GmailSender(user, pwd, daily_limit=effective,
                                 smtp_host="smtp-mail.outlook.com", smtp_port=587, use_tls=False)
                 senders.append(s)
-                logger.info(f"Outlook hazir: {user} (limit: {limit})")
+                warmup_note = f" [ısınma: {effective}/{limit}]" if effective < limit else ""
+                logger.info(f"Outlook hazir: {user} (limit: {effective}{warmup_note})")
 
         if not senders:
             return None
