@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title id="page-title">Demo Site — Bostok.dev</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -13,171 +14,271 @@
       --primary: #e85d04;
       --dark:    #c43f00;
       --light:   #ffd166;
-      --text:    #1a1a2e;
-      --muted:   #6b7280;
-      --bg:      #ffffff;
-      --bg-alt:  #f8f9fa;
-      --radius:  16px;
-      --shadow:  0 4px 24px rgba(0,0,0,0.08);
+      --glow-sm: #e85d0480;
+      --glow-lg: #e85d0430;
+      --tint-bg: #e85d0420;
+      --tint-bd: #e85d0440;
+      --bg:      #080810;
+      --bg2:     #0c0c18;
+      --glass:   rgba(255,255,255,0.05);
+      --border:  rgba(255,255,255,0.09);
+      --text:    #f0f0ff;
+      --muted:   rgba(240,240,255,0.55);
+      --radius:  20px;
+      --fh: 'Space Grotesk', system-ui, sans-serif;
+      --fb: 'Inter', system-ui, sans-serif;
     }
 
-    body { font-family: 'Inter', -apple-system, sans-serif; color: var(--text); background: var(--bg); line-height: 1.6; }
+    html { scroll-behavior: smooth; }
+    body { font-family: var(--fb); color: var(--text); background: var(--bg); line-height: 1.6; }
 
     /* ── NAV ── */
     nav {
       position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-      padding: .9rem 2rem;
+      padding: 1rem 2rem;
       display: flex; align-items: center; justify-content: space-between;
-      background: rgba(255,255,255,.96);
-      backdrop-filter: blur(14px);
-      border-bottom: 1px solid rgba(0,0,0,.06);
+      background: rgba(8,8,16,0.82);
+      -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px);
+      border-bottom: 1px solid var(--border);
     }
-    .nav-logo { font-weight: 800; font-size: 1.1rem; color: var(--primary); }
+    .nav-logo { font-family: var(--fh); font-weight: 700; font-size: 1.05rem; color: var(--text); }
     .nav-cta {
-      padding: .5rem 1.25rem;
+      padding: .55rem 1.4rem;
       background: var(--primary); color: #fff;
       border-radius: 50px; text-decoration: none;
       font-weight: 600; font-size: .85rem;
       transition: transform .18s, box-shadow .18s;
     }
-    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 14px rgba(0,0,0,.22); }
+    .nav-cta:hover { transform: translateY(-1px); box-shadow: 0 4px 20px var(--glow-sm); }
 
     /* ── HERO ── */
     .hero {
-      min-height: 100vh;
+      position: relative; min-height: 100vh;
       display: flex; align-items: center; justify-content: center;
-      background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 55%, var(--light) 100%);
-      position: relative; overflow: hidden;
-      padding: 7rem 2rem 4rem; text-align: center;
+      overflow: hidden; padding: 7rem 2rem 5rem; text-align: center;
     }
-    .hero::before {
+    .hero-bg {
+      position: absolute; inset: 0;
+      background-color: var(--bg);
+      background-size: cover; background-position: center;
+    }
+    .hero-bg::after {
       content: '';
       position: absolute; inset: 0;
-      background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Ccircle cx='30' cy='30' r='3' fill='%23ffffff' fill-opacity='.06'/%3E%3C/svg%3E");
+      background: linear-gradient(180deg, rgba(8,8,16,.62) 0%, rgba(8,8,16,.82) 60%, rgba(8,8,16,.97) 100%);
     }
-    .hero-inner { position: relative; max-width: 720px; }
+    .orb {
+      position: absolute; border-radius: 50%;
+      filter: blur(90px); opacity: .28; pointer-events: none;
+    }
+    .orb-1 {
+      width: 600px; height: 600px; background: var(--primary);
+      top: -150px; left: -150px;
+      animation: orb-drift 18s ease-in-out infinite;
+    }
+    .orb-2 {
+      width: 500px; height: 500px; background: var(--dark);
+      bottom: -100px; right: -100px;
+      animation: orb-drift 22s ease-in-out infinite reverse;
+    }
+    .orb-3 {
+      width: 350px; height: 350px; background: var(--light);
+      top: 40%; left: 55%; opacity: .12;
+      animation: orb-drift 28s ease-in-out infinite;
+    }
+    @keyframes orb-drift {
+      0%, 100% { transform: translate(0,0) scale(1); }
+      33%       { transform: translate(40px,-30px) scale(1.06); }
+      66%       { transform: translate(-25px,45px) scale(.94); }
+    }
+
+    .hero-inner { position: relative; z-index: 1; max-width: 780px; }
     .hero-badge {
-      display: inline-block; margin-bottom: 1.5rem;
-      padding: .4rem 1.1rem;
-      background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.3);
-      border-radius: 50px; color: #fff; font-size: .85rem; font-weight: 500;
-      backdrop-filter: blur(8px);
+      display: inline-flex; align-items: center; gap: .45rem;
+      margin-bottom: 1.5rem; padding: .42rem 1.15rem;
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 50px; color: var(--text);
+      font-size: .82rem; font-weight: 500; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px);
     }
     .hero h1 {
-      font-size: clamp(2.4rem, 6vw, 4.2rem); font-weight: 900;
-      color: #fff; line-height: 1.1; margin-bottom: 1rem;
+      font-family: var(--fh);
+      font-size: clamp(2.6rem, 7vw, 4.8rem); font-weight: 700;
+      line-height: 1.08; color: #fff; margin-bottom: 1.1rem;
+      letter-spacing: -.025em;
     }
-    .hero-sub {
-      font-size: 1.1rem; color: rgba(255,255,255,.85);
-      max-width: 520px; margin: 0 auto 2.5rem;
-    }
+    .hero-sub { font-size: 1.1rem; color: var(--muted); max-width: 520px; margin: 0 auto 2.5rem; }
     .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-    .btn-white {
-      padding: .85rem 2rem;
-      background: #fff; color: var(--primary);
+
+    .btn-neon {
+      padding: .9rem 2.2rem;
+      background: var(--primary); color: #fff;
       border-radius: 50px; font-weight: 700; font-size: 1rem;
       text-decoration: none;
-      box-shadow: 0 4px 20px rgba(0,0,0,.15);
+      border: 1px solid var(--tint-bd);
+      box-shadow: 0 0 22px var(--glow-sm), 0 0 55px var(--glow-lg);
       transition: transform .18s, box-shadow .18s;
     }
-    .btn-white:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(0,0,0,.2); }
-    .btn-ghost {
-      padding: .85rem 2rem;
-      background: rgba(255,255,255,.15); color: #fff;
-      border: 1px solid rgba(255,255,255,.4);
-      border-radius: 50px; font-weight: 600; font-size: 1rem;
-      text-decoration: none; backdrop-filter: blur(8px);
-      transition: background .18s;
+    .btn-neon:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 32px var(--glow-sm), 0 0 75px var(--glow-lg);
     }
-    .btn-ghost:hover { background: rgba(255,255,255,.25); }
+    .btn-ghost {
+      padding: .9rem 2.2rem;
+      background: var(--glass); color: var(--text);
+      border: 1px solid var(--border); border-radius: 50px;
+      font-weight: 600; font-size: 1rem; text-decoration: none;
+      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); transition: background .18s, border-color .18s;
+    }
+    .btn-ghost:hover { background: rgba(255,255,255,.09); border-color: rgba(255,255,255,.18); }
+
     .rating-row {
       display: inline-flex; align-items: center; gap: .6rem;
-      margin-top: 1.75rem; padding: .5rem 1.25rem;
-      background: rgba(255,255,255,.15); border-radius: 50px;
-      color: #fff; font-size: .9rem;
+      margin-top: 2rem; padding: .5rem 1.25rem;
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 50px; color: var(--text); font-size: .88rem;
+      -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
     }
-    .stars { color: #ffd166; }
+    .stars { color: #fbbf24; }
 
-    /* ── SECTIONS ── */
-    section { padding: 5rem 2rem; }
-    .container { max-width: 1080px; margin: 0 auto; }
+    /* ── SHARED SECTION LAYOUT ── */
+    section { padding: 5.5rem 2rem; }
+    .container { max-width: 1100px; margin: 0 auto; }
+    .section-header { text-align: center; margin-bottom: 3.5rem; }
     .tag {
-      display: inline-block; margin-bottom: .7rem;
-      padding: .3rem .9rem;
-      background: rgba(232,93,4,.12); color: var(--primary);
-      border-radius: 50px; font-size: .78rem; font-weight: 600;
-      letter-spacing: .05em; text-transform: uppercase;
+      display: inline-block; margin-bottom: .75rem; padding: .3rem .9rem;
+      background: var(--tint-bg); color: var(--primary);
+      border: 1px solid var(--tint-bd);
+      border-radius: 50px; font-size: .75rem; font-weight: 600;
+      letter-spacing: .06em; text-transform: uppercase;
     }
-    h2 { font-size: clamp(1.7rem, 4vw, 2.4rem); font-weight: 800; margin-bottom: .9rem; }
-    .lead { font-size: 1.05rem; color: var(--muted); max-width: 540px; margin-bottom: 2.8rem; }
+    h2 {
+      font-family: var(--fh);
+      font-size: clamp(1.8rem, 4vw, 2.6rem); font-weight: 700;
+      margin-bottom: .8rem; letter-spacing: -.015em; color: var(--text);
+    }
+    .lead { font-size: 1.05rem; color: var(--muted); max-width: 560px; margin: 0 auto; }
 
     /* ── SERVICES ── */
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.4rem; }
-    .card {
-      padding: 1.8rem;
-      background: #fff; border: 1px solid rgba(0,0,0,.07);
-      border-radius: var(--radius); box-shadow: var(--shadow);
-      transition: transform .2s, box-shadow .2s;
+    .services-section { background: var(--bg); }
+    .services-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.2rem; }
+    .svc-card {
+      padding: 2rem;
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: var(--radius); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+      transition: transform .22s, border-color .22s, box-shadow .22s;
     }
-    .card:hover { transform: translateY(-4px); box-shadow: 0 12px 36px rgba(0,0,0,.11); }
-    .card-icon {
-      width: 50px; height: 50px; margin-bottom: 1.1rem;
-      background: rgba(232,93,4,.1);
+    .svc-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--tint-bd);
+      box-shadow: 0 8px 40px var(--tint-bg);
+    }
+    .svc-icon {
+      width: 52px; height: 52px; margin-bottom: 1.2rem;
+      background: var(--tint-bg); border: 1px solid var(--tint-bd);
       border-radius: 14px; display: flex; align-items: center; justify-content: center;
-      font-size: 1.4rem;
+      font-size: 1.45rem;
     }
-    .card h3 { font-size: 1rem; font-weight: 700; margin-bottom: .4rem; }
-    .card p  { font-size: .88rem; color: var(--muted); }
+    .svc-card h3 { font-family: var(--fh); font-size: 1rem; font-weight: 600; margin-bottom: .4rem; }
+    .svc-card p  { font-size: .875rem; color: var(--muted); line-height: 1.55; }
+
+    /* ── STATS STRIP ── */
+    .stats-strip {
+      background: var(--bg2);
+      border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+      padding: 4rem 2rem;
+    }
+    .stats-row { display: flex; flex-wrap: wrap; gap: 1rem; justify-content: center; }
+    .stat-item {
+      flex: 1; min-width: 160px; text-align: center;
+      padding: 2rem 1.5rem;
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: var(--radius); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px);
+    }
+    .stat-n {
+      font-family: var(--fh); font-size: 2.8rem; font-weight: 700;
+      color: var(--primary); line-height: 1;
+      text-shadow: 0 0 30px var(--glow-sm);
+    }
+    .stat-l { font-size: .82rem; color: var(--muted); margin-top: .4rem; letter-spacing: .04em; }
 
     /* ── ABOUT ── */
-    .about-section { background: var(--bg-alt); }
+    .about-section { background: var(--bg); }
     .about-wrap { display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center; }
-    @media (max-width: 768px) { .about-wrap { grid-template-columns: 1fr; gap: 2rem; } }
-    .about-visual {
-      aspect-ratio: 4/3; border-radius: 24px;
-      background: linear-gradient(135deg, var(--primary) 0%, var(--dark) 100%);
+    @media (max-width: 768px) { .about-wrap { grid-template-columns: 1fr; gap: 2.5rem; } }
+    .about-text { color: var(--muted); line-height: 1.75; font-size: 1.02rem; }
+    .about-deco {
       display: flex; align-items: center; justify-content: center;
-      font-size: 5rem; box-shadow: 0 20px 60px rgba(0,0,0,.14);
+      aspect-ratio: 1; max-width: 360px; margin: 0 auto;
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: 30px; -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+      font-size: 7rem; position: relative; overflow: hidden;
     }
-    .about-text { color: var(--muted); margin-bottom: 1.6rem; }
-    .stats { display: flex; gap: 2.5rem; flex-wrap: wrap; }
-    .stat-n { font-size: 2rem; font-weight: 900; color: var(--primary); }
-    .stat-l { font-size: .82rem; color: var(--muted); }
+    .about-deco::before {
+      content: ''; position: absolute; inset: 0;
+      background: radial-gradient(circle at 40% 40%, var(--tint-bg) 0%, transparent 65%);
+    }
+
+    /* ── TESTIMONIALS ── */
+    .testimonials { background: var(--bg2); }
+    .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.2rem; }
+    .testi-card {
+      padding: 2rem;
+      background: var(--glass); border: 1px solid var(--border);
+      border-radius: var(--radius); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px);
+    }
+    .testi-stars { color: #fbbf24; font-size: .95rem; margin-bottom: .9rem; letter-spacing: .1em; }
+    .testi-text { font-size: .92rem; color: var(--muted); line-height: 1.65; margin-bottom: 1.2rem; }
+    .testi-author { display: flex; align-items: center; gap: .75rem; }
+    .testi-avatar {
+      width: 42px; height: 42px; border-radius: 50%; flex-shrink: 0;
+      background: var(--tint-bg); border: 1px solid var(--tint-bd);
+      display: flex; align-items: center; justify-content: center;
+      font-family: var(--fh); font-weight: 700; font-size: .82rem;
+      color: var(--primary);
+    }
+    .testi-name { font-family: var(--fh); font-weight: 600; font-size: .9rem; }
+    .testi-role { font-size: .77rem; color: var(--muted); }
 
     /* ── CTA ── */
     .cta-section {
-      background: linear-gradient(135deg, var(--dark) 0%, var(--primary) 100%);
-      text-align: center; color: #fff;
+      background: var(--bg); text-align: center;
+      position: relative; overflow: hidden;
     }
-    .cta-section .tag { background: rgba(255,255,255,.2); color: #fff; }
-    .cta-section h2 { color: #fff; }
-    .cta-section .cta-sub { color: rgba(255,255,255,.85); font-size: 1.05rem; margin-bottom: 2rem; max-width: 480px; margin-left: auto; margin-right: auto; }
+    .cta-glow {
+      position: absolute; inset: 0; pointer-events: none;
+      background: radial-gradient(ellipse 70% 60% at 50% 50%, var(--tint-bg) 0%, transparent 70%);
+    }
+    .cta-section .container { position: relative; z-index: 1; }
+    .cta-sub { color: var(--muted); font-size: 1.05rem; max-width: 480px; margin: .8rem auto 2.5rem; }
 
     /* ── FOOTER ── */
     footer {
-      padding: 1.8rem 2rem; text-align: center;
-      background: #0f0f1a; color: rgba(255,255,255,.45); font-size: .82rem;
+      padding: 2rem; text-align: center;
+      background: #04040a; color: rgba(255,255,255,.3); font-size: .82rem;
+      border-top: 1px solid var(--border);
     }
     footer a { color: var(--primary); text-decoration: none; font-weight: 600; }
 
-    /* ── DEMO BANNER ── */
+    /* ── DEMO BAR ── */
     .demo-bar {
-      position: fixed; bottom: 1rem; left: 50%; transform: translateX(-50%);
-      z-index: 200;
-      padding: .7rem 1.5rem;
-      background: rgba(15,15,26,.95); color: #fff;
-      border-radius: 50px; font-size: .83rem;
+      position: fixed; bottom: 1.2rem; left: 50%; transform: translateX(-50%);
+      z-index: 200; padding: .7rem 1.5rem;
+      background: rgba(4,4,10,.94); border: 1px solid var(--border); color: var(--text);
+      border-radius: 50px; font-size: .82rem;
       display: flex; align-items: center; gap: .75rem;
-      box-shadow: 0 8px 32px rgba(0,0,0,.35);
-      backdrop-filter: blur(14px); white-space: nowrap;
+      box-shadow: 0 8px 40px rgba(0,0,0,.55);
+      -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px); white-space: nowrap;
     }
-    .demo-bar span { opacity: .65; }
+    .demo-bar span { opacity: .55; }
     .demo-bar a { color: var(--primary); font-weight: 700; text-decoration: none; }
 
+    /* ── RESPONSIVE ── */
     @media (max-width: 600px) {
-      nav { padding: .8rem 1rem; }
-      .hero { padding: 5.5rem 1.2rem 3rem; }
+      nav { padding: .85rem 1.1rem; }
+      .hero { padding: 5.5rem 1.2rem 3.5rem; }
       section { padding: 3.5rem 1.2rem; }
+      .stats-strip { padding: 3rem 1.2rem; }
+      .about-deco { max-width: 220px; font-size: 5rem; }
       .demo-bar { font-size: .75rem; padding: .6rem 1.1rem; max-width: 92vw; white-space: normal; text-align: center; }
     }
   </style>
@@ -186,17 +287,21 @@
 
 <nav>
   <div class="nav-logo" id="nav-logo">İşletme</div>
-  <a href="https://bostok.dev?ref=demo-nav" target="_blank" class="nav-cta">Web Sitesi İstiyorum</a>
+  <a href="https://bostok.dev?ref=demo-nav" target="_blank" rel="noopener noreferrer" class="nav-cta" id="nav-cta">Web Sitesi İstiyorum</a>
 </nav>
 
 <section class="hero">
+  <div class="hero-bg" id="hero-bg"></div>
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="orb orb-3"></div>
   <div class="hero-inner">
     <div class="hero-badge" id="hero-badge">🏆 Profesyonel Web Tasarım</div>
     <h1 id="hero-title">İşletme Adı</h1>
     <p class="hero-sub" id="hero-sub">Şehrinizde kaliteli ve güvenilir hizmet.</p>
     <div class="hero-btns">
-      <a href="#iletisim" class="btn-white" id="cta-btn">Hemen İletişime Geç</a>
-      <a href="#hizmetler" class="btn-ghost">Hizmetlerimiz</a>
+      <a href="#iletisim" class="btn-neon" id="cta-btn">Hemen İletişime Geç</a>
+      <a href="#hizmetler" class="btn-ghost" id="hero-btn2">Hizmetlerimiz</a>
     </div>
     <div class="rating-row" id="rating-row" style="display:none">
       <span class="stars" id="stars">★★★★★</span>
@@ -205,194 +310,834 @@
   </div>
 </section>
 
-<section id="hizmetler">
+<section id="hizmetler" class="services-section">
   <div class="container">
-    <span class="tag">Hizmetlerimiz</span>
-    <h2>Size Nasıl Yardımcı Olabiliriz?</h2>
-    <p class="lead" id="services-lead">Uzman ekibimizle en kaliteli hizmeti sunuyoruz.</p>
-    <div class="grid" id="services-grid"></div>
+    <div class="section-header">
+      <span class="tag" id="s-tag">Hizmetlerimiz</span>
+      <h2 id="s-title">Size Nasıl Yardımcı Olabiliriz?</h2>
+      <p class="lead" id="services-lead">Uzman ekibimizle en kaliteli hizmeti sunuyoruz.</p>
+    </div>
+    <div class="services-grid" id="services-grid"></div>
   </div>
 </section>
 
-<section class="about-section" id="hakkimizda">
+<section class="stats-strip">
+  <div class="container">
+    <div class="stats-row" id="stats-row"></div>
+  </div>
+</section>
+
+<section id="hakkimizda" class="about-section">
   <div class="container">
     <div class="about-wrap">
       <div>
-        <span class="tag">Hakkımızda</span>
+        <span class="tag" id="a-tag">Hakkımızda</span>
         <h2 id="about-title">Kalite ve Güvenin Adresi</h2>
         <p class="about-text" id="about-text">Yılların deneyimiyle sektörde fark yaratan hizmetler sunuyoruz.</p>
-        <div class="stats" id="stats"></div>
       </div>
-      <div class="about-visual" id="about-icon">🏆</div>
+      <div class="about-deco" id="about-icon">🏆</div>
     </div>
   </div>
 </section>
 
-<section id="iletisim" class="cta-section">
+<section class="testimonials">
   <div class="container">
-    <span class="tag">İletişim</span>
-    <h2>Bugün Başlayalım</h2>
+    <div class="section-header">
+      <span class="tag" id="t-tag">Yorumlar</span>
+      <h2 id="t-title">Müşterilerimiz Ne Diyor?</h2>
+    </div>
+    <div class="testi-grid" id="testi-grid"></div>
+  </div>
+</section>
+
+<section id="iletisim" class="cta-section">
+  <div class="cta-glow"></div>
+  <div class="container">
+    <span class="tag" id="cta-tag">İletişim</span>
+    <h2 id="cta-title">Bugün Başlayalım</h2>
     <p class="cta-sub" id="cta-sub">Profesyonel web siteniz için ücretsiz teklif alın.</p>
-    <a href="https://bostok.dev?ref=demo-cta" target="_blank" class="btn-white" id="cta-main">Ücretsiz Teklif Al →</a>
+    <a href="https://bostok.dev?ref=demo-cta" target="_blank" rel="noopener noreferrer" class="btn-neon" id="cta-main">Ücretsiz Teklif Al →</a>
   </div>
 </section>
 
 <footer>
-  <p>Bu site <a href="https://bostok.dev" target="_blank">Bostok.dev</a> tarafından demo olarak hazırlanmıştır.</p>
+  <p id="footer-text">Bu site <a href="https://bostok.dev" target="_blank" rel="noopener noreferrer">Bostok.dev</a> tarafından demo olarak hazırlanmıştır.</p>
 </footer>
 
 <div class="demo-bar">
-  <span>🎨 Demo Site</span>
-  <a href="https://bostok.dev?ref=demo-bar" target="_blank">Sitenizi Yaptırın →</a>
+  <span id="demo-label">🎨 Demo Site</span>
+  <a href="https://bostok.dev?ref=demo-bar" target="_blank" rel="noopener noreferrer" id="demo-link">Sitenizi Yaptırın →</a>
 </div>
 
 <script>
-const SECTORS = {
-  food: {
-    label:'Yeme & İçme', icon:'🍽️',
-    p:'#e85d04', d:'#c43f00', l:'#ffd166',
-    services:[
-      {i:'🍳',t:'Lezzetli Menü',      d:'Taze malzemelerle hazırlanan ev yapımı lezzetler'},
-      {i:'📦',t:'Paket Servis',        d:'Hızlı ve güvenli kapınıza teslimat'},
-      {i:'🎉',t:'Özel Organizasyon',  d:'Doğum günü, düğün ve şirket etkinlikleri'},
-      {i:'📅',t:'Online Rezervasyon', d:'Kolay masa rezervasyonu imkânı'},
+// ── UI CHROME TRANSLATIONS ──
+const LANG = {
+  tr: {
+    navCta: 'Web Sitesi İstiyorum',
+    sTag: 'Hizmetlerimiz', sTitle: 'Size Nasıl Yardımcı Olabiliriz?',
+    sLead: n => `${n} olarak size en iyi hizmeti sunmak için buradayız.`,
+    aTag: 'Hakkımızda',
+    aTitle: n => `${n} Hakkında`,
+    aText: (n, c, lbl) => `${c ? c + "'da " : ''}${lbl.toLowerCase()} alanında uzmanlaşmış ekibimizle en yüksek kalitede hizmet sunuyoruz.`,
+    ctaTag: 'İletişim', ctaTitle: 'Bugün Başlayalım',
+    ctaSub: n => `${n} için profesyonel bir web sitesi hazırlayalım. Ücretsiz demo ve teklif için bize ulaşın.`,
+    ctaBtn: 'Ücretsiz Teklif Al →',
+    ctaBtnTel: ph => `Hemen Ara: ${ph}`,
+    footerHtml: 'Bu site <a href="https://bostok.dev" target="_blank" rel="noopener noreferrer">Bostok.dev</a> tarafından demo olarak hazırlanmıştır.',
+    demoLabel: '🎨 Demo Site', demoLink: 'Sitenizi Yaptırın →',
+    badge: '🏆 Profesyonel Web Tasarım',
+    heroSub: (c, tl) => c ? `${c}'da ${tl.toLowerCase()}.` : `${tl}.`,
+    btn1: 'Hemen İletişime Geç', btn2: 'Hizmetlerimiz',
+    tTag: 'Yorumlar', tTitle: 'Müşterilerimiz Ne Diyor?',
+    testimonials: [
+      { name: 'Mehmet Y.', role: 'Müşteri', text: 'Hizmet kalitesinden gerçekten memnun kaldım. Profesyonel yaklaşım ve hızlı çözümler için teşekkürler.', stars: 5 },
+      { name: 'Ayşe K.', role: 'Düzenli Müşteri', text: 'Her zaman kaliteli ve güvenilir hizmet. Çevremdeki herkese tavsiye ediyorum.', stars: 5 },
+      { name: 'Ali D.', role: 'Müşteri', text: 'Beklentilerimin çok ötesinde bir deneyim. Kesinlikle tekrar tercih edeceğim.', stars: 5 },
     ],
-    taglines:['Lezzetin Adresi','Damak Zevkinize Uygun Seçenekler','Her Lokmada Kalite'],
-    stats:[{n:'500+',l:'Mutlu Müşteri'},{n:'50+',l:'Menü Çeşidi'},{n:'5★',l:'Google Puanı'}],
-    vi:'🍽️',
   },
-  health: {
-    label:'Sağlık & Klinik', icon:'🏥',
-    p:'#0096c7', d:'#0077b6', l:'#90e0ef',
-    services:[
-      {i:'🔬',t:'Uzman Muayene',    d:'Alanında uzman doktorlarla kapsamlı muayene'},
-      {i:'💊',t:'Tedavi Planı',     d:'Kişiye özel tedavi ve takip programı'},
-      {i:'📋',t:'Online Randevu',   d:'Kolay ve hızlı randevu sistemi'},
-      {i:'🚑',t:'Acil Destek',      d:'7/24 acil durum hizmetleri'},
+  en: {
+    navCta: 'Get a Website',
+    sTag: 'Our Services', sTitle: 'How Can We Help You?',
+    sLead: n => `At ${n}, we are here to provide you with the best service.`,
+    aTag: 'About Us',
+    aTitle: n => `About ${n}`,
+    aText: (n, c, lbl) => `${c ? 'Based in ' + c + ', our ' : 'Our '}specialist team in the ${lbl} sector delivers top-quality service.`,
+    ctaTag: 'Contact', ctaTitle: "Let's Get Started",
+    ctaSub: n => `Let us build a professional website for ${n}. Contact us for a free demo and quote.`,
+    ctaBtn: 'Get a Free Quote →',
+    ctaBtnTel: ph => `Call Now: ${ph}`,
+    footerHtml: 'This demo was created by <a href="https://bostok.dev" target="_blank" rel="noopener noreferrer">Bostok.dev</a>.',
+    demoLabel: '🎨 Demo Site', demoLink: 'Get Your Website →',
+    badge: '🏆 Professional Web Design',
+    heroSub: (c, tl) => c ? `${tl} in ${c}.` : `${tl}.`,
+    btn1: 'Contact Us Now', btn2: 'Our Services',
+    tTag: 'Reviews', tTitle: 'What Our Customers Say',
+    testimonials: [
+      { name: 'James W.', role: 'Customer', text: 'Exceptional service quality. Professional, fast and reliable. Highly recommend to everyone!', stars: 5 },
+      { name: 'Sarah M.', role: 'Regular Client', text: 'Consistently outstanding service every visit. My go-to choice without hesitation.', stars: 5 },
+      { name: 'Robert C.', role: 'Customer', text: 'Exceeded my expectations in every way. Will definitely be back and bring friends.', stars: 5 },
     ],
-    taglines:['Sağlığınız Bizim Önceliğimiz','Uzman Kadro, Güvenilir Tedavi','Sağlıklı Yarınlar İçin'],
-    stats:[{n:'10+',l:'Uzman Hekim'},{n:'2000+',l:'Mutlu Hasta'},{n:'15+',l:'Yıl Deneyim'}],
-    vi:'⚕️',
   },
-  legal: {
-    label:'Hukuk & Finans', icon:'⚖️',
-    p:'#1b2a4a', d:'#0f1b33', l:'#c9a84c',
-    services:[
-      {i:'⚖️',t:'Hukuki Danışmanlık', d:'Uzman avukatlardan profesyonel destek'},
-      {i:'📄',t:'Sözleşme Hazırlama', d:'Her türlü sözleşme ve belge düzenleme'},
-      {i:'🏛️',t:'Dava Yönetimi',      d:'Tüm aşamalarda güçlü hukuki temsil'},
-      {i:'📞',t:'Online Konsültasyon', d:'Video konferans ile hızlı danışmanlık'},
+  de: {
+    navCta: 'Website anfragen',
+    sTag: 'Unsere Leistungen', sTitle: 'Wie können wir Ihnen helfen?',
+    sLead: n => `Bei ${n} sind wir für Sie da, um Ihnen den besten Service zu bieten.`,
+    aTag: 'Über uns',
+    aTitle: n => `Über ${n}`,
+    aText: (n, c, lbl) => c
+      ? `Mit Sitz in ${c} bietet unser spezialisiertes Team im Bereich ${lbl} Leistungen höchster Qualität.`
+      : `Unser spezialisiertes Team im Bereich ${lbl} bietet Leistungen höchster Qualität.`,
+    ctaTag: 'Kontakt', ctaTitle: 'Jetzt starten',
+    ctaSub: n => `Wir erstellen eine professionelle Website für ${n}. Kontaktieren Sie uns für ein kostenloses Demo und Angebot.`,
+    ctaBtn: 'Kostenloses Angebot →',
+    ctaBtnTel: ph => `Jetzt anrufen: ${ph}`,
+    footerHtml: 'Diese Demo wurde von <a href="https://bostok.dev" target="_blank" rel="noopener noreferrer">Bostok.dev</a> erstellt.',
+    demoLabel: '🎨 Demo-Website', demoLink: 'Website erstellen →',
+    badge: '🏆 Professionelles Webdesign',
+    heroSub: (c, tl) => c ? `${tl} in ${c}.` : `${tl}.`,
+    btn1: 'Jetzt Kontakt aufnehmen', btn2: 'Unsere Leistungen',
+    tTag: 'Bewertungen', tTitle: 'Was unsere Kunden sagen',
+    testimonials: [
+      { name: 'Thomas M.', role: 'Kunde', text: 'Hervorragende Servicequalität. Professionell, schnell und zuverlässig. Sehr empfehlenswert!', stars: 5 },
+      { name: 'Sabine H.', role: 'Stammkundin', text: 'Jedes Mal erstklassiger Service. Meine klare Empfehlung für jeden, der Qualität schätzt.', stars: 5 },
+      { name: 'Klaus W.', role: 'Kunde', text: 'Hat meine Erwartungen in jeder Hinsicht übertroffen. Komme definitiv wieder.', stars: 5 },
     ],
-    taglines:['Haklarınız Güvende','Profesyonel Hukuki Destek','Güvenilir Hukuk Bürosu'],
-    stats:[{n:'500+',l:'Kazanılan Dava'},{n:'20+',l:'Yıl Deneyim'},{n:'98%',l:'Müşteri Memnuniyeti'}],
-    vi:'⚖️',
   },
-  beauty: {
-    label:'Güzellik & Bakım', icon:'💅',
-    p:'#c9184a', d:'#a4133c', l:'#ff758f',
-    services:[
-      {i:'✂️',t:'Saç Tasarımı',   d:'Trendlere uygun profesyonel kesim ve şekillendirme'},
-      {i:'💆',t:'Cilt Bakımı',    d:'Cildinize özel bakım ve nemlendirme uygulamaları'},
-      {i:'💅',t:'Tırnak Bakımı',  d:'Manikür, pedikür ve kalıcı oje'},
-      {i:'🌸',t:'Spa & Masaj',    d:'Rahatlatıcı masaj ve spa deneyimi'},
+  nl: {
+    navCta: 'Website aanvragen',
+    sTag: 'Onze diensten', sTitle: 'Hoe kunnen we u helpen?',
+    sLead: n => `Bij ${n} zijn we er om u de beste service te bieden.`,
+    aTag: 'Over ons',
+    aTitle: n => `Over ${n}`,
+    aText: (n, c, lbl) => c
+      ? `Gevestigd in ${c}, biedt ons gespecialiseerde team in de ${lbl}-sector diensten van topkwaliteit.`
+      : `Ons gespecialiseerde team in de ${lbl}-sector biedt diensten van topkwaliteit.`,
+    ctaTag: 'Contact', ctaTitle: 'Laten we beginnen',
+    ctaSub: n => `Laat ons een professionele website bouwen voor ${n}. Neem contact op voor een gratis demo en offerte.`,
+    ctaBtn: 'Gratis offerte →',
+    ctaBtnTel: ph => `Bel nu: ${ph}`,
+    footerHtml: 'Deze demo is gemaakt door <a href="https://bostok.dev" target="_blank" rel="noopener noreferrer">Bostok.dev</a>.',
+    demoLabel: '🎨 Demowebsite', demoLink: 'Uw website →',
+    badge: '🏆 Professioneel webdesign',
+    heroSub: (c, tl) => c ? `${tl} in ${c}.` : `${tl}.`,
+    btn1: 'Neem nu contact op', btn2: 'Onze diensten',
+    tTag: 'Beoordelingen', tTitle: 'Wat onze klanten zeggen',
+    testimonials: [
+      { name: 'Jan V.', role: 'Klant', text: 'Uitstekende servicekwaliteit. Professioneel, snel en betrouwbaar. Zeker aan te bevelen!', stars: 5 },
+      { name: 'Anne B.', role: 'Vaste klant', text: 'Elke keer een eersteklas ervaring. Mijn eerste keuze zonder enige twijfel.', stars: 5 },
+      { name: 'Peter K.', role: 'Klant', text: 'Heeft al mijn verwachtingen overtroffen. Ik kom zeker terug en neem vrienden mee!', stars: 5 },
     ],
-    taglines:['Güzelliğinizi Keşfedin','Kendinize En İyi Hediyeyi Verin','Profesyonel Güzellik Uzmanları'],
-    stats:[{n:'1000+',l:'Mutlu Müşteri'},{n:'30+',l:'Hizmet Çeşidi'},{n:'8+',l:'Yıl Deneyim'}],
-    vi:'💄',
   },
-  realestate: {
-    label:'Emlak & İnşaat', icon:'🏠',
-    p:'#588157', d:'#3a5a40', l:'#a3b18a',
-    services:[
-      {i:'🏠',t:'Satılık & Kiralık', d:'Geniş portföyden size özel mülk'},
-      {i:'📊',t:'Değerleme',          d:'Profesyonel mülk değerleme hizmeti'},
-      {i:'📝',t:'Tapu & Hukuk',       d:'Tapu işlemleri ve hukuki danışmanlık'},
-      {i:'🔑',t:'Proje Satışı',       d:'Sıfır proje ve konut danışmanlığı'},
+  fr: {
+    navCta: 'Demander un site web',
+    sTag: 'Nos services', sTitle: 'Comment pouvons-nous vous aider ?',
+    sLead: n => `Chez ${n}, nous sommes là pour vous offrir le meilleur service.`,
+    aTag: 'À propos',
+    aTitle: n => `À propos de ${n}`,
+    aText: (n, c, lbl) => c
+      ? `Basés à ${c}, notre équipe spécialisée dans le secteur ${lbl} vous offre des services de la plus haute qualité.`
+      : `Notre équipe spécialisée dans le secteur ${lbl} vous offre des services de la plus haute qualité.`,
+    ctaTag: 'Contact', ctaTitle: 'Commençons',
+    ctaSub: n => `Laissez-nous créer un site web professionnel pour ${n}. Contactez-nous pour une démo et un devis gratuits.`,
+    ctaBtn: 'Devis gratuit →',
+    ctaBtnTel: ph => `Appelez : ${ph}`,
+    footerHtml: 'Cette démo a été créée par <a href="https://bostok.dev" target="_blank" rel="noopener noreferrer">Bostok.dev</a>.',
+    demoLabel: '🎨 Site démo', demoLink: 'Votre site web →',
+    badge: '🏆 Conception web professionnelle',
+    heroSub: (c, tl) => c ? `${tl} à ${c}.` : `${tl}.`,
+    btn1: 'Contactez-nous', btn2: 'Nos services',
+    tTag: 'Avis clients', tTitle: 'Ce que disent nos clients',
+    testimonials: [
+      { name: 'Pierre D.', role: 'Client', text: 'Qualité de service exceptionnelle. Professionnel, rapide et fiable. Je recommande vivement !', stars: 5 },
+      { name: 'Marie L.', role: 'Cliente fidèle', text: 'Un service de premier ordre à chaque visite. Mon choix évident sans hésitation.', stars: 5 },
+      { name: 'Jean-C. M.', role: 'Client', text: 'A dépassé mes attentes à tous égards. Je reviendrai certainement avec mes amis.', stars: 5 },
     ],
-    taglines:['Hayalinizdeki Evi Bulun','Güvenilir Emlak Danışmanlığı','Her Bütçeye Uygun Seçenekler'],
-    stats:[{n:'200+',l:'Satılan Mülk'},{n:'150+',l:'Aktif İlan'},{n:'12+',l:'Yıl Deneyim'}],
-    vi:'🏡',
-  },
-  auto: {
-    label:'Otomotiv', icon:'🚗',
-    p:'#37474f', d:'#1c313a', l:'#f77f00',
-    services:[
-      {i:'🔧',t:'Bakım & Onarım',   d:'Araçınız için kapsamlı bakım ve tamir'},
-      {i:'🛞',t:'Lastik & Balata',  d:'Tüm marka lastik ve fren sistemi'},
-      {i:'🔍',t:'Araç Ekspertiz',   d:'Detaylı araç muayene ve durum raporu'},
-      {i:'⚡',t:'Elektrik Sistemi', d:'Araç elektrik ve elektronik sistemleri'},
-    ],
-    taglines:['Aracınız Güvende','Uzman Ellerde Bakım','Güvenli Yolculuk İçin'],
-    stats:[{n:'5000+',l:'Servis Yapılan Araç'},{n:'15+',l:'Yıl Deneyim'},{n:'24/7',l:'Yol Yardım'}],
-    vi:'🔧',
-  },
-  education: {
-    label:'Eğitim', icon:'📚',
-    p:'#7209b7', d:'#560bad', l:'#b5179e',
-    services:[
-      {i:'📚',t:'Kurslar',        d:'Uzman eğitmenlerle kapsamlı eğitim programları'},
-      {i:'👨‍🏫',t:'Özel Ders',    d:'Birebir kişiselleştirilmiş öğretim'},
-      {i:'💻',t:'Online Eğitim', d:'İstediğin yerden, istediğin zaman öğren'},
-      {i:'🏆',t:'Sertifika',     d:'Sektörde geçerli uluslararası sertifikalar'},
-    ],
-    taglines:['Geleceğinizi Şekillendirin','Kaliteli Eğitimin Adresi','Başarıya Giden Yol'],
-    stats:[{n:'500+',l:'Mezun Öğrenci'},{n:'20+',l:'Eğitim Programı'},{n:'%95',l:'İş Bulma Oranı'}],
-    vi:'🎓',
-  },
-  hotel: {
-    label:'Konaklama', icon:'🏨',
-    p:'#264653', d:'#1a323e', l:'#e9c46a',
-    services:[
-      {i:'🛏️',t:'Konforlu Odalar',   d:'Lüks ve huzurlu konaklama deneyimi'},
-      {i:'🍳',t:'Restoran & Kahvaltı',d:'Zengin açık büfe ve à la carte menü'},
-      {i:'🏊',t:'Havuz & SPA',        d:'Yüzme havuzu ve wellness merkezi'},
-      {i:'🎉',t:'Etkinlik Salonu',    d:'Düğün, toplantı ve organizasyon hizmetleri'},
-    ],
-    taglines:['Konforun Buluşma Noktası','Unutulmaz Bir Konaklama','Misafirperverliğin Adresi'],
-    stats:[{n:'100+',l:'Oda'},{n:'5★',l:'Hizmet Kalitesi'},{n:'10+',l:'Yıl Deneyim'}],
-    vi:'🏨',
-  },
-  tech: {
-    label:'Teknoloji & Medya', icon:'💻',
-    p:'#023e8a', d:'#012a5e', l:'#48cae4',
-    services:[
-      {i:'💻',t:'Yazılım Geliştirme', d:'Web ve mobil uygulama geliştirme'},
-      {i:'🌐',t:'Web Tasarım',         d:'Modern ve kullanıcı dostu web siteleri'},
-      {i:'📱',t:'Dijital Pazarlama',   d:'SEO, sosyal medya ve reklam yönetimi'},
-      {i:'🔧',t:'Teknik Destek',       d:'7/24 teknik destek ve bakım'},
-    ],
-    taglines:['Dijital Geleceğinizi Şekillendirin','Teknoloji ile Büyüyün','Akıllı Çözümler'],
-    stats:[{n:'100+',l:'Proje'},{n:'50+',l:'Müşteri'},{n:'5+',l:'Yıl Deneyim'}],
-    vi:'🚀',
-  },
-  retail: {
-    label:'Mağaza & Hizmet', icon:'🛍️',
-    p:'#6d23a1', d:'#4f1780', l:'#e040fb',
-    services:[
-      {i:'🛍️',t:'Geniş Ürün Yelpazesi', d:'Her ihtiyacınıza uygun kaliteli ürünler'},
-      {i:'🚚',t:'Hızlı Teslimat',         d:'Aynı gün kargo ve kapıya teslim'},
-      {i:'💳',t:'Kolay Ödeme',             d:'Taksit ve farklı ödeme seçenekleri'},
-      {i:'🔄',t:'İade Garantisi',          d:'Koşulsuz iade ve değişim imkânı'},
-    ],
-    taglines:['Kaliteli Alışverişin Adresi','İhtiyacınız Ne Olursa','Güvenli ve Hızlı Alışveriş'],
-    stats:[{n:'1000+',l:'Ürün Çeşidi'},{n:'500+',l:'Mutlu Müşteri'},{n:'%100',l:'Güvenli Alışveriş'}],
-    vi:'🛒',
-  },
-  industrial: {
-    label:'Sanayi & Üretim', icon:'🏭',
-    p:'#455a64', d:'#263238', l:'#ff6f00',
-    services:[
-      {i:'🏭',t:'Üretim & İmalat',  d:'Yüksek kapasiteli endüstriyel üretim'},
-      {i:'✅',t:'Kalite Kontrol',   d:'ISO standartlarında kalite güvencesi'},
-      {i:'🤝',t:'B2B Tedarik',      d:'Toptan satış ve kurumsal tedarik anlaşmaları'},
-      {i:'🔩',t:'Teknik Servis',    d:'Makine bakım, onarım ve revizyon hizmetleri'},
-    ],
-    taglines:['Endüstriyel Güç','Üretimde Mükemmellik','Kalite ve Verimlilik'],
-    stats:[{n:'20+',l:'Yıl Deneyim'},{n:'500+',l:'B2B Müşteri'},{n:'ISO',l:'Kalite Sertifikası'}],
-    vi:'⚙️',
   },
 };
 
+// ── SECTOR DATA (multilingual) ──
+const SECTORS = {
+  food: {
+    icon: '🍽️', vi: '🍽️', p: '#e85d04', d: '#c43f00', l: '#ffd166',
+    tr: {
+      label: 'Yeme & İçme',
+      taglines: ['Lezzetin Adresi', 'Damak Zevkinize Uygun Seçenekler', 'Her Lokmada Kalite'],
+      services: [
+        {i:'🍳',t:'Lezzetli Menü',      d:'Taze malzemelerle hazırlanan ev yapımı lezzetler'},
+        {i:'📦',t:'Paket Servis',        d:'Hızlı ve güvenli kapınıza teslimat'},
+        {i:'🎉',t:'Özel Organizasyon',   d:'Doğum günü, düğün ve şirket etkinlikleri'},
+        {i:'📅',t:'Online Rezervasyon',  d:'Kolay masa rezervasyonu imkânı'},
+      ],
+      stats: [{n:'500+',l:'Mutlu Müşteri'},{n:'50+',l:'Menü Çeşidi'},{n:'5★',l:'Google Puanı'}],
+    },
+    en: {
+      label: 'Food & Beverage',
+      taglines: ["Flavours You'll Love", 'Quality in Every Bite', 'Your Neighbourhood Favourite'],
+      services: [
+        {i:'🍳',t:'Delicious Menu',      d:'Fresh ingredients, homemade quality'},
+        {i:'📦',t:'Takeaway & Delivery', d:'Fast and reliable delivery to your door'},
+        {i:'🎉',t:'Private Events',      d:'Birthdays, weddings and corporate catering'},
+        {i:'📅',t:'Online Booking',      d:'Easy table reservation in seconds'},
+      ],
+      stats: [{n:'500+',l:'Happy Customers'},{n:'50+',l:'Menu Items'},{n:'5★',l:'Google Rating'}],
+    },
+    de: {
+      label: 'Gastronomie',
+      taglines: ['Genuss pur', 'Qualität bei jedem Bissen', 'Ihr lokaler Lieblingsort'],
+      services: [
+        {i:'🍳',t:'Köstliche Speisen',   d:'Frische Zutaten, hausgemachte Qualität'},
+        {i:'📦',t:'Lieferservice',        d:'Schnelle und zuverlässige Lieferung'},
+        {i:'🎉',t:'Private Events',       d:'Geburtstage, Hochzeiten, Firmenevents'},
+        {i:'📅',t:'Online-Reservierung',  d:'Tisch reservieren in wenigen Klicks'},
+      ],
+      stats: [{n:'500+',l:'Zufriedene Kunden'},{n:'50+',l:'Menüpunkte'},{n:'5★',l:'Google-Bewertung'}],
+    },
+    nl: {
+      label: 'Eten & Drinken',
+      taglines: ['Smaken die u zult liefhebben', 'Kwaliteit in elke hap', 'Uw favoriete restaurant'],
+      services: [
+        {i:'🍳',t:'Heerlijk menu',        d:'Verse ingrediënten, huisgemaakte kwaliteit'},
+        {i:'📦',t:'Afhalen & bezorgen',   d:'Snelle en betrouwbare bezorging'},
+        {i:'🎉',t:'Privé evenementen',    d:'Verjaardagen, bruiloften, bedrijfsfeesten'},
+        {i:'📅',t:'Online reservering',   d:'Eenvoudig een tafel reserveren'},
+      ],
+      stats: [{n:'500+',l:'Tevreden klanten'},{n:'50+',l:'Menu-items'},{n:'5★',l:'Google-beoordeling'}],
+    },
+    fr: {
+      label: 'Restauration',
+      taglines: ['Des saveurs que vous aimerez', 'La qualité dans chaque bouchée', 'Votre adresse favorite'],
+      services: [
+        {i:'🍳',t:'Menu savoureux',        d:'Ingrédients frais, qualité maison'},
+        {i:'📦',t:'Livraison à domicile',  d:'Livraison rapide et fiable'},
+        {i:'🎉',t:'Événements privés',     d:"Anniversaires, mariages, événements d'entreprise"},
+        {i:'📅',t:'Réservation en ligne',  d:'Réservez une table en quelques clics'},
+      ],
+      stats: [{n:'500+',l:'Clients satisfaits'},{n:'50+',l:'Plats au menu'},{n:'5★',l:'Note Google'}],
+    },
+  },
+  health: {
+    icon: '🏥', vi: '⚕️', p: '#0096c7', d: '#0077b6', l: '#90e0ef',
+    tr: {
+      label: 'Sağlık & Klinik',
+      taglines: ['Sağlığınız Bizim Önceliğimiz', 'Uzman Kadro, Güvenilir Tedavi', 'Sağlıklı Yarınlar İçin'],
+      services: [
+        {i:'🔬',t:'Uzman Muayene',    d:'Alanında uzman doktorlarla kapsamlı muayene'},
+        {i:'💊',t:'Tedavi Planı',     d:'Kişiye özel tedavi ve takip programı'},
+        {i:'📋',t:'Online Randevu',   d:'Kolay ve hızlı randevu sistemi'},
+        {i:'🚑',t:'Acil Destek',      d:'7/24 acil durum hizmetleri'},
+      ],
+      stats: [{n:'10+',l:'Uzman Hekim'},{n:'2000+',l:'Mutlu Hasta'},{n:'15+',l:'Yıl Deneyim'}],
+    },
+    en: {
+      label: 'Health & Clinic',
+      taglines: ['Your Health is Our Priority', 'Expert Care, Trusted Treatment', 'For a Healthier Tomorrow'],
+      services: [
+        {i:'🔬',t:'Expert Consultation', d:'Comprehensive examination with specialist doctors'},
+        {i:'💊',t:'Treatment Plan',      d:'Personalised care and follow-up programme'},
+        {i:'📋',t:'Online Appointments', d:'Easy and fast appointment booking'},
+        {i:'🚑',t:'Emergency Support',   d:'24/7 emergency services'},
+      ],
+      stats: [{n:'10+',l:'Specialist Doctors'},{n:'2000+',l:'Happy Patients'},{n:'15+',l:'Years Experience'}],
+    },
+    de: {
+      label: 'Gesundheit & Klinik',
+      taglines: ['Ihre Gesundheit ist unsere Priorität', 'Expertenpflege, vertrauensvolle Behandlung', 'Für eine gesündere Zukunft'],
+      services: [
+        {i:'🔬',t:'Fachberatung',        d:'Umfassende Untersuchung mit Spezialisten'},
+        {i:'💊',t:'Behandlungsplan',      d:'Personalisierte Therapie und Nachsorge'},
+        {i:'📋',t:'Online-Termin',        d:'Einfache und schnelle Terminbuchung'},
+        {i:'🚑',t:'Notfallservice',       d:'24/7 Notfallversorgung'},
+      ],
+      stats: [{n:'10+',l:'Fachärzte'},{n:'2000+',l:'Zufriedene Patienten'},{n:'15+',l:'Jahre Erfahrung'}],
+    },
+    nl: {
+      label: 'Gezondheid & Kliniek',
+      taglines: ['Uw gezondheid is onze prioriteit', 'Deskundige zorg, betrouwbare behandeling', 'Voor een gezondere toekomst'],
+      services: [
+        {i:'🔬',t:'Deskundig consult',   d:'Uitgebreid onderzoek met specialisten'},
+        {i:'💊',t:'Behandelplan',         d:'Persoonlijk zorgprogramma en follow-up'},
+        {i:'📋',t:'Online afspraak',      d:'Eenvoudig en snel afspraak maken'},
+        {i:'🚑',t:'Noodservice',          d:'24/7 spoedservice'},
+      ],
+      stats: [{n:'10+',l:'Specialisten'},{n:'2000+',l:'Tevreden patiënten'},{n:'15+',l:'Jaar ervaring'}],
+    },
+    fr: {
+      label: 'Santé & Clinique',
+      taglines: ['Votre santé est notre priorité', 'Soins experts, traitement fiable', 'Pour un avenir en meilleure santé'],
+      services: [
+        {i:'🔬',t:'Consultation spécialisée', d:'Examen complet par des médecins spécialistes'},
+        {i:'💊',t:'Plan de traitement',       d:'Programme de soins et suivi personnalisé'},
+        {i:'📋',t:'Rendez-vous en ligne',     d:'Prise de rendez-vous facile et rapide'},
+        {i:'🚑',t:'Urgences',                 d:"Service d'urgence 24h/24"},
+      ],
+      stats: [{n:'10+',l:'Médecins spécialistes'},{n:'2000+',l:'Patients satisfaits'},{n:'15+',l:"Ans d'expérience"}],
+    },
+  },
+  legal: {
+    icon: '⚖️', vi: '⚖️', p: '#1b2a4a', d: '#0f1b33', l: '#c9a84c',
+    tr: {
+      label: 'Hukuk & Finans',
+      taglines: ['Haklarınız Güvende', 'Profesyonel Hukuki Destek', 'Güvenilir Hukuk Bürosu'],
+      services: [
+        {i:'⚖️',t:'Hukuki Danışmanlık',  d:'Uzman avukatlardan profesyonel destek'},
+        {i:'📄',t:'Sözleşme Hazırlama',  d:'Her türlü sözleşme ve belge düzenleme'},
+        {i:'🏛️',t:'Dava Yönetimi',       d:'Tüm aşamalarda güçlü hukuki temsil'},
+        {i:'📞',t:'Online Konsültasyon',  d:'Video konferans ile hızlı danışmanlık'},
+      ],
+      stats: [{n:'500+',l:'Kazanılan Dava'},{n:'20+',l:'Yıl Deneyim'},{n:'98%',l:'Müşteri Memnuniyeti'}],
+    },
+    en: {
+      label: 'Law & Finance',
+      taglines: ['Your Rights Are Protected', 'Professional Legal Support', 'Trusted Legal Expertise'],
+      services: [
+        {i:'⚖️',t:'Legal Consultation',  d:'Professional support from expert lawyers'},
+        {i:'📄',t:'Contract Drafting',    d:'All types of contracts and documents'},
+        {i:'🏛️',t:'Case Management',     d:'Strong legal representation at every stage'},
+        {i:'📞',t:'Online Consultation',  d:'Fast advice via video conference'},
+      ],
+      stats: [{n:'500+',l:'Cases Won'},{n:'20+',l:'Years Experience'},{n:'98%',l:'Client Satisfaction'}],
+    },
+    de: {
+      label: 'Recht & Finanzen',
+      taglines: ['Ihre Rechte sind geschützt', 'Professionelle Rechtsberatung', 'Vertrauenswürdige Rechtskompetenz'],
+      services: [
+        {i:'⚖️',t:'Rechtsberatung',       d:'Professionelle Unterstützung durch Fachanwälte'},
+        {i:'📄',t:'Vertragsgestaltung',    d:'Alle Arten von Verträgen und Dokumenten'},
+        {i:'🏛️',t:'Fallmanagement',       d:'Starke rechtliche Vertretung in jeder Phase'},
+        {i:'📞',t:'Online-Beratung',       d:'Schnelle Beratung per Videokonferenz'},
+      ],
+      stats: [{n:'500+',l:'Gewonnene Fälle'},{n:'20+',l:'Jahre Erfahrung'},{n:'98%',l:'Kundenzufriedenheit'}],
+    },
+    nl: {
+      label: 'Recht & Financiën',
+      taglines: ['Uw rechten zijn beschermd', 'Professionele juridische ondersteuning', 'Betrouwbare juridische expertise'],
+      services: [
+        {i:'⚖️',t:'Juridisch advies',     d:'Professionele ondersteuning van deskundige advocaten'},
+        {i:'📄',t:'Contractopstelling',    d:'Alle soorten contracten en documenten'},
+        {i:'🏛️',t:'Zaakbeheer',           d:'Sterke juridische vertegenwoordiging in elke fase'},
+        {i:'📞',t:'Online consultatie',    d:'Snel advies via videoconferentie'},
+      ],
+      stats: [{n:'500+',l:'Gewonnen zaken'},{n:'20+',l:'Jaar ervaring'},{n:'98%',l:'Klanttevredenheid'}],
+    },
+    fr: {
+      label: 'Droit & Finance',
+      taglines: ['Vos droits sont protégés', 'Soutien juridique professionnel', 'Expertise juridique de confiance'],
+      services: [
+        {i:'⚖️',t:'Conseil juridique',     d:"Soutien professionnel d'avocats experts"},
+        {i:'📄',t:'Rédaction de contrats', d:'Tous types de contrats et documents'},
+        {i:'🏛️',t:'Gestion de dossier',   d:'Représentation juridique solide à chaque étape'},
+        {i:'📞',t:'Consultation en ligne', d:'Conseil rapide par visioconférence'},
+      ],
+      stats: [{n:'500+',l:'Affaires gagnées'},{n:'20+',l:"Ans d'expérience"},{n:'98%',l:'Satisfaction client'}],
+    },
+  },
+  beauty: {
+    icon: '💅', vi: '💄', p: '#c9184a', d: '#a4133c', l: '#ff758f',
+    tr: {
+      label: 'Güzellik & Bakım',
+      taglines: ['Güzelliğinizi Keşfedin', 'Kendinize En İyi Hediyeyi Verin', 'Profesyonel Güzellik Uzmanları'],
+      services: [
+        {i:'✂️',t:'Saç Tasarımı',   d:'Trendlere uygun profesyonel kesim ve şekillendirme'},
+        {i:'💆',t:'Cilt Bakımı',    d:'Cildinize özel bakım ve nemlendirme uygulamaları'},
+        {i:'💅',t:'Tırnak Bakımı',  d:'Manikür, pedikür ve kalıcı oje'},
+        {i:'🌸',t:'Spa & Masaj',    d:'Rahatlatıcı masaj ve spa deneyimi'},
+      ],
+      stats: [{n:'1000+',l:'Mutlu Müşteri'},{n:'30+',l:'Hizmet Çeşidi'},{n:'8+',l:'Yıl Deneyim'}],
+    },
+    en: {
+      label: 'Beauty & Care',
+      taglines: ['Discover Your Beauty', 'Treat Yourself to the Best', 'Professional Beauty Experts'],
+      services: [
+        {i:'✂️',t:'Hair Design',    d:'Professional cut and styling following latest trends'},
+        {i:'💆',t:'Skin Care',      d:'Personalised skin care and moisturising treatments'},
+        {i:'💅',t:'Nail Care',      d:'Manicure, pedicure and gel nails'},
+        {i:'🌸',t:'Spa & Massage',  d:'Relaxing massage and spa experience'},
+      ],
+      stats: [{n:'1000+',l:'Happy Clients'},{n:'30+',l:'Services'},{n:'8+',l:'Years Experience'}],
+    },
+    de: {
+      label: 'Schönheit & Pflege',
+      taglines: ['Entdecken Sie Ihre Schönheit', 'Das Beste für sich selbst', 'Professionelle Schönheitsexperten'],
+      services: [
+        {i:'✂️',t:'Haardesign',     d:'Professioneller Haarschnitt nach neuesten Trends'},
+        {i:'💆',t:'Hautpflege',     d:'Individuelle Hautpflege und Feuchtigkeitsbehandlungen'},
+        {i:'💅',t:'Nagelpflege',    d:'Maniküre, Pediküre und Gelnägel'},
+        {i:'🌸',t:'Spa & Massage',  d:'Entspannende Massage und Spa-Erlebnis'},
+      ],
+      stats: [{n:'1000+',l:'Zufriedene Kunden'},{n:'30+',l:'Dienstleistungen'},{n:'8+',l:'Jahre Erfahrung'}],
+    },
+    nl: {
+      label: 'Schoonheid & Verzorging',
+      taglines: ['Ontdek uw schoonheid', 'Geef uzelf het beste', 'Professionele schoonheidsexperts'],
+      services: [
+        {i:'✂️',t:'Haardesign',       d:'Professionele knip en styling'},
+        {i:'💆',t:'Huidverzorging',   d:'Persoonlijke huidverzorging en hydratatiebehandeling'},
+        {i:'💅',t:'Nagelverzorging',  d:'Manicure, pedicure en gel nagels'},
+        {i:'🌸',t:'Spa & massage',    d:'Ontspannende massage en spa-ervaring'},
+      ],
+      stats: [{n:'1000+',l:'Tevreden klanten'},{n:'30+',l:'Diensten'},{n:'8+',l:'Jaar ervaring'}],
+    },
+    fr: {
+      label: 'Beauté & Soins',
+      taglines: ['Découvrez votre beauté', 'Offrez-vous le meilleur', 'Experts en beauté professionnels'],
+      services: [
+        {i:'✂️',t:'Coiffure',         d:'Coupe et coiffure professionnelles'},
+        {i:'💆',t:'Soins de la peau', d:'Soins de la peau et traitement hydratant personnalisés'},
+        {i:'💅',t:'Soins des ongles', d:'Manucure, pédicure et vernis gel'},
+        {i:'🌸',t:'Spa & Massage',    d:'Massage relaxant et expérience spa'},
+      ],
+      stats: [{n:'1000+',l:'Clients satisfaits'},{n:'30+',l:'Services'},{n:'8+',l:"Ans d'expérience"}],
+    },
+  },
+  realestate: {
+    icon: '🏠', vi: '🏡', p: '#588157', d: '#3a5a40', l: '#a3b18a',
+    tr: {
+      label: 'Emlak & İnşaat',
+      taglines: ['Hayalinizdeki Evi Bulun', 'Güvenilir Emlak Danışmanlığı', 'Her Bütçeye Uygun Seçenekler'],
+      services: [
+        {i:'🏠',t:'Satılık & Kiralık',  d:'Geniş portföyden size özel mülk'},
+        {i:'📊',t:'Değerleme',           d:'Profesyonel mülk değerleme hizmeti'},
+        {i:'📝',t:'Tapu & Hukuk',        d:'Tapu işlemleri ve hukuki danışmanlık'},
+        {i:'🔑',t:'Proje Satışı',        d:'Sıfır proje ve konut danışmanlığı'},
+      ],
+      stats: [{n:'200+',l:'Satılan Mülk'},{n:'150+',l:'Aktif İlan'},{n:'12+',l:'Yıl Deneyim'}],
+    },
+    en: {
+      label: 'Real Estate',
+      taglines: ['Find Your Dream Home', 'Reliable Property Experts', 'Options for Every Budget'],
+      services: [
+        {i:'🏠',t:'Buy & Rent',          d:'Wide portfolio of properties to match your needs'},
+        {i:'📊',t:'Valuation',            d:'Professional property valuation service'},
+        {i:'📝',t:'Legal Services',       d:'Title deeds and legal advice'},
+        {i:'🔑',t:'New Projects',         d:'New development and residential consulting'},
+      ],
+      stats: [{n:'200+',l:'Properties Sold'},{n:'150+',l:'Active Listings'},{n:'12+',l:'Years Experience'}],
+    },
+    de: {
+      label: 'Immobilien',
+      taglines: ['Finden Sie Ihr Traumhaus', 'Zuverlässige Immobilienexperten', 'Optionen für jedes Budget'],
+      services: [
+        {i:'🏠',t:'Kauf & Miete',        d:'Breites Portfolio an Immobilien'},
+        {i:'📊',t:'Bewertung',            d:'Professionelle Immobilienbewertung'},
+        {i:'📝',t:'Rechtsservice',        d:'Grundbuch und Rechtsberatung'},
+        {i:'🔑',t:'Neubauprojekte',       d:'Neubau- und Wohnimmobilienberatung'},
+      ],
+      stats: [{n:'200+',l:'Verkaufte Objekte'},{n:'150+',l:'Aktive Inserate'},{n:'12+',l:'Jahre Erfahrung'}],
+    },
+    nl: {
+      label: 'Vastgoed',
+      taglines: ['Vind uw droomhuis', 'Betrouwbare vastgoedexperts', 'Opties voor elk budget'],
+      services: [
+        {i:'🏠',t:'Kopen & huren',        d:'Breed portfolio aan woningen'},
+        {i:'📊',t:'Taxatie',              d:'Professionele woningtaxatie'},
+        {i:'📝',t:'Juridische diensten',  d:'Eigendomsakte en juridisch advies'},
+        {i:'🔑',t:'Nieuwe projecten',     d:'Nieuwbouw en woonadvies'},
+      ],
+      stats: [{n:'200+',l:'Verkochte woningen'},{n:'150+',l:'Actieve advertenties'},{n:'12+',l:'Jaar ervaring'}],
+    },
+    fr: {
+      label: 'Immobilier',
+      taglines: ['Trouvez votre maison idéale', 'Experts immobiliers de confiance', 'Des options pour chaque budget'],
+      services: [
+        {i:'🏠',t:'Achat & location',    d:'Large portefeuille de biens immobiliers'},
+        {i:'📊',t:'Évaluation',          d:"Service d'évaluation immobilière professionnelle"},
+        {i:'📝',t:'Services juridiques', d:'Actes de propriété et conseil juridique'},
+        {i:'🔑',t:'Nouveaux projets',    d:'Conseil en immobilier neuf et résidentiel'},
+      ],
+      stats: [{n:'200+',l:'Biens vendus'},{n:'150+',l:'Annonces actives'},{n:'12+',l:"Ans d'expérience"}],
+    },
+  },
+  auto: {
+    icon: '🚗', vi: '🔧', p: '#37474f', d: '#1c313a', l: '#f77f00',
+    tr: {
+      label: 'Otomotiv',
+      taglines: ['Aracınız Güvende', 'Uzman Ellerde Bakım', 'Güvenli Yolculuk İçin'],
+      services: [
+        {i:'🔧',t:'Bakım & Onarım',   d:'Araçınız için kapsamlı bakım ve tamir'},
+        {i:'🛞',t:'Lastik & Balata',  d:'Tüm marka lastik ve fren sistemi'},
+        {i:'🔍',t:'Araç Ekspertiz',   d:'Detaylı araç muayene ve durum raporu'},
+        {i:'⚡',t:'Elektrik Sistemi', d:'Araç elektrik ve elektronik sistemleri'},
+      ],
+      stats: [{n:'5000+',l:'Servis Yapılan Araç'},{n:'15+',l:'Yıl Deneyim'},{n:'24/7',l:'Yol Yardım'}],
+    },
+    en: {
+      label: 'Automotive',
+      taglines: ['Your Vehicle in Safe Hands', 'Expert Maintenance & Repair', 'For Safe Journeys'],
+      services: [
+        {i:'🔧',t:'Service & Repair',   d:'Comprehensive maintenance and repair for your vehicle'},
+        {i:'🛞',t:'Tyres & Brakes',     d:'All brands of tyres and brake systems'},
+        {i:'🔍',t:'Vehicle Inspection', d:'Detailed vehicle inspection and condition report'},
+        {i:'⚡',t:'Electrical Systems', d:'Vehicle electrical and electronic systems'},
+      ],
+      stats: [{n:'5000+',l:'Vehicles Serviced'},{n:'15+',l:'Years Experience'},{n:'24/7',l:'Roadside Assistance'}],
+    },
+    de: {
+      label: 'Automobil',
+      taglines: ['Ihr Fahrzeug in sicheren Händen', 'Fachkundige Wartung & Reparatur', 'Für sichere Fahrten'],
+      services: [
+        {i:'🔧',t:'Wartung & Reparatur',  d:'Umfassende Wartung und Reparatur für Ihr Fahrzeug'},
+        {i:'🛞',t:'Reifen & Bremsen',     d:'Alle Marken von Reifen und Bremssystemen'},
+        {i:'🔍',t:'Fahrzeugprüfung',      d:'Detaillierte Fahrzeuginspektion'},
+        {i:'⚡',t:'Elektrische Systeme',  d:'Elektrische und elektronische Fahrzeugsysteme'},
+      ],
+      stats: [{n:'5000+',l:'Gewartete Fahrzeuge'},{n:'15+',l:'Jahre Erfahrung'},{n:'24/7',l:'Pannenhilfe'}],
+    },
+    nl: {
+      label: 'Automotive',
+      taglines: ['Uw voertuig in goede handen', 'Deskundig onderhoud & reparatie', 'Voor veilige ritten'],
+      services: [
+        {i:'🔧',t:'Onderhoud & reparatie',  d:'Uitgebreid onderhoud en reparatie'},
+        {i:'🛞',t:'Banden & remmen',        d:'Alle merken banden en remsystemen'},
+        {i:'🔍',t:'Keuring',                d:'Gedetailleerde voertuiginspectie'},
+        {i:'⚡',t:'Elektrische systemen',   d:'Elektrische en elektronische voertuigsystemen'},
+      ],
+      stats: [{n:'5000+',l:'Voertuigen onderhouden'},{n:'15+',l:'Jaar ervaring'},{n:'24/7',l:'Wegenhulp'}],
+    },
+    fr: {
+      label: 'Automobile',
+      taglines: ['Votre véhicule entre de bonnes mains', 'Entretien & réparation experts', 'Pour des trajets en sécurité'],
+      services: [
+        {i:'🔧',t:'Entretien & réparation', d:'Entretien et réparation complets de votre véhicule'},
+        {i:'🛞',t:'Pneus & freins',         d:'Toutes marques de pneus et systèmes de freinage'},
+        {i:'🔍',t:'Contrôle technique',     d:'Inspection détaillée du véhicule'},
+        {i:'⚡',t:'Systèmes électriques',   d:"Systèmes électriques et électroniques du véhicule"},
+      ],
+      stats: [{n:'5000+',l:'Véhicules révisés'},{n:'15+',l:"Ans d'expérience"},{n:'24/7',l:'Assistance routière'}],
+    },
+  },
+  education: {
+    icon: '📚', vi: '🎓', p: '#7209b7', d: '#560bad', l: '#b5179e',
+    tr: {
+      label: 'Eğitim',
+      taglines: ['Geleceğinizi Şekillendirin', 'Kaliteli Eğitimin Adresi', 'Başarıya Giden Yol'],
+      services: [
+        {i:'📚',t:'Kurslar',         d:'Uzman eğitmenlerle kapsamlı eğitim programları'},
+        {i:'👨‍🏫',t:'Özel Ders',    d:'Birebir kişiselleştirilmiş öğretim'},
+        {i:'💻',t:'Online Eğitim',   d:'İstediğin yerden, istediğin zaman öğren'},
+        {i:'🏆',t:'Sertifika',       d:'Sektörde geçerli uluslararası sertifikalar'},
+      ],
+      stats: [{n:'500+',l:'Mezun Öğrenci'},{n:'20+',l:'Eğitim Programı'},{n:'%95',l:'İş Bulma Oranı'}],
+    },
+    en: {
+      label: 'Education',
+      taglines: ['Shape Your Future', 'Quality Education Starts Here', 'The Road to Success'],
+      services: [
+        {i:'📚',t:'Courses',          d:'Comprehensive training with expert instructors'},
+        {i:'👨‍🏫',t:'Private Tuition', d:'One-to-one personalised teaching'},
+        {i:'💻',t:'Online Learning',   d:'Learn anywhere, anytime'},
+        {i:'🏆',t:'Certification',     d:'Internationally recognised industry certificates'},
+      ],
+      stats: [{n:'500+',l:'Graduates'},{n:'20+',l:'Programmes'},{n:'95%',l:'Employment Rate'}],
+    },
+    de: {
+      label: 'Bildung',
+      taglines: ['Gestalten Sie Ihre Zukunft', 'Qualitätsbildung beginnt hier', 'Der Weg zum Erfolg'],
+      services: [
+        {i:'📚',t:'Kurse',            d:'Umfassende Ausbildungsprogramme mit Experten'},
+        {i:'👨‍🏫',t:'Nachhilfe',      d:'Persönlicher Eins-zu-eins-Unterricht'},
+        {i:'💻',t:'Online-Lernen',    d:'Lernen Sie überall und jederzeit'},
+        {i:'🏆',t:'Zertifizierung',   d:'International anerkannte Branchenzertifikate'},
+      ],
+      stats: [{n:'500+',l:'Absolventen'},{n:'20+',l:'Programme'},{n:'95%',l:'Beschäftigungsrate'}],
+    },
+    nl: {
+      label: 'Onderwijs',
+      taglines: ['Bepaal uw toekomst', 'Kwaliteitsonderwijs begint hier', 'De weg naar succes'],
+      services: [
+        {i:'📚',t:'Cursussen',        d:"Uitgebreide opleidingsprogramma's met experts"},
+        {i:'👨‍🏫',t:'Bijles',          d:'Persoonlijk één-op-één onderwijs'},
+        {i:'💻',t:'Online leren',     d:'Leer overal en altijd'},
+        {i:'🏆',t:'Certificering',    d:'Internationaal erkende branchekwalificaties'},
+      ],
+      stats: [{n:'500+',l:'Afgestudeerden'},{n:'20+',l:"Programma's"},{n:'95%',l:'Baankansen'}],
+    },
+    fr: {
+      label: 'Éducation',
+      taglines: ['Façonnez votre avenir', 'La qualité commence ici', 'Le chemin vers le succès'],
+      services: [
+        {i:'📚',t:'Formations',           d:'Programmes de formation complets avec des experts'},
+        {i:'👨‍🏫',t:'Cours particuliers',  d:'Enseignement personnalisé en tête-à-tête'},
+        {i:'💻',t:'Apprentissage en ligne', d:"Apprenez n'importe où et n'importe quand"},
+        {i:'🏆',t:'Certification',         d:'Certificats de secteur reconnus internationalement'},
+      ],
+      stats: [{n:'500+',l:'Diplômés'},{n:'20+',l:'Programmes'},{n:'95%',l:"Taux d'emploi"}],
+    },
+  },
+  hotel: {
+    icon: '🏨', vi: '🏨', p: '#264653', d: '#1a323e', l: '#e9c46a',
+    tr: {
+      label: 'Konaklama',
+      taglines: ['Konforun Buluşma Noktası', 'Unutulmaz Bir Konaklama', 'Misafirperverliğin Adresi'],
+      services: [
+        {i:'🛏️',t:'Konforlu Odalar',      d:'Lüks ve huzurlu konaklama deneyimi'},
+        {i:'🍳',t:'Restoran & Kahvaltı',  d:'Zengin açık büfe ve à la carte menü'},
+        {i:'🏊',t:'Havuz & SPA',          d:'Yüzme havuzu ve wellness merkezi'},
+        {i:'🎉',t:'Etkinlik Salonu',      d:'Düğün, toplantı ve organizasyon hizmetleri'},
+      ],
+      stats: [{n:'100+',l:'Oda'},{n:'5★',l:'Hizmet Kalitesi'},{n:'10+',l:'Yıl Deneyim'}],
+    },
+    en: {
+      label: 'Accommodation',
+      taglines: ['Where Comfort Meets Hospitality', 'An Unforgettable Stay', 'Your Home Away from Home'],
+      services: [
+        {i:'🛏️',t:'Comfortable Rooms',      d:'Luxury and peaceful accommodation experience'},
+        {i:'🍳',t:'Restaurant & Breakfast',  d:'Rich buffet and à la carte menu'},
+        {i:'🏊',t:'Pool & Spa',              d:'Swimming pool and wellness centre'},
+        {i:'🎉',t:'Event Hall',              d:'Wedding, meeting and event services'},
+      ],
+      stats: [{n:'100+',l:'Rooms'},{n:'5★',l:'Service Quality'},{n:'10+',l:'Years Experience'}],
+    },
+    de: {
+      label: 'Unterkunft',
+      taglines: ['Wo Komfort auf Gastfreundschaft trifft', 'Ein unvergesslicher Aufenthalt', 'Ihr Zuhause fern von Zuhause'],
+      services: [
+        {i:'🛏️',t:'Komfortzimmer',           d:'Luxuriöse und ruhige Unterkunft'},
+        {i:'🍳',t:'Restaurant & Frühstück',  d:'Reichhaltiges Buffet und à la carte Menü'},
+        {i:'🏊',t:'Pool & Spa',              d:'Schwimmbad und Wellnesszentrum'},
+        {i:'🎉',t:'Veranstaltungssaal',      d:'Hochzeits-, Meeting- und Eventservice'},
+      ],
+      stats: [{n:'100+',l:'Zimmer'},{n:'5★',l:'Servicequalität'},{n:'10+',l:'Jahre Erfahrung'}],
+    },
+    nl: {
+      label: 'Accommodatie',
+      taglines: ['Waar comfort gastvrijheid ontmoet', 'Een onvergetelijk verblijf', 'Uw tweede thuis'],
+      services: [
+        {i:'🛏️',t:'Comfortabele kamers',  d:'Luxe en rustgevend verblijf'},
+        {i:'🍳',t:'Restaurant & ontbijt', d:'Uitgebreid buffet en à la carte menu'},
+        {i:'🏊',t:'Zwembad & spa',        d:'Zwembad en wellnesscentrum'},
+        {i:'🎉',t:'Evenementenhal',       d:'Bruilofts-, vergader- en evenementendiensten'},
+      ],
+      stats: [{n:'100+',l:'Kamers'},{n:'5★',l:'Servicekwaliteit'},{n:'10+',l:'Jaar ervaring'}],
+    },
+    fr: {
+      label: 'Hébergement',
+      taglines: ["Où le confort rencontre l'hospitalité", 'Un séjour inoubliable', 'Votre maison loin de chez vous'],
+      services: [
+        {i:'🛏️',t:'Chambres confortables',      d:"Une expérience d'hébergement luxueuse et paisible"},
+        {i:'🍳',t:'Restaurant & petit-déjeuner', d:'Buffet riche et menu à la carte'},
+        {i:'🏊',t:'Piscine & spa',               d:'Piscine et centre de bien-être'},
+        {i:'🎉',t:'Salle de réception',          d:'Services mariage, réunion et événement'},
+      ],
+      stats: [{n:'100+',l:'Chambres'},{n:'5★',l:'Qualité de service'},{n:'10+',l:"Ans d'expérience"}],
+    },
+  },
+  tech: {
+    icon: '💻', vi: '🚀', p: '#023e8a', d: '#012a5e', l: '#48cae4',
+    tr: {
+      label: 'Teknoloji & Medya',
+      taglines: ['Dijital Geleceğinizi Şekillendirin', 'Teknoloji ile Büyüyün', 'Akıllı Çözümler'],
+      services: [
+        {i:'💻',t:'Yazılım Geliştirme',  d:'Web ve mobil uygulama geliştirme'},
+        {i:'🌐',t:'Web Tasarım',         d:'Modern ve kullanıcı dostu web siteleri'},
+        {i:'📱',t:'Dijital Pazarlama',   d:'SEO, sosyal medya ve reklam yönetimi'},
+        {i:'🔧',t:'Teknik Destek',       d:'7/24 teknik destek ve bakım'},
+      ],
+      stats: [{n:'100+',l:'Proje'},{n:'50+',l:'Müşteri'},{n:'5+',l:'Yıl Deneyim'}],
+    },
+    en: {
+      label: 'Technology & Media',
+      taglines: ['Shape Your Digital Future', 'Grow with Technology', 'Smart Solutions for Your Business'],
+      services: [
+        {i:'💻',t:'Software Development', d:'Web and mobile application development'},
+        {i:'🌐',t:'Web Design',           d:'Modern and user-friendly websites'},
+        {i:'📱',t:'Digital Marketing',    d:'SEO, social media and ad management'},
+        {i:'🔧',t:'Technical Support',    d:'24/7 technical support and maintenance'},
+      ],
+      stats: [{n:'100+',l:'Projects'},{n:'50+',l:'Clients'},{n:'5+',l:'Years Experience'}],
+    },
+    de: {
+      label: 'Technologie & Medien',
+      taglines: ['Gestalten Sie Ihre digitale Zukunft', 'Mit Technologie wachsen', 'Smarte Lösungen für Ihr Unternehmen'],
+      services: [
+        {i:'💻',t:'Softwareentwicklung',  d:'Web- und Mobile-App-Entwicklung'},
+        {i:'🌐',t:'Webdesign',            d:'Moderne und benutzerfreundliche Websites'},
+        {i:'📱',t:'Digitales Marketing',  d:'SEO, Social Media und Anzeigenmanagement'},
+        {i:'🔧',t:'Technischer Support',  d:'24/7 technischer Support und Wartung'},
+      ],
+      stats: [{n:'100+',l:'Projekte'},{n:'50+',l:'Kunden'},{n:'5+',l:'Jahre Erfahrung'}],
+    },
+    nl: {
+      label: 'Technologie & Media',
+      taglines: ['Bepaal uw digitale toekomst', 'Groei met technologie', 'Slimme oplossingen voor uw bedrijf'],
+      services: [
+        {i:'💻',t:'Softwareontwikkeling',     d:'Web- en mobiele app-ontwikkeling'},
+        {i:'🌐',t:'Webdesign',               d:'Moderne en gebruiksvriendelijke websites'},
+        {i:'📱',t:'Digitale marketing',       d:'SEO, social media en advertentiebeheer'},
+        {i:'🔧',t:'Technische ondersteuning', d:'24/7 technische ondersteuning en onderhoud'},
+      ],
+      stats: [{n:'100+',l:'Projecten'},{n:'50+',l:'Klanten'},{n:'5+',l:'Jaar ervaring'}],
+    },
+    fr: {
+      label: 'Technologie & Médias',
+      taglines: ['Façonnez votre avenir numérique', 'Grandissez avec la technologie', "Des solutions intelligentes pour votre entreprise"],
+      services: [
+        {i:'💻',t:'Développement logiciel', d:"Développement d'applications web et mobiles"},
+        {i:'🌐',t:'Web design',             d:'Sites web modernes et conviviaux'},
+        {i:'📱',t:'Marketing digital',      d:'SEO, réseaux sociaux et gestion des annonces'},
+        {i:'🔧',t:'Support technique',      d:'Support technique et maintenance 24h/24'},
+      ],
+      stats: [{n:'100+',l:'Projets'},{n:'50+',l:'Clients'},{n:'5+',l:"Ans d'expérience"}],
+    },
+  },
+  retail: {
+    icon: '🛍️', vi: '🛒', p: '#6d23a1', d: '#4f1780', l: '#e040fb',
+    tr: {
+      label: 'Mağaza & Hizmet',
+      taglines: ['Kaliteli Alışverişin Adresi', 'İhtiyacınız Ne Olursa', 'Güvenli ve Hızlı Alışveriş'],
+      services: [
+        {i:'🛍️',t:'Geniş Ürün Yelpazesi', d:'Her ihtiyacınıza uygun kaliteli ürünler'},
+        {i:'🚚',t:'Hızlı Teslimat',        d:'Aynı gün kargo ve kapıya teslim'},
+        {i:'💳',t:'Kolay Ödeme',           d:'Taksit ve farklı ödeme seçenekleri'},
+        {i:'🔄',t:'İade Garantisi',        d:'Koşulsuz iade ve değişim imkânı'},
+      ],
+      stats: [{n:'1000+',l:'Ürün Çeşidi'},{n:'500+',l:'Mutlu Müşteri'},{n:'%100',l:'Güvenli Alışveriş'}],
+    },
+    en: {
+      label: 'Retail & Services',
+      taglines: ['Quality Shopping Destination', 'Whatever You Need', 'Safe and Fast Shopping'],
+      services: [
+        {i:'🛍️',t:'Wide Product Range',  d:'Quality products for every need'},
+        {i:'🚚',t:'Fast Delivery',        d:'Same-day shipping and door-to-door delivery'},
+        {i:'💳',t:'Easy Payment',         d:'Instalment and multiple payment options'},
+        {i:'🔄',t:'Return Guarantee',     d:'Unconditional returns and exchanges'},
+      ],
+      stats: [{n:'1000+',l:'Products'},{n:'500+',l:'Happy Customers'},{n:'100%',l:'Secure Shopping'}],
+    },
+    de: {
+      label: 'Einzelhandel & Services',
+      taglines: ['Ihr Einkaufsziel für Qualität', 'Was auch immer Sie brauchen', 'Sicheres und schnelles Einkaufen'],
+      services: [
+        {i:'🛍️',t:'Breites Sortiment',   d:'Qualitätsprodukte für jeden Bedarf'},
+        {i:'🚚',t:'Schnelle Lieferung',   d:'Gleichtags-Versand und Haustürlieferung'},
+        {i:'💳',t:'Einfache Zahlung',     d:'Ratenzahlung und verschiedene Zahlungsoptionen'},
+        {i:'🔄',t:'Rückgabegarantie',     d:'Bedingungslose Rückgabe und Umtausch'},
+      ],
+      stats: [{n:'1000+',l:'Produkte'},{n:'500+',l:'Zufriedene Kunden'},{n:'100%',l:'Sicheres Einkaufen'}],
+    },
+    nl: {
+      label: 'Retail & Diensten',
+      taglines: ['Uw bestemming voor kwaliteitsinkopen', 'Wat u ook nodig heeft', 'Veilig en snel winkelen'],
+      services: [
+        {i:'🛍️',t:'Breed productassortiment', d:'Kwaliteitsproducten voor elke behoefte'},
+        {i:'🚚',t:'Snelle levering',          d:'Zelfde dag verzending en thuisbezorging'},
+        {i:'💳',t:'Eenvoudige betaling',      d:'Termijnbetaling en meerdere betaalopties'},
+        {i:'🔄',t:'Retourgarantie',           d:'Onvoorwaardelijk retourneren en ruilen'},
+      ],
+      stats: [{n:'1000+',l:'Producten'},{n:'500+',l:'Tevreden klanten'},{n:'100%',l:'Veilig winkelen'}],
+    },
+    fr: {
+      label: 'Commerce & Services',
+      taglines: ['Votre destination shopping', 'Tout ce dont vous avez besoin', 'Shopping sûr et rapide'],
+      services: [
+        {i:'🛍️',t:'Large gamme de produits', d:'Produits de qualité pour chaque besoin'},
+        {i:'🚚',t:'Livraison rapide',         d:'Expédition le jour même et livraison à domicile'},
+        {i:'💳',t:'Paiement facile',          d:'Paiements échelonnés et options multiples'},
+        {i:'🔄',t:'Garantie de retour',       d:'Retours et échanges sans conditions'},
+      ],
+      stats: [{n:'1000+',l:'Produits'},{n:'500+',l:'Clients satisfaits'},{n:'100%',l:'Shopping sécurisé'}],
+    },
+  },
+  industrial: {
+    icon: '🏭', vi: '⚙️', p: '#455a64', d: '#263238', l: '#ff6f00',
+    tr: {
+      label: 'Sanayi & Üretim',
+      taglines: ['Endüstriyel Güç', 'Üretimde Mükemmellik', 'Kalite ve Verimlilik'],
+      services: [
+        {i:'🏭',t:'Üretim & İmalat',   d:'Yüksek kapasiteli endüstriyel üretim'},
+        {i:'✅',t:'Kalite Kontrol',    d:'ISO standartlarında kalite güvencesi'},
+        {i:'🤝',t:'B2B Tedarik',       d:'Toptan satış ve kurumsal tedarik anlaşmaları'},
+        {i:'🔩',t:'Teknik Servis',     d:'Makine bakım, onarım ve revizyon hizmetleri'},
+      ],
+      stats: [{n:'20+',l:'Yıl Deneyim'},{n:'500+',l:'B2B Müşteri'},{n:'ISO',l:'Kalite Sertifikası'}],
+    },
+    en: {
+      label: 'Industry & Manufacturing',
+      taglines: ['Industrial Strength', 'Excellence in Production', 'Quality and Efficiency'],
+      services: [
+        {i:'🏭',t:'Manufacturing',     d:'High-capacity industrial production'},
+        {i:'✅',t:'Quality Control',   d:'Quality assurance to ISO standards'},
+        {i:'🤝',t:'B2B Supply',        d:'Wholesale and corporate supply agreements'},
+        {i:'🔩',t:'Technical Service', d:'Machine maintenance, repair and overhaul'},
+      ],
+      stats: [{n:'20+',l:'Years Experience'},{n:'500+',l:'B2B Clients'},{n:'ISO',l:'Quality Certificate'}],
+    },
+    de: {
+      label: 'Industrie & Fertigung',
+      taglines: ['Industrielle Stärke', 'Exzellenz in der Produktion', 'Qualität und Effizienz'],
+      services: [
+        {i:'🏭',t:'Fertigung',             d:'Industrielle Hochkapazitätsfertigung'},
+        {i:'✅',t:'Qualitätskontrolle',    d:'Qualitätssicherung nach ISO-Standards'},
+        {i:'🤝',t:'B2B-Lieferung',         d:'Groß- und Unternehmensliefervereinbarungen'},
+        {i:'🔩',t:'Technischer Service',   d:'Maschinenwartung, Reparatur und Überholung'},
+      ],
+      stats: [{n:'20+',l:'Jahre Erfahrung'},{n:'500+',l:'B2B-Kunden'},{n:'ISO',l:'Qualitätszertifikat'}],
+    },
+    nl: {
+      label: 'Industrie & Productie',
+      taglines: ['Industriële kracht', 'Excellentie in productie', 'Kwaliteit en efficiëntie'],
+      services: [
+        {i:'🏭',t:'Productie',            d:'Industriële productie met hoge capaciteit'},
+        {i:'✅',t:'Kwaliteitscontrole',   d:'Kwaliteitsborging volgens ISO-normen'},
+        {i:'🤝',t:'B2B-levering',         d:'Groothandel en zakelijke leveringsovereenkomsten'},
+        {i:'🔩',t:'Technische service',   d:'Machineonderhoud, reparatie en revisie'},
+      ],
+      stats: [{n:'20+',l:'Jaar ervaring'},{n:'500+',l:'B2B-klanten'},{n:'ISO',l:'Kwaliteitscertificaat'}],
+    },
+    fr: {
+      label: 'Industrie & Fabrication',
+      taglines: ['Force industrielle', 'Excellence en production', 'Qualité et efficacité'],
+      services: [
+        {i:'🏭',t:'Fabrication',           d:'Production industrielle à haute capacité'},
+        {i:'✅',t:'Contrôle qualité',      d:'Assurance qualité selon les normes ISO'},
+        {i:'🤝',t:'Approvisionnement B2B', d:"Accords de gros et d'approvisionnement d'entreprise"},
+        {i:'🔩',t:'Service technique',     d:'Maintenance, réparation et révision de machines'},
+      ],
+      stats: [{n:'20+',l:"Ans d'expérience"},{n:'500+',l:'Clients B2B'},{n:'ISO',l:'Certificat qualité'}],
+    },
+  },
+};
+
+// ── KEYWORD → CATEGORY MAP ──
 const MAP = {
   restoran:'food', restaurant:'food', kafe:'food', cafe:'food', 'coffee shop':'food',
   pastane:'food', bakery:'food', catering:'food', 'fast food':'food',
@@ -407,6 +1152,7 @@ const MAP = {
   'guzellik salonu':'beauty', 'beauty salon':'beauty', friseur:'beauty',
   berber:'beauty', barber:'beauty', 'barber shop':'beauty', spa:'beauty',
   dovme:'beauty', tattoo:'beauty', 'tirnak salonu':'beauty', 'nail salon':'beauty',
+  kapsalon:'beauty', schoonheidssalon:'beauty', coiffeur:'beauty',
   emlakci:'realestate', 'real estate':'realestate', 'estate agent':'realestate',
   immobilienmakler:'realestate', 'agence immobiliere':'realestate',
   mimar:'realestate', architect:'realestate', insaat:'realestate', construction:'realestate',
@@ -416,7 +1162,7 @@ const MAP = {
   'oto servis':'auto', 'auto repair':'auto', 'auto repair shop':'auto',
   autohaus:'auto', 'car dealer':'auto', 'oto yikama':'auto', 'car wash':'auto',
   'oto kiralama':'auto', 'car rental':'auto', lastikci:'auto', 'tire shop':'auto',
-  'oto ekspertiz':'auto', 'car inspection':'auto',
+  'oto ekspertiz':'auto', 'car inspection':'auto', autowerkstatt:'auto',
   'ozel okul':'education', 'private school':'education', 'dil kursu':'education',
   'language school':'education', 'surucu kursu':'education', 'driving school':'education',
   'dans okulu':'education', 'dance studio':'education', 'muzik okulu':'education',
@@ -438,82 +1184,123 @@ const MAP = {
   warehouse:'industrial', logistics:'industrial',
 };
 
-function stars(r) {
-  let s = '';
-  for (let i = 1; i <= 5; i++) s += (i <= Math.round(r)) ? '★' : '☆';
-  return s;
+function starsHtml(r) {
+  return '★'.repeat(r) + '☆'.repeat(5 - r);
 }
 
 (function () {
-  const p = new URLSearchParams(location.search);
+  const p    = new URLSearchParams(location.search);
   const raw  = (p.get('s') || 'restoran').toLowerCase();
   const name = p.get('n') || 'İşletmemiz';
   const city = p.get('c') || '';
   const phone= p.get('p') || '';
   const r    = parseFloat(p.get('r') || '0');
+  const photo= p.get('ph') || '';
+  const lang = (p.get('lang') || 'tr').toLowerCase().split('-')[0];
 
-  let cat = MAP[raw] || 'food';
-  if (!MAP[raw]) {
+  // Resolve sector
+  let cat = MAP[raw] || null;
+  if (!cat) {
     for (const [k, v] of Object.entries(MAP)) {
       if (raw.includes(k) || k.includes(raw)) { cat = v; break; }
     }
   }
-  const D = SECTORS[cat] || SECTORS.food;
+  cat = cat || 'food';
 
-  // Colors
+  const D  = SECTORS[cat] || SECTORS.food;
+  const LD = D[lang] || D.en || D.tr;
+  const L  = LANG[lang] || LANG.en;
+
+  // HTML lang attribute
+  document.documentElement.lang = lang;
+
+  // Apply sector colours via CSS custom properties
   const root = document.documentElement.style;
   root.setProperty('--primary', D.p);
-  root.setProperty('--dark', D.d);
-  root.setProperty('--light', D.l);
+  root.setProperty('--dark',    D.d);
+  root.setProperty('--light',   D.l);
+  root.setProperty('--glow-sm', D.p + '80');
+  root.setProperty('--glow-lg', D.p + '2e');
+  root.setProperty('--tint-bg', D.p + '20');
+  root.setProperty('--tint-bd', D.p + '44');
 
-  // Tag bg uses primary — recalc on icon
-  document.querySelectorAll('.tag').forEach(el => {
-    el.style.background = D.p + '20';
-    el.style.color = D.p;
-  });
-  document.querySelectorAll('.card-icon').forEach(el => {
-    el.style.background = D.p + '18';
-  });
-
+  // Page title
   document.title = `${name}${city ? ' — ' + city : ''}`;
-  document.getElementById('nav-logo').textContent = name;
-  document.getElementById('hero-badge').textContent = `${D.icon} ${D.label}`;
-  document.getElementById('hero-title').textContent = name;
-  const tag = D.taglines[Math.floor(Math.random() * D.taglines.length)];
-  document.getElementById('hero-sub').textContent = city
-    ? `${city}'da ${tag.toLowerCase()}.`
-    : `${tag}.`;
 
+  // NAV
+  document.getElementById('nav-logo').textContent = name;
+  document.getElementById('nav-cta').textContent  = L.navCta;
+
+  // HERO — photo as background
+  if (photo) {
+    document.getElementById('hero-bg').style.backgroundImage = `url(${photo})`;
+  }
+
+  // HERO content
+  document.getElementById('hero-badge').textContent = `${D.icon} ${LD.label}`;
+  document.getElementById('hero-title').textContent = name;
+  const tl = LD.taglines[Math.floor(Math.random() * LD.taglines.length)];
+  document.getElementById('hero-sub').textContent   = L.heroSub(city, tl);
+  document.getElementById('cta-btn').textContent    = L.btn1;
+  document.getElementById('hero-btn2').textContent  = L.btn2;
+
+  // Rating
   if (r >= 1) {
     document.getElementById('rating-row').style.display = 'inline-flex';
-    document.getElementById('stars').textContent = stars(r);
+    document.getElementById('stars').textContent = starsHtml(Math.round(r));
     document.getElementById('rating-text').textContent = `${r.toFixed(1)} / 5.0 · Google`;
   }
 
-  document.getElementById('services-grid').innerHTML = D.services.map(s =>
-    `<div class="card"><div class="card-icon">${s.i}</div><h3>${s.t}</h3><p>${s.d}</p></div>`
+  // SERVICES
+  document.getElementById('s-tag').textContent         = L.sTag;
+  document.getElementById('s-title').textContent       = L.sTitle;
+  document.getElementById('services-lead').textContent = L.sLead(name);
+  document.getElementById('services-grid').innerHTML   = LD.services.map(s =>
+    `<div class="svc-card"><div class="svc-icon">${s.i}</div><h3>${s.t}</h3><p>${s.d}</p></div>`
   ).join('');
 
-  document.getElementById('services-lead').textContent =
-    `${name} olarak size en iyi hizmeti sunmak için buradayız.`;
-
-  document.getElementById('about-title').textContent = name + ' Hakkında';
-  document.getElementById('about-text').textContent =
-    `${city ? city + "'da " : ''}${D.label.toLowerCase()} alanında uzmanlaşmış ekibimizle müşterilerimize en yüksek kalitede hizmet sunuyoruz.`;
-  document.getElementById('about-icon').textContent = D.vi;
-
-  document.getElementById('stats').innerHTML = D.stats.map(s =>
-    `<div><div class="stat-n">${s.n}</div><div class="stat-l">${s.l}</div></div>`
+  // STATS STRIP
+  document.getElementById('stats-row').innerHTML = LD.stats.map(s =>
+    `<div class="stat-item"><div class="stat-n">${s.n}</div><div class="stat-l">${s.l}</div></div>`
   ).join('');
 
-  document.getElementById('cta-sub').textContent =
-    `${name} için profesyonel bir web sitesi hazırlayalım. Ücretsiz demo ve teklif için bize ulaşın.`;
+  // ABOUT
+  document.getElementById('a-tag').textContent     = L.aTag;
+  document.getElementById('about-title').textContent = L.aTitle(name);
+  document.getElementById('about-text').textContent  = L.aText(name, city, LD.label);
+  document.getElementById('about-icon').textContent  = D.vi;
 
+  // TESTIMONIALS
+  document.getElementById('t-tag').textContent   = L.tTag;
+  document.getElementById('t-title').textContent = L.tTitle;
+  document.getElementById('testi-grid').innerHTML = (L.testimonials || []).map(t => {
+    const initials = t.name.split(/[\s.]+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+    return `<div class="testi-card">
+      <div class="testi-stars">${starsHtml(t.stars)}</div>
+      <p class="testi-text">"${t.text}"</p>
+      <div class="testi-author">
+        <div class="testi-avatar">${initials}</div>
+        <div><div class="testi-name">${t.name}</div><div class="testi-role">${t.role}</div></div>
+      </div>
+    </div>`;
+  }).join('');
+
+  // CTA
+  document.getElementById('cta-tag').textContent   = L.ctaTag;
+  document.getElementById('cta-title').textContent = L.ctaTitle;
+  document.getElementById('cta-sub').textContent   = L.ctaSub(name);
+  const ctaBtn = document.getElementById('cta-main');
   if (phone) {
-    const btn = document.getElementById('cta-main');
-    btn.href = `tel:${phone}`;
-    btn.textContent = `Hemen Ara: ${phone}`;
+    ctaBtn.href = `tel:${phone}`;
+    ctaBtn.textContent = L.ctaBtnTel(phone);
+  } else {
+    ctaBtn.textContent = L.ctaBtn;
   }
+
+  // FOOTER & DEMO BAR
+  document.getElementById('footer-text').innerHTML = L.footerHtml;
+  document.getElementById('demo-label').textContent = L.demoLabel;
+  document.getElementById('demo-link').textContent  = L.demoLink;
 })();
 </script>
 </body>
