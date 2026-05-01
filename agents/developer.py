@@ -27,20 +27,42 @@ def _cleanup_old_demos(demos_root: Path) -> None:
             pass
 
 
-SYSTEM = """You are the Developer agent of Bostok.dev agency.
+SYSTEM = """You are the Developer agent of Bostok.dev — a premium web design agency.
 
-Your job: Write fully working website code based on the design guide and content.
+Your job: Build stunning websites that look like they cost $5,000+. No amateur work.
 
-Tech stack:
-- HTML5 + Tailwind CSS (CDN)
-- Vanilla JavaScript (if needed)
-- Responsive (mobile-first)
-- SEO meta tags
-- Fast-loading, clean code
+Tech stack: HTML5 + Tailwind CSS CDN + Google Fonts + Vanilla JS
 
-Output a single index.html file per project (all-in-one).
-Never use content placeholders — fill in real content.
-Code must be functional and openable in a browser."""
+NON-NEGOTIABLE quality standards:
+
+STRUCTURE:
+- Sticky nav with smooth scroll, mobile hamburger menu (JS toggle)
+- Hero: full-viewport (min-h-screen), bold headline, subline, CTA button(s)
+- Every nav link must have a matching section id — no broken anchors EVER
+- Generous section padding: py-20 md:py-28
+- Dark footer with links, social icons placeholder, copyright
+
+VISUALS:
+- Load a Google Font via <link> in <head> — never use default system fonts
+- Rich color palette: avoid plain gray/white. Use gradients, dark backgrounds, or bold brand colors
+- Hero background: CSS gradient mesh OR a real Unsplash image URL for the sector
+  Format: https://images.unsplash.com/photo-XXXXXXXXXXXXX?w=1600&q=80
+- Cards: rounded-2xl shadow-lg hover:-translate-y-1 transition-all duration-300
+- Buttons: px-8 py-4 rounded-full font-semibold shadow-lg hover:shadow-xl transition
+- Sections alternate: light bg → dark bg (or brand color bg) → light bg
+
+JAVASCRIPT (inline at bottom):
+- Mobile menu toggle
+- Scroll-triggered fade-in: IntersectionObserver on sections
+- Sticky nav: add shadow on scroll
+
+CONTENT:
+- NEVER leave {{PLACEHOLDER}} — fill every tag with realistic sector content
+- NEVER use Lorem Ipsum
+- Title: 50-60 chars | Meta description: 140-160 chars
+- All image alt texts filled
+
+Output: one self-contained index.html. Return HTML code only."""
 
 
 class DeveloperAgent(BaseAgent):
@@ -97,15 +119,18 @@ class DeveloperAgent(BaseAgent):
 
         code = await self.ask(
             f"Design and content:\n{msg.content}{template_hint}{video_hint}\n\n"
-            "Using the template as reference, write a fully working index.html. "
-            "Replace all {{PLACEHOLDER}} tags with real content. "
-            "Use Tailwind CSS CDN. Return HTML code only."
+            "Build a stunning, premium index.html. Every nav link must have a matching section id. "
+            "Replace ALL {{PLACEHOLDER}} tags with real sector-specific content. "
+            "Use Tailwind CSS CDN + Google Fonts. Return HTML code only."
         )
 
         # HTML kodunu çıkar
         html = self._extract_html(code)
         if not html:
             html = code
+
+        # Placeholder tarayıcı — eğer {{...}} kaldıysa tekrar doldurtur
+        html = await self._fill_placeholders(html, context=msg.content[:500])
 
         # Dosyaya kaydet
         project_name = msg.metadata.get("project_name", f"site_{len(list(OUTPUT_DIR.iterdir()))}")
@@ -155,15 +180,23 @@ class DeveloperAgent(BaseAgent):
 
         code = await self.ask(
             f"Website concept for a {sector} business ({country}):\n\n{concept}\n\n"
-            "Build a complete, stunning index.html based on this concept. "
-            "Use Tailwind CSS CDN. Fill with realistic placeholder content for this sector. "
-            "The site must look like a real, polished business website — not a template. "
+            "Build a world-class index.html from this concept. Requirements:\n"
+            "- Full-viewport hero with gradient or Unsplash background image for this sector\n"
+            "- Google Font loaded via <link> in <head>\n"
+            "- Sticky nav, all nav links with matching section ids (no broken anchors)\n"
+            "- Cards with rounded-2xl shadow-lg hover transitions\n"
+            "- Scroll-triggered fade-in via IntersectionObserver (inline JS)\n"
+            "- Dark footer with copyright\n"
+            "- Fill ALL content with realistic {sector} business text — no placeholders\n"
+            "- Title 50-60 chars, meta description 140-160 chars\n"
             "Return HTML code only."
         )
 
         html = self._extract_html(code)
         if not html:
             html = code
+
+        html = await self._fill_placeholders(html, context=f"{sector} business in {country}")
 
         output_file = demo_dir / "index.html"
         output_file.write_text(html, encoding="utf-8")
@@ -239,6 +272,23 @@ class DeveloperAgent(BaseAgent):
         result = f"✅ Revize uygulandı!\nDosya: {site_path}\nDeğişiklik: {revision[:100]}"
         await self.send(AgentName.MANAGER, MessageType.RESULT, result,
                        {"file_path": str(site_path), "project_name": project_name})
+
+    async def _fill_placeholders(self, html: str, context: str = "") -> str:
+        """If {{...}} placeholders remain, ask LLM to fill them and return fixed HTML."""
+        remaining = re.findall(r'\{\{[^}]+\}\}', html)
+        if not remaining:
+            return html
+        from loguru import logger
+        logger.warning(f"Placeholder kaldı ({len(remaining)} adet): {remaining[:5]} — otomatik dolduruluyor")
+        fixed = await self.ask(
+            f"This HTML has unfilled placeholders: {', '.join(set(remaining))}\n"
+            f"Context: {context}\n\n"
+            f"Replace every {'{{'} and {'}}'}  tag with realistic content. "
+            "Return the complete HTML with all placeholders filled. HTML code only."
+            f"\n\nHTML:\n{html[:7000]}"
+        )
+        result = self._extract_html(fixed)
+        return result if result else fixed
 
     def _extract_html(self, text: str) -> str:
         # ```html ... ``` bloğunu çıkar
