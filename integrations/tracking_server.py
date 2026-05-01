@@ -290,7 +290,7 @@ tr:hover td{{background:rgba(255,255,255,.02)}}
 </style></head>
 <body>
 <h1>🤖 Bostok Agent Köyü</h1>
-<div class="sub">Son güncelleme: {now_str} &nbsp;·&nbsp; Otomatik yenileme: 30s &nbsp;·&nbsp; Kampanya: 201 kombinasyon, {exhausted} tükendi</div>
+<div class="sub">Son güncelleme: {now_str} &nbsp;·&nbsp; Otomatik yenileme: 30s &nbsp;·&nbsp; Kampanya: 201 kombinasyon, {exhausted} tükendi &nbsp;·&nbsp; <a href="/sites" style="color:#60a5fa">🖥️ Üretilen Siteler</a></div>
 
 <div class="grid">
   <div class="card">
@@ -336,6 +336,116 @@ tr:hover td{{background:rgba(255,255,255,.02)}}
 <thead><tr><th>Zaman</th><th>Alıcı</th><th>Konu</th><th>Sektör</th></tr></thead>
 <tbody>{recent_rows}</tbody>
 </table></div>
+
+</body></html>"""
+
+
+@app.get("/sites", response_class=HTMLResponse)
+async def sites_gallery():
+    return _build_sites_page()
+
+
+@app.get("/site/{folder:path}", response_class=HTMLResponse)
+async def serve_site(folder: str):
+    """Serve a generated site HTML file."""
+    for root in [Path("output/sites"), Path("output/demos")]:
+        candidate = root / folder
+        if candidate.is_file() and candidate.suffix == ".html":
+            return HTMLResponse(content=candidate.read_text(encoding="utf-8"))
+        # folder might be just the dir name — serve index.html
+        index = candidate / "index.html"
+        if index.exists():
+            return HTMLResponse(content=index.read_text(encoding="utf-8"))
+    return HTMLResponse("<h2>Site bulunamadı</h2>", status_code=404)
+
+
+def _build_sites_page() -> str:
+    import json as _json
+
+    def _site_cards(root: Path, kind: str) -> str:
+        cards = ""
+        if not root.exists():
+            return ""
+        dirs = sorted([d for d in root.iterdir() if d.is_dir()], key=lambda d: d.name)
+        for d in reversed(dirs):
+            index = d / "index.html"
+            if not index.exists():
+                continue
+            size = f"{index.stat().st_size // 1024} KB"
+            lines = len(index.read_text(encoding="utf-8").splitlines())
+
+            # Try meta.json for demos
+            meta_file = d / "meta.json"
+            if meta_file.exists():
+                try:
+                    m = _json.loads(meta_file.read_text(encoding="utf-8"))
+                    title = f"#{m['num']} {m['sector']} / {m['country']}"
+                    subtitle = m.get("summary", "")[:80]
+                    date = m.get("date", "")
+                    expires = m.get("expires", "")
+                    badge = f"<span style='background:#1d4ed8;color:#fff;padding:2px 8px;border-radius:20px;font-size:11px'>Demo #{m['num']}</span>"
+                    extra = f"<div style='color:#64748b;font-size:11px;margin-top:6px'>📅 {date} &nbsp;·&nbsp; ⏳ {expires}'e kadar</div>"
+                except Exception:
+                    title = d.name
+                    subtitle = ""
+                    badge = ""
+                    extra = ""
+            else:
+                title = d.name
+                subtitle = ""
+                badge = f"<span style='background:#065f46;color:#fff;padding:2px 8px;border-radius:20px;font-size:11px'>{kind}</span>"
+                extra = ""
+
+            link = f"/site/{kind.lower()}/{d.name}"
+            cards += f"""
+<div style='background:#1e293b;border:1px solid #334155;border-radius:12px;padding:18px;'>
+  <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px'>
+    {badge}
+    <span style='color:#475569;font-size:11px'>{size} · {lines} satır</span>
+  </div>
+  <div style='font-weight:600;color:#e2e8f0;margin-bottom:4px'>{title}</div>
+  <div style='color:#94a3b8;font-size:12px;margin-bottom:10px'>{subtitle}</div>
+  {extra}
+  <div style='margin-top:12px'>
+    <a href='{link}' target='_blank'
+       style='display:inline-block;background:#3b82f6;color:#fff;padding:6px 14px;border-radius:7px;font-size:12px;text-decoration:none;font-weight:600'>
+      🌐 Siteyi Aç
+    </a>
+    <span style='color:#475569;font-size:11px;margin-left:10px'>{d.name}/</span>
+  </div>
+</div>"""
+        return cards
+
+    sites_html  = _site_cards(Path("output/sites"),  "sites")
+    demos_html  = _site_cards(Path("output/demos"),  "demos")
+    sites_count = len([d for d in Path("output/sites").iterdir() if d.is_dir()]) if Path("output/sites").exists() else 0
+    demos_count = len([d for d in Path("output/demos").iterdir() if d.is_dir()]) if Path("output/demos").exists() else 0
+    now_str = datetime.now().strftime("%Y-%m-%d %H:%M")
+
+    return f"""<!DOCTYPE html>
+<html lang="tr"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Bostok — Üretilen Siteler</title>
+<style>
+*{{box-sizing:border-box;margin:0;padding:0}}
+body{{background:#0f172a;color:#e2e8f0;font-family:'Segoe UI',system-ui,sans-serif;padding:24px;font-size:14px}}
+h1{{color:#60a5fa;font-size:22px;font-weight:700;margin-bottom:4px}}
+.sub{{color:#475569;font-size:12px;margin-bottom:24px}}
+h2{{color:#94a3b8;font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;margin:28px 0 14px;padding-bottom:8px;border-bottom:1px solid #334155}}
+.grid{{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}}
+.back{{color:#60a5fa;text-decoration:none;font-size:13px}}
+</style></head>
+<body>
+<a href="/dashboard" class="back">← Dashboard</a>
+<h1 style="margin-top:12px">🖥️ Üretilen Siteler</h1>
+<div class="sub">Son güncelleme: {now_str}</div>
+
+<h2>📁 Demo Siteler ({demos_count})</h2>
+<div class="grid">{demos_html or "<p style='color:#475569'>Henüz demo site üretilmedi. /demo komutu ile başlat.</p>"}</div>
+
+<h2>💼 Müşteri Siteleri ({sites_count})</h2>
+<div class="grid">{sites_html or "<p style='color:#475569'>Henüz müşteri sitesi yok.</p>"}</div>
 
 </body></html>"""
 
