@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     # Google Maps Places API (lead finder icin - opsiyonel)
     google_maps_api_key: str = Field("", env="GOOGLE_MAPS_API_KEY")
 
+    # Yelp Fusion API (lead finder - ucretsiz 5000 istek/gun)
+    # Almak icin: https://www.yelp.com/developers → Create App
+    yelp_api_key:        str = Field("", env="YELP_API_KEY")
+
     # Gorsel & Video
     pexels_api_key:      str = Field("", env="PEXELS_API_KEY")
 

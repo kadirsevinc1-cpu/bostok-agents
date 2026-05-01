@@ -204,7 +204,48 @@ async def find_leads(sector: str, location: str, api_key: str = "") -> list[Lead
     except Exception as e:
         logger.debug(f"Overpass atlandi: {e}")
 
-    # 3. Chamber / directory scraper (firmarehberi, yell, yellowpages…)
+    # 3. Yelp Fusion API (if key available — global, very rich data)
+    try:
+        from integrations.yelp_finder import find_yelp_leads
+        from config import settings as _cfg
+        yelp_key = getattr(_cfg, "yelp_api_key", "")
+        if yelp_key:
+            yelp_leads = await find_yelp_leads(sector, location, yelp_key, limit=50)
+            new_yelp = [yl for yl in yelp_leads if yl.name.lower().strip() not in seen_names]
+            for yl in new_yelp:
+                seen_names.add(yl.name.lower().strip())
+
+            if new_yelp:
+                async with aiohttp.ClientSession() as session:
+                    for yl in new_yelp:
+                        email = yl.email
+                        website = yl.website
+
+                        if not email and website:
+                            email = await _scrape_email(session, website)
+
+                        if not email and not website:
+                            email, website = await _guess_email_from_name(session, yl.name)
+
+                        lead = Lead(
+                            name=yl.name, location=yl.location, sector=yl.sector,
+                            phone=yl.phone, email=email,
+                            has_website=bool(website or yl.website),
+                            website=website or yl.website,
+                            rating=yl.rating, review_count=yl.review_count,
+                        )
+                        leads.append(lead)
+                        await asyncio.sleep(0.3)
+
+                found_emails = sum(1 for l in leads if l.email)
+                logger.info(
+                    f"Yelp {len(new_yelp)} firma ekledi — toplam: {len(leads)}, "
+                    f"emailli: {found_emails} ({sector}/{location})"
+                )
+    except Exception as e:
+        logger.debug(f"Yelp atlandi: {e}")
+
+    # 4. Chamber / directory scraper (firmarehberi, yell, yellowpages…)
     try:
         from integrations.chamber_scraper import scrape_directory
         chamber_leads = await scrape_directory(sector, location)
