@@ -9,7 +9,8 @@ from fastapi.responses import Response, HTMLResponse
 import uvicorn
 from loguru import logger
 
-OPENS_FILE = Path("memory/email_opens.json")
+OPENS_FILE  = Path("memory/email_opens.json")
+UNSUB_FILE  = Path("memory/unsubscribed_via_link.json")
 
 _PIXEL_GIF = bytes([
     0x47,0x49,0x46,0x38,0x39,0x61,0x01,0x00,0x01,0x00,
@@ -35,6 +36,13 @@ def get_tracking_url(msg_id: str) -> str:
         return ""
     safe = msg_id.strip("<>").replace("/", "_").replace("+", "-")
     return f"{_public_url}/t/{safe}"
+
+
+def get_unsub_url(msg_id: str) -> str:
+    if not _public_url:
+        return ""
+    safe = msg_id.strip("<>").replace("/", "_").replace("+", "-")
+    return f"{_public_url}/unsub/{safe}"
 
 
 def _load_opens() -> dict:
@@ -96,6 +104,56 @@ async def tracking_pixel(safe_id: str, request: Request):
         content=_PIXEL_GIF, media_type="image/gif",
         headers={"Cache-Control": "no-cache, no-store", "Pragma": "no-cache"},
     )
+
+
+@app.get("/unsub/{safe_id:path}", response_class=HTMLResponse)
+async def unsubscribe(safe_id: str):
+    original = safe_id.replace("_", "/").replace("-", "+")
+    key = f"<{original}>"
+    email = ""
+
+    sent_file = Path("memory/sent_message_ids.json")
+    if sent_file.exists():
+        try:
+            sent = json.loads(sent_file.read_text(encoding="utf-8"))
+            email = sent.get(key, {}).get("to", "")
+        except Exception:
+            pass
+
+    if email:
+        # Bounce listesine ekle — bir daha mail gitmez
+        from integrations.gmail import record_bounce
+        record_bounce(email)
+        try:
+            from core.lead_state import get_tracker, LeadStage
+            get_tracker().update(email, LeadStage.UNSUBSCRIBED, "Unsubscribe link clicked")
+        except Exception:
+            pass
+        # Log kaydet
+        UNSUB_FILE.parent.mkdir(exist_ok=True)
+        data: dict = {}
+        if UNSUB_FILE.exists():
+            try:
+                data = json.loads(UNSUB_FILE.read_text(encoding="utf-8"))
+            except Exception:
+                pass
+        data[email] = datetime.now().isoformat()
+        UNSUB_FILE.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+        logger.info(f"Unsubscribe: {email}")
+
+    return """<!DOCTYPE html><html><head><meta charset="UTF-8">
+<style>body{font-family:Arial,sans-serif;display:flex;justify-content:center;align-items:center;
+min-height:100vh;margin:0;background:#f8fafc}
+.box{text-align:center;padding:40px;background:#fff;border-radius:12px;
+box-shadow:0 2px 12px rgba(0,0,0,.08);max-width:400px}
+h2{color:#1e293b;margin-bottom:12px}p{color:#64748b;font-size:14px}</style></head>
+<body><div class="box">
+<h2>✅ Unsubscribed</h2>
+<p>You have been removed from our mailing list.<br>
+You will not receive further emails from Bostok.dev.</p>
+<p style="margin-top:20px;font-size:12px;color:#94a3b8">
+Changed your mind? Reply to any of our previous emails.</p>
+</div></body></html>"""
 
 
 @app.get("/opens")

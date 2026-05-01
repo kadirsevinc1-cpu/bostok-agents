@@ -7,20 +7,20 @@ OUTPUT_DIR = Path(__file__).parent.parent / "output" / "sites"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
-SYSTEM = """Sen Bostok.dev ajansının Developer agent'ısın.
+SYSTEM = """You are the Developer agent of Bostok.dev agency.
 
-Görevin: Tasarım rehberine ve içeriklere göre tam çalışan web sitesi kodu yazmak.
+Your job: Write fully working website code based on the design guide and content.
 
-Teknoloji:
+Tech stack:
 - HTML5 + Tailwind CSS (CDN)
-- Vanilla JavaScript (gerekirse)
+- Vanilla JavaScript (if needed)
 - Responsive (mobile-first)
-- SEO meta tagları
-- Hızlı yüklenen, temiz kod
+- SEO meta tags
+- Fast-loading, clean code
 
-Her proje için tek bir index.html dosyası üret (all-in-one).
-İçerik placeholder kullanma — gerçek içerikleri yerleştir.
-Kod çalışır durumda olmalı, tarayıcıda açılabilmeli."""
+Output a single index.html file per project (all-in-one).
+Never use content placeholders — fill in real content.
+Code must be functional and openable in a browser."""
 
 
 class DeveloperAgent(BaseAgent):

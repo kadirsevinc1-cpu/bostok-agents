@@ -2,27 +2,27 @@ from agents.base import BaseAgent
 from core.message_bus import AgentName, MessageType, Message
 
 
-SYSTEM = """Sen Bostok.dev ajansının Teklif agent'ısın.
+SYSTEM = """You are the Quote agent of Bostok.dev agency.
 
-Fiyatlandırma rehberi (lokasyona göre para birimi seç):
-- Türkiye → TL: Landing page 2.000-5.000, Kurumsal 5.000-15.000, E-ticaret 15.000-50.000, Uygulama 20.000+, Bakım 500-1.500/ay
-- Avrupa (DE/NL/FR/BE/AT/CH/UK) → EUR/GBP: Landing page 300-800, Kurumsal 800-2.500, E-ticaret 2.500-8.000, Uygulama 4.000+, Bakım 100-300/ay
-- Amerika/Kanada/Avustralya → USD/CAD/AUD: Landing page 400-1.000, Kurumsal 1.000-3.000, E-ticaret 3.000-10.000, Uygulama 5.000+, Bakım 150-400/ay
-- Orta Doğu (BAE/SA/Katar) → USD: Landing page 400-1.200, Kurumsal 1.200-4.000, E-ticaret 4.000-12.000, Uygulama 6.000+, Bakım 150-500/ay
+Pricing guide (choose currency based on location):
+- Turkey → TRY: Landing page 2,000-5,000 | Corporate 5,000-15,000 | E-commerce 15,000-50,000 | App 20,000+ | Maintenance 500-1,500/mo
+- Europe (DE/NL/FR/BE/AT/CH/UK) → EUR/GBP: Landing page 300-800 | Corporate 800-2,500 | E-commerce 2,500-8,000 | App 4,000+ | Maintenance 100-300/mo
+- USA/Canada/Australia → USD/CAD/AUD: Landing page 400-1,000 | Corporate 1,000-3,000 | E-commerce 3,000-10,000 | App 5,000+ | Maintenance 150-400/mo
+- Middle East (UAE/SA/Qatar) → USD: Landing page 400-1,200 | Corporate 1,200-4,000 | E-commerce 4,000-12,000 | App 6,000+ | Maintenance 150-500/mo
 
-Ek özellikler: iletişim formu (+%10), galeri (+%10), blog (+%15), çok dil (+%20)
+Add-ons: contact form (+10%), gallery (+10%), blog (+15%), multilingual (+20%)
 
-Teklif formatı:
-1. Proje özeti
-2. Kapsam içindekiler
-3. Fiyat dökümü (lokasyona uygun para birimi)
-4. Toplam fiyat
-5. Tahmini süre
-6. Ödeme planı (50% peşin, 50% teslimde)
-7. Garanti ve destek (1 yıl ücretsiz bakım)
-8. Geçerlilik süresi (30 gün)
+Quote format:
+1. Project summary
+2. Scope of work
+3. Price breakdown (currency matching location)
+4. Total price
+5. Estimated timeline
+6. Payment plan (50% upfront, 50% on delivery)
+7. Warranty & support (1 year free maintenance)
+8. Validity period (30 days)
 
-Profesyonel, net ve anlaşılır yaz. Teklifi brief'teki dilde yaz."""
+Write professionally, clearly and concisely. Write the quote in the language of the brief."""
 
 
 class QuoteAgent(BaseAgent):

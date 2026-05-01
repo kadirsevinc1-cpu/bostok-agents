@@ -178,15 +178,25 @@ class GmailSender:
             )
             # Tracking pixel
             try:
-                from integrations.tracking_server import get_tracking_url
+                from integrations.tracking_server import get_tracking_url, get_unsub_url
                 pixel_url = get_tracking_url(msg_id)
                 pixel_tag = f'<img src="{pixel_url}" width="1" height="1" style="display:none" alt=""/>' if pixel_url else ""
+                unsub_url = get_unsub_url(msg_id)
             except Exception:
                 pixel_tag = ""
+                unsub_url = ""
+
+            unsub_footer = (
+                f'<div style="margin-top:32px;padding-top:16px;border-top:1px solid #e2e8f0;'
+                f'font-size:11px;color:#94a3b8;text-align:center">'
+                f'<a href="{unsub_url}" style="color:#94a3b8;text-decoration:underline">Unsubscribe</a>'
+                f' &nbsp;·&nbsp; Bostok.dev</div>'
+            ) if unsub_url else ""
+
             html_body = (
                 f'<html><body style="font-family:Arial,sans-serif;font-size:14px;'
                 f'color:#222;max-width:600px;margin:0 auto;padding:20px">'
-                f'{html_body}{pixel_tag}</body></html>'
+                f'{html_body}{unsub_footer}{pixel_tag}</body></html>'
             )
             msg.attach(MIMEText(html_body, "html", "utf-8"))
             loop = asyncio.get_running_loop()
@@ -202,6 +212,27 @@ class GmailSender:
             except Exception:
                 pass
             logger.info(f"Mail gonderildi: {to} ({self._today_count}/{self._limit})")
+            # Decision log (TradingAgents'tan ilham — Apache 2.0)
+            try:
+                import json as _json
+                from pathlib import Path as _P
+                _dlog = _P("memory/decision_log.jsonl")
+                _dlog.parent.mkdir(exist_ok=True)
+                info = lead_info or {}
+                entry = {
+                    "ts": __import__("datetime").datetime.now().isoformat(),
+                    "to": to,
+                    "subject": subject[:120],
+                    "sector": info.get("sector", ""),
+                    "location": info.get("location", ""),
+                    "lang": info.get("lang", ""),
+                    "has_website": info.get("has_website", False),
+                    "msg_id": msg_id,
+                }
+                with _dlog.open("a", encoding="utf-8") as _f:
+                    _f.write(_json.dumps(entry, ensure_ascii=False) + "\n")
+            except Exception:
+                pass
             try:
                 from core.lead_state import get_tracker, LeadStage
                 info = lead_info or {}

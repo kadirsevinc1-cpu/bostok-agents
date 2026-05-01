@@ -15,15 +15,21 @@ FOLLOWUP_LOG  = Path("memory/followup_log.json")
 def _build_system() -> str:
     from core.user_profile import get_context
     profile_ctx = get_context("followup")
-    base = """Sen Bostok.dev ajansının takip uzmanısın.
-Görevin: Yanıt gelmemiş outreach maillerine kısa, samimi, baskısız takip maili yazmak.
-Asla ısrarcı veya agresif olma."""
+    base = """You are the follow-up specialist of Bostok.dev agency.
+Your job: Write short, genuine, pressure-free follow-up emails to unanswered outreach.
+Never be pushy or aggressive."""
     return f"{profile_ctx}\n\n{base}" if profile_ctx else base
 
 
 SYSTEM = _build_system()
 
-SIGNATURE = "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev"
+SIGNATURES = {
+    "tr": "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "en": "\n\nBest regards,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "de": "\n\nMit freundlichen Grüßen,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "nl": "\n\nMet vriendelijke groeten,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "fr": "\n\nCordialement,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+}
 
 
 class FollowupAgent(BaseAgent):
@@ -142,7 +148,10 @@ class FollowupAgent(BaseAgent):
         return "tr"
 
     def _lang_name(self, lang: str) -> str:
-        return {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca"}.get(lang, "İngilizce")
+        return {
+            "tr": "Turkish", "en": "English", "de": "German",
+            "nl": "Dutch",   "fr": "French",
+        }.get(lang, "English")
 
     async def _send_followup(self, gmail, to: str, info: dict, original_msg_id: str, stage: int) -> bool:
         original_subject = info.get("subject", "Web Site Teklifi")
@@ -167,30 +176,30 @@ class FollowupAgent(BaseAgent):
 
         if stage == 1:
             prompt = (
-                f"{sector} sektöründeki \"{name}\" işletmesine ({location}) 7 gün önce web site teklifi "
-                f"gönderdik ama yanıt gelmedi.\n"
+                f"We sent a web design proposal 7 days ago to \"{name}\" "
+                f"({sector} sector, {location}) but received no reply.\n"
                 f"{insight_ctx}"
-                f"Mükemmel {lang_name} dil bilgisiyle kısa, samimi, baskısız takip maili yaz. Max 80 kelime.\n"
-                "Ton: 'Sadece takip ediyorum, görme fırsatı buldunuz mu?' tarzında.\n"
-                "Sona https://bostok.dev linki ver. İmza YAZMA, sona ekliyoruz.\n"
-                "Sadece mail gövdesini yaz, konu satırı yazma."
+                f"Write a short, genuine, pressure-free follow-up email in {lang_name}. Max 80 words.\n"
+                "Tone: 'Just following up — did you get a chance to take a look?'\n"
+                "Include https://bostok.dev at the end. DO NOT write a sign-off, we add it separately.\n"
+                "Write ONLY the email body, no subject line."
             )
         else:
             prompt = (
-                f"{sector} sektöründeki \"{name}\" işletmesine ({location}) iki haftadır iki mail gönderdik, "
-                f"yanıt yok.\n"
+                f"We sent two emails over two weeks to \"{name}\" "
+                f"({sector} sector, {location}) with no reply.\n"
                 f"{insight_ctx}"
-                f"Mükemmel {lang_name} dil bilgisiyle kibarca kapanış maili yaz. Max 60 kelime.\n"
-                "Ton: 'Son kez yazıyorum, ilgi duymuyorsanız sorun değil, ihtiyaç olursa buradayım.'\n"
-                "Sona https://bostok.dev linki ver. İmza YAZMA, sona ekliyoruz.\n"
-                "Sadece mail gövdesini yaz, konu satırı yazma."
+                f"Write a polite closing email in {lang_name}. Max 60 words.\n"
+                "Tone: 'Last message — no worries if not interested, we're here if you ever need us.'\n"
+                "Include https://bostok.dev at the end. DO NOT write a sign-off, we add it separately.\n"
+                "Write ONLY the email body, no subject line."
             )
 
         try:
             body = await self.ask(prompt)
             if len(body.strip()) < 20:
                 return False
-            body = body.rstrip() + SIGNATURE
+            body = body.rstrip() + SIGNATURES.get(lang, SIGNATURES["en"])
             return await gmail.send_reply(to, subject, body, in_reply_to=original_msg_id)
         except Exception as e:
             logger.error(f"Followup mail hata [{to}]: {e}")

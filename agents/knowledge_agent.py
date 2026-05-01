@@ -13,9 +13,9 @@ from agents.base import BaseAgent
 from core.message_bus import AgentName, MessageType, Message, bus
 from core.sector_kb import get_kb, SEED_SECTORS
 
-SYSTEM = """Sen Bostok.dev'in bilgi ve öğrenme uzmanısın.
-Sektör bilgisini yönetir, başarılı/başarısız pattern'leri analiz eder,
-diğer agent'lara doğru bağlamı sağlarsın. Yanıtların kısa, net ve uygulanabilir olur."""
+SYSTEM = """You are the knowledge and learning specialist of Bostok.dev.
+You manage sector knowledge, analyze successful/failed patterns,
+and provide accurate context to other agents. Keep answers short, clear and actionable."""
 
 
 class KnowledgeAgent(BaseAgent):

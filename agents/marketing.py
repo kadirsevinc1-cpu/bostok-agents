@@ -10,16 +10,16 @@ from core.message_bus import AgentName, MessageType, Message
 def _build_system() -> str:
     from core.user_profile import get_context
     profile_ctx = get_context("marketing")
-    base = """Sen Bostok.dev web ajansının Pazarlama agent'ısın.
+    base = """You are the Marketing agent of Bostok.dev web agency.
 
-Bostok.dev: Profesyonel web tasarım ve geliştirme ajansı. https://bostok.dev
+Bostok.dev: Professional web design and development agency. https://bostok.dev
 
-Kurallar:
-- Mesajlar profesyonel, samimi, spam olmayan tonda
-- Max 120 kelime / mesaj
-- Bostok.dev'i doğal tanıt — zorlamadan
-- Her zaman net CTA ekle (https://bostok.dev)
-- İmza: Kadir Sevinç — Bostok.dev"""
+Rules:
+- Messages must be professional, genuine, non-spammy
+- Max 120 words per message
+- Introduce Bostok.dev naturally — never pushy
+- Always include a clear CTA (https://bostok.dev)
+- Sign-off: Kadir Sevinç — Bostok.dev"""
     return f"{profile_ctx}\n\n{base}" if profile_ctx else base
 
 
@@ -27,13 +27,47 @@ SYSTEM = _build_system()
 
 LANG_NAMES = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca", "nl": "Flemenkçe", "fr": "Fransızca"}
 
-SIGNATURE = "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev"
+# Her dil için doğru kapanış ifadesi
+SIGNATURES = {
+    "tr": "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "en": "\n\nBest regards,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "de": "\n\nMit freundlichen Grüßen,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "nl": "\n\nMet vriendelijke groeten,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "fr": "\n\nCordialement,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+}
+
+# Demo link için dile göre hazır cümle (model "çevir" demek yerine direkt kullanır)
+_DEMO_PHRASES = {
+    "tr": ("Sizin için özel bir demo hazırladım", "Nasıl görünebileceğinizi buradan görebilirsiniz"),
+    "en": ("I've prepared a demo site just for you", "See how your website could look"),
+    "de": ("Ich habe eine Demo speziell für Sie vorbereitet", "Sehen Sie hier, wie Ihre Website aussehen könnte"),
+    "nl": ("Ik heb een demo speciaal voor u gemaakt", "Zie hier hoe uw website eruit zou kunnen zien"),
+    "fr": ("J'ai préparé une démo spécialement pour vous", "Voyez ici comment votre site pourrait ressembler"),
+}
+
+# Calendly için dile göre hazır cümle
+_CALENDLY_PHRASES = {
+    "tr": "Ücretsiz 15 dakikalık görüşme için",
+    "en": "Schedule a free 15-minute call",
+    "de": "Kostenloses 15-Minuten-Gespräch vereinbaren",
+    "nl": "Plan een gratis gesprek van 15 minuten",
+    "fr": "Planifier un appel gratuit de 15 minutes",
+}
+
+# Hizmet özeti her dilde hazır
+_SERVICE_LINES = {
+    "tr": "Web tasarım, SEO optimizasyonu, e-ticaret çözümleri ve kurumsal kimlik hizmetleri için bostok.dev",
+    "en": "Web design, SEO optimization, e-commerce solutions and branding services at bostok.dev",
+    "de": "Webdesign, SEO-Optimierung, E-Commerce-Lösungen und Corporate-Identity-Services auf bostok.dev",
+    "nl": "Webdesign, SEO-optimalisatie, e-commerceoplossingen en huisstijldiensten op bostok.dev",
+    "fr": "Conception web, optimisation SEO, solutions e-commerce et identité visuelle sur bostok.dev",
+}
 
 import re as _re
 
 _STRIP_PATTERNS = [
-    # İmza benzeri satırlar
-    _re.compile(r'(?i)^(saygılar|saygılarımla|best regards|kind regards|regards|mit freundlichen grüßen|cordialmente|cordialement|vriendelijke groeten)[,.\s]*$'),
+    # İmza benzeri satırlar (tüm diller)
+    _re.compile(r'(?i)^(saygılar|saygılarımla|best regards|kind regards|regards|sincerely|yours sincerely|warm regards|mit freundlichen gr[üu][ßs]en|freundliche gr[üu][ßs]e|mit besten gr[üu][ßs]en|cordialmente|cordialement|bien cordialement|vriendelijke groeten|met vriendelijke groeten)[,.\s]*$'),
     # İsim / ajans referansı
     _re.compile(r'(?i)kadir\s*sevin[cç]'),
     _re.compile(r'(?i)bostok\.dev'),
@@ -69,6 +103,37 @@ def _clean_subject(subject: str) -> str:
     return subject.strip()
 
 _WORKER_BASE = "https://bostok-demo.kadirsevinc1.workers.dev"
+
+# Sector keyword → Pexels category mapping (matches JS MAP keys)
+_SECTOR_CAT_MAP: dict[str, str] = {
+    "restoran": "food", "restaurant": "food", "kafe": "food", "cafe": "food",
+    "pastane": "food", "bakery": "food", "catering": "food", "food": "food",
+    "dis hekimi": "health", "dental": "health", "eczane": "health", "pharmacy": "health",
+    "klinik": "health", "clinic": "health", "hastane": "health", "hospital": "health",
+    "veteriner": "health", "spor salonu": "health", "gym": "health", "fitness": "health",
+    "avukat": "legal", "law": "legal", "muhasebe": "legal", "accounting": "legal",
+    "sigorta": "legal", "insurance": "legal", "hukuk": "legal", "notary": "legal",
+    "guzellik": "beauty", "beauty": "beauty", "berber": "beauty", "barber": "beauty",
+    "spa": "beauty", "tirnak": "beauty", "nail": "beauty", "friseur": "beauty",
+    "kapsalon": "beauty", "coiffeur": "beauty",
+    "emlak": "realestate", "real estate": "realestate", "estate agent": "realestate",
+    "immobilien": "realestate", "mimar": "realestate", "insaat": "realestate",
+    "tadilat": "realestate", "elektrikci": "realestate", "temizlik": "realestate",
+    "nakliyat": "realestate", "tesisatci": "realestate", "renovation": "realestate",
+    "oto servis": "auto", "auto repair": "auto", "autohaus": "auto", "car": "auto",
+    "lastikci": "auto", "tire": "auto", "autowerkstatt": "auto",
+    "okul": "education", "school": "education", "kurs": "education", "course": "education",
+    "dans": "education", "muzik": "education", "surucu": "education", "etut": "education",
+    "kindergarten": "education", "daycare": "education", "tutoring": "education",
+    "otel": "hotel", "hotel": "hotel", "pansiyon": "hotel", "resort": "hotel",
+    "yazilim": "tech", "software": "tech", "bilgisayar": "tech", "computer": "tech",
+    "reklam": "tech", "fotograf": "tech", "matbaa": "tech", "print": "tech",
+    "cicekci": "retail", "florist": "retail", "kuyumcu": "retail", "optik": "retail",
+    "pet shop": "retail", "kuru temizleme": "retail", "dry clean": "retail",
+    "fabrika": "industrial", "factory": "industrial", "imalat": "industrial",
+    "sanayi": "industrial", "industrial": "industrial", "makine": "industrial",
+    "warehouse": "industrial", "logistics": "industrial",
+}
 _DEMO_URL_CACHE = None   # startup'ta Netlify URL buraya yüklenir
 
 _TR_TABLE = str.maketrans("şğüöıçŞĞÜÖİIÇ", "sguoicSGUOIIC")
@@ -168,16 +233,15 @@ class MarketingAgent(BaseAgent):
 
         if send_emails and leads:
             result = await self._run_campaign(leads, sector, location, languages)
+            self.save_observation(
+                f"Kampanya: {sector}/{location}: {str(result)[:200]}",
+                importance=6.0
+            )
+            await self.send(AgentName.MANAGER, MessageType.RESULT, str(result))
         else:
-            # Demo mod: şablon üret + gönderim simüle et
-            result = await self._demo_campaign(sector, location, languages, has_leads=bool(leads))
-
-        self.save_observation(
-            f"Kampanya: {sector}/{location}: {str(result)[:200]}",
-            importance=6.0
-        )
-
-        await self.send(AgentName.MANAGER, MessageType.RESULT, str(result))
+            # Demo mod — sadece logla, Telegram'a gönderme
+            reason = "Google Maps API key eksik" if not leads else "Email bulunamadi"
+            logger.info(f"Demo mod [{sector}/{location}]: {reason}, bildirim atlanıyor")
 
     # ── Lead bulma ────────────────────────────────────────────────
 
@@ -227,6 +291,7 @@ class MarketingAgent(BaseAgent):
             return f"Mesai saati disi — kampanya ertelendi [{sector}/{location}]"
 
         sent = skipped = no_email = 0
+        _no_email_leads: list = []   # event-driven LinkedIn önerisi için
         from integrations.gmail import load_bounced
         bounced_set = load_bounced()
 
@@ -235,6 +300,7 @@ class MarketingAgent(BaseAgent):
                 break
             if not lead.email:
                 no_email += 1
+                _no_email_leads.append(lead)
                 continue
 
             # Erken çık — zaten gönderildi veya bounce listesinde
@@ -242,11 +308,6 @@ class MarketingAgent(BaseAgent):
                 skipped += 1
                 continue
             if lead.email.strip().lower() in bounced_set:
-                skipped += 1
-                continue
-
-            # Dil döngüsünden önce dedup kontrolü — birden fazla dil varsa tekrar gönderme
-            if gmail.is_sent(lead.email):
                 skipped += 1
                 continue
 
@@ -292,6 +353,19 @@ class MarketingAgent(BaseAgent):
             except Exception:
                 pass
 
+        # Event-driven: 3+ email-bulunamayan lead varsa LinkedIn aramasını öner
+        if no_email >= 3 and _no_email_leads:
+            try:
+                hint = (
+                    f"💡 <b>Otomatik Öneri:</b> {no_email} lead için email bulunamadı "
+                    f"({sector}/{location}).\n"
+                    f"LinkedIn üzerinden ulaşmak ister misin?\n"
+                    f"<code>/linkedin {_ascii_param(sector)} {_ascii_param(location)}</code>"
+                )
+                await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY, hint)
+            except Exception:
+                pass
+
         return (
             f"Kampanya tamamlandi [{sector}/{location}]:\n"
             f"- Gonderilen: {sent}\n"
@@ -300,7 +374,7 @@ class MarketingAgent(BaseAgent):
             f"- {gmail.stats}"
         )
 
-    def _make_demo_url(self, lead, lang: str) -> str:
+    async def _make_demo_url(self, lead, lang: str) -> str:
         import urllib.parse
         params = {
             "s": _ascii_param(lead.sector),
@@ -316,6 +390,23 @@ class MarketingAgent(BaseAgent):
             params["p"] = lead.phone
         if getattr(lead, "website", None):
             params["w"] = "1" if lead.has_website else "0"
+
+        # Pexels photo for about-visual
+        try:
+            from integrations.pexels_photos import get_sector_photo
+            from config import settings as _cfg
+            if _cfg.pexels_api_key:
+                sec_raw = lead.sector.lower()
+                cat = next(
+                    (v for k, v in _SECTOR_CAT_MAP.items() if k in sec_raw or sec_raw in k),
+                    "food",
+                )
+                photo = await get_sector_photo(cat, _cfg.pexels_api_key)
+                if photo:
+                    params["ph"] = photo
+        except Exception:
+            pass
+
         base = _get_demo_base()
         return f"{base}/?{urllib.parse.urlencode(params, quote_via=urllib.parse.quote)}"
 
@@ -342,48 +433,73 @@ class MarketingAgent(BaseAgent):
         if lead.has_website:
             seo_detail = seo.for_email_prompt() if seo else ""
             offer = (
-                "Web siteleri var AMA eski, yavaş veya mobil uyumsuz olabilir. "
-                "Teklif: siteyi modernize etme, hız artırma, mobil uyumluluk, SEO iyileştirme. "
-                "Ton: mevcut çalışmalarını takdir et, geliştirme fırsatı sun."
+                "They HAVE a website but it may be outdated, slow, or not mobile-friendly. "
+                "Offer: modernize the site, improve speed, mobile compatibility, SEO. "
+                "Tone: appreciate their existing work, present an upgrade opportunity."
             )
             if seo_detail:
-                offer += f" Kişiselleştirme için şu gerçek sorunları kullan: {seo_detail}"
+                offer += f" Use these real issues for personalization: {seo_detail}"
         else:
             offer = (
-                "Henüz web siteleri YOK — dijital dünyada görünmüyorlar. "
-                "Teklif: sıfırdan profesyonel web sitesi yapımı. "
-                "Ton: fırsatı vurgula, rakiplerinden geri kalmasın."
+                "They have NO website — invisible in the digital world. "
+                "Offer: build a professional website from scratch. "
+                "Tone: highlight the opportunity, warn they're falling behind competitors."
             )
 
-        demo_url = self._make_demo_url(lead, lang)
+        demo_url = await self._make_demo_url(lead, lang)
         demo_url = await self._verify_demo_url(demo_url)
 
+        demo_phrase_a, demo_phrase_b = _DEMO_PHRASES.get(lang, _DEMO_PHRASES["en"])
         if demo_url:
             demo_instruction = (
-                f"Onemli: Mailde su demo linki dogal bir sekilde vurgula: {demo_url}\n"
-                f"(\"Sizin icin bir demo hazirladim\" veya \"Nasil gorunebilecegini buradan gorebilirsiniz\" tarzinda)\n\n"
+                f'Important: Naturally include this demo link in the email: {demo_url}\n'
+                f'(e.g. "{demo_phrase_a}" or "{demo_phrase_b}")\n\n'
             )
         else:
             demo_instruction = ""
 
+        from config import settings as _cfg
+        calendly_phrase = _CALENDLY_PHRASES.get(lang, _CALENDLY_PHRASES["en"])
+        if _cfg.calendly_url:
+            calendly_instruction = (
+                f'Add this exact line before the sign-off: "{calendly_phrase}: {_cfg.calendly_url}"\n'
+            )
+        else:
+            calendly_instruction = ""
+
+        service_line = _SERVICE_LINES.get(lang, _SERVICE_LINES["en"])
+
+        # Geçmiş başarılı pattern'ları prompta ekle
+        pattern_hint = ""
+        try:
+            from core.skills.skill_crystallizer import get_success_hints
+            pattern_hint = get_success_hints(lead.sector, lang)
+            if pattern_hint:
+                pattern_hint = f"\n{pattern_hint}\nUse these patterns as inspiration for tone and subject.\n\n"
+        except Exception:
+            pass
+
         prompt = (
-            f"{lead.sector} sektöründeki \"{lead.name}\" isletmesine ({lead.location}) "
-            f"{lang_name} dilinde profesyonel soguk e-posta yaz.\n\n"
-            f"Durum: {offer}\n\n"
+            f'Write a professional cold outreach email in {lang_name} for the business '
+            f'"{lead.name}" ({lead.sector} sector, {lead.location}).\n\n'
+            f"Situation: {offer}\n\n"
+            f"{pattern_hint}"
             f"{demo_instruction}"
-            f"Dil kurallari: Mükemmel {lang_name} kullan — imla/gramer/noktalama hatası OLMAMALI. "
-            "Spam tetikleyici ifade ve BUYUK HARF kullanma. "
-            "Isletme adini kullan, bostok.dev dogal tanit, sonda https://bostok.dev linki ver. "
-            "Mailin sonunda, imzadan once su hizmet ozetini dile cevirerek tek satir ekle: "
-            "'Web tasarim, SEO optimizasyonu, e-ticaret cozumleri ve kurumsal kimlik hizmetlerimiz icin bostok.dev adresini ziyaret edebilirsiniz.' "
-            "KESINLIKLE yazma: imza (isim/selamlama), otomatik gonderim notu, ajans/bot aciklamasi, yuzdelik oran. "
-            "Max 150 kelime.\n\n"
-            "Yanit SADECE su formatta olmali, baska hicbir sey yazma:\n"
-            "KONU_A: [birinci konu satiri — sade]\n"
-            "KONU_B: [ikinci konu satiri — merak uyandirici]\n"
-            "SECILEN_KONU: [acilma orani daha yuksek olani — sadece konu metni, aciklama veya yuzde ekleme]\n"
-            "MAIL:\n"
-            "[mail metni]"
+            f"{calendly_instruction}"
+            f"STRICT LANGUAGE RULE: The ENTIRE email MUST be written in {lang_name} ONLY. "
+            f"Not a single word in Turkish or any other language. "
+            f"Perfect grammar, spelling and punctuation for {lang_name}. "
+            f"No spam trigger words, no ALL CAPS. "
+            f"Use the business name naturally. Mention bostok.dev and include https://bostok.dev link. "
+            f'Add this exact line before the sign-off: "{service_line}" '
+            f"DO NOT write: name sign-off, greeting/closing salutation, automation notes, bot disclaimers, percentages. "
+            f"Max 150 words.\n\n"
+            f"Response ONLY in this format, nothing else:\n"
+            f"KONU_A: [first subject line — straightforward]\n"
+            f"KONU_B: [second subject line — curiosity-inducing]\n"
+            f"SECILEN_KONU: [the one with higher open rate — subject text only, no explanation]\n"
+            f"MAIL:\n"
+            f"[email body in {lang_name}]"
         )
 
         # KB'den sektör + dil bilgisi çek
@@ -431,7 +547,29 @@ class MarketingAgent(BaseAgent):
         if not body or len(body) < 20:
             return subject, ""
 
-        body = _strip_auto_content(body) + SIGNATURE
+        body = _strip_auto_content(body)
+
+        # Spam kontrolü — skoru yüksekse bir kez tekrar yaz
+        from core.skills.spam_checker import spam_score
+        score, issues = spam_score(body)
+        if score >= 2:
+            from loguru import logger as _log
+            _log.warning(f"Spam skoru {score} [{lead.name}]: {issues} — yeniden yaziliyor")
+            retry_prompt = (
+                f"Rewrite the following email to remove spam triggers.\n"
+                f"Problems: {'; '.join(issues)}\n"
+                f"Keep the same language ({lang_name}), same message, but cleaner and more natural.\n"
+                f"DO NOT write a sign-off. Output ONLY the email body.\n\n"
+                f"Original:\n{body}"
+            )
+            try:
+                rewritten = await self.ask(retry_prompt)
+                if rewritten and len(rewritten.strip()) > 20:
+                    body = _strip_auto_content(rewritten.strip())
+            except Exception:
+                pass
+
+        body = body + SIGNATURES.get(lang, SIGNATURES["en"])
         return subject, body
 
     # ── Demo kampanya (Gmail yok / lead yok) ─────────────────────

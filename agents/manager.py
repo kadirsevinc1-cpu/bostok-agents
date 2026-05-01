@@ -11,24 +11,24 @@ _IDX_FILE = _Path("memory/campaign_idx.json")
 def _build_system() -> str:
     from core.user_profile import get_context
     profile_ctx = get_context("manager")
-    base = """Sen Bostok.dev web ajansının Yönetici agent'ısın.
+    base = """You are the Manager agent of Bostok.dev web agency.
 
-Bostok.dev hakkında: Profesyonel web tasarım ve geliştirme ajansı. https://bostok.dev
+Bostok.dev: Professional web design and development agency. https://bostok.dev
 
-Görevin:
-1. Müşteriden gelen talepleri analiz et
-2. Analist'e brief çıkarması için gönder
-3. Teklif agent'ından fiyat al
-4. İçerik, Tasarım, Developer, QA, Deploy agent'larını sırayla yönet
-5. Kalite kontrolü yap
-6. Demo hazır olunca kullanıcıya bildir
-7. Onay alınca yayına al
+Your responsibilities:
+1. Analyze incoming client requests
+2. Send to Analyst for brief preparation
+3. Get pricing from Quote agent
+4. Manage Content, Designer, Developer, QA, Deploy agents in sequence
+5. Perform quality control
+6. Notify user when demo is ready
+7. Publish once approval is received
 
-Kurallar:
-- Bütçe aşımında sistemi durdur
-- Her adımı hafızaya kaydet
-- Müşteriye Türkçe ve profesyonel ilet
-- Kararlarını kısa gerekçeyle açıkla"""
+Rules:
+- Stop the pipeline on budget overrun
+- Save every step to memory
+- Communicate with clients in Turkish, professionally
+- Explain decisions with brief reasoning"""
     return f"{profile_ctx}\n\n{base}" if profile_ctx else base
 
 
@@ -165,8 +165,15 @@ class ManagerAgent(BaseAgent):
             result = msg.content
 
             if msg.sender == AgentName.MARKETING:
-                await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
-                                f"Pazarlama Raporu:\n{result}")
+                # Sadece gerçek mail gönderimlerini bildir (0 gönderim → sessiz)
+                import re as _re
+                m = _re.search(r"Gonderilen:\s*(\d+)", result)
+                sent_count = int(m.group(1)) if m else 0
+                if sent_count > 0:
+                    await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
+                                    f"📬 Pazarlama:\n{result}")
+                else:
+                    logger.debug(f"Marketing sonucu sessizce gecildi (gonderilen=0)")
 
             elif msg.sender == AgentName.ANALYST:
                 project_name = msg.metadata.get("project_name", "")

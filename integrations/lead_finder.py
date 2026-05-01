@@ -355,8 +355,101 @@ async def _search_email(session: aiohttp.ClientSession, name: str, location: str
     return ""
 
 
+async def _scrape_facebook_email(session: aiohttp.ClientSession, name: str, location: str) -> str:
+    """Facebook business page'den email veya telefon çek."""
+    query = urllib.parse.quote(f"{name} {location} site:facebook.com")
+    search_url = f"https://www.google.com/search?q={query}&num=3"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+               "(KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"}
+    try:
+        async with session.get(search_url, headers=headers,
+                               timeout=aiohttp.ClientTimeout(total=8),
+                               allow_redirects=True) as resp:
+            if resp.status != 200:
+                return ""
+            text = await resp.text(errors="ignore")
+            # Google snippet'larında email var mı?
+            for m in _extract_emails(text):
+                logger.debug(f"Facebook Google snippet email: {m} [{name}]")
+                return m
+    except Exception as e:
+        logger.debug(f"Facebook scrape hata [{name}]: {e}")
+    return ""
+
+
+def _whois_email(domain: str) -> str:
+    """WHOIS kaydından alan adı sahibinin emailini çek — ücretsiz, API gerektirmez."""
+    try:
+        import whois as _whois
+        w = _whois.whois(domain)
+        emails = w.emails
+        if not emails:
+            return ""
+        if isinstance(emails, str):
+            emails = [emails]
+        # Privacy-proxy emaillerini filtrele
+        skip = ("privacy", "proxy", "protect", "whoisguard", "contact.gandi",
+                "registrar", "abuse", "noreply", "no-reply", "domainsbyproxy",
+                "markmonitor", "godaddy", "networksolutions", "namecheap",
+                "whoisrequest", "hostmaster", "webmaster")
+        for e in emails:
+            e = e.strip().lower()
+            if e and "@" in e and not any(s in e for s in skip):
+                return e
+    except Exception:
+        pass
+    return ""
+
+
+async def _hunter_domain_search(session: aiohttp.ClientSession, domain: str) -> str:
+    """Hunter.io domain search — alan adı için email bul (25 ücretsiz/ay)."""
+    try:
+        from config import settings as _cfg
+        if not _cfg.hunter_api_key or not domain:
+            return ""
+        url = "https://api.hunter.io/v2/domain-search"
+        params = {"domain": domain, "api_key": _cfg.hunter_api_key, "limit": 5}
+        async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=8)) as resp:
+            if resp.status != 200:
+                return ""
+            data = await resp.json()
+            emails = data.get("data", {}).get("emails", [])
+            if emails:
+                # Önce owner/manager/director rollerini tercih et
+                priority = ["owner", "founder", "ceo", "director", "manager", "contact", "info"]
+                for role in priority:
+                    for e in emails:
+                        if role in (e.get("type", "") + " " + e.get("value", "")).lower():
+                            return e["value"]
+                return emails[0]["value"]
+    except Exception as e:
+        logger.debug(f"Hunter.io error [{domain}]: {e}")
+    return ""
+
+
 async def _find_email_no_website(session: aiohttp.ClientSession, name: str, location: str) -> str:
-    return await _search_email(session, name, location)
+    # 1. Web/SerpApi/Serper arama
+    email = await _search_email(session, name, location)
+    if email:
+        return email
+    # 2. Facebook sayfası snippet'ından dene
+    email = await _scrape_facebook_email(session, name, location)
+    if email:
+        return email
+    # 3. İşletme adından tahmin edilen domain'i WHOIS'te ara
+    try:
+        import re as _re
+        slug = _re.sub(r"[^a-z0-9]", "", name.lower())[:20]
+        loc_slug = _re.sub(r"[^a-z]", "", location.lower())[:8]
+        for candidate in [f"{slug}.com", f"{slug}.de", f"{slug}.nl",
+                          f"{slug}{loc_slug}.com", f"{slug}.co.uk"]:
+            w_email = _whois_email(candidate)
+            if w_email:
+                logger.debug(f"WHOIS (tahmini domain) email buldu: {w_email} [{candidate}]")
+                return w_email
+    except Exception:
+        pass
+    return ""
 
 
 async def _scrape_email(session: aiohttp.ClientSession, url: str) -> str:
@@ -381,7 +474,31 @@ async def _scrape_email(session: aiohttp.ClientSession, url: str) -> str:
         except Exception:
             pass
 
-    # Bulunamadı → domain'den tahmin et (MX kaydı varsa)
+    # Bulunamadı → WHOIS email dene (ücretsiz, API yok)
+    try:
+        from urllib.parse import urlparse as _up
+        domain = _up(url).netloc.lstrip("www.")
+        if domain:
+            whois_email = _whois_email(domain)
+            if whois_email:
+                logger.debug(f"WHOIS email buldu: {whois_email} [{domain}]")
+                return whois_email
+    except Exception:
+        pass
+
+    # Hunter.io domain search (API key varsa)
+    try:
+        from urllib.parse import urlparse as _up
+        domain = _up(url).netloc.lstrip("www.")
+        if domain:
+            hunter_email = await _hunter_domain_search(session, domain)
+            if hunter_email:
+                logger.debug(f"Hunter.io email buldu: {hunter_email} [{domain}]")
+                return hunter_email
+    except Exception:
+        pass
+
+    # Son çare → domain'den tahmin et (MX kaydı varsa)
     guesses = _guess_domain_emails(url)
     if guesses:
         try:

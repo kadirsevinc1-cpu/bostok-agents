@@ -57,9 +57,19 @@ class Settings(BaseSettings):
     # Gorsel & Video
     pexels_api_key:      str = Field("", env="PEXELS_API_KEY")
 
+    # Calendly randevu linki (opsiyonel — maile ve teklife eklenir)
+    calendly_url:        str = Field("", env="CALENDLY_URL")
+
+    # Instagram scraping (opsiyonel — business lead bulma)
+    instagram_user:      str = Field("", env="INSTAGRAM_USER")
+    instagram_password:  str = Field("", env="INSTAGRAM_PASSWORD")
+
     # Web Arama (tasarim ilham, opsiyonel)
     serpapi_api_key:     str = Field("", env="SERPAPI_API_KEY")
     serper_api_key:      str = Field("", env="SERPER_API_KEY")
+
+    # Email bulma — Hunter.io (25 arama/ay ücretsiz, domain bazlı)
+    hunter_api_key:      str = Field("", env="HUNTER_API_KEY")
 
     # WhatsApp (Green-API)
     greenapi_instance_id: str = Field("", env="GREENAPI_INSTANCE_ID")
@@ -93,6 +103,7 @@ class Settings(BaseSettings):
             ("pexels_api_key",      "pexels_api_key"),
             ("serpapi_api_key",      "serpapi_api_key"),
             ("serper_api_key",       "serper_api_key"),
+            ("hunter_api_key",       "hunter_api_key"),
             ("greenapi_instance_id", "greenapi_instance_id"),
             ("greenapi_api_token",   "greenapi_api_token"),
         ]

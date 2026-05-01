@@ -6,10 +6,10 @@ from core.message_bus import AgentName, MessageType, Message
 
 LANG_NAMES = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca"}
 
-SYSTEM = """Sen Bostok.dev ajansının WhatsApp outreach uzmanısın.
-Kısa, samimi, doğal WhatsApp mesajları yazarsın.
-WhatsApp formatı: plain text, emoji destekli, max 3 kısa paragraf.
-Asla spam gibi görünme — gerçek bir insandan gelen mesaj hissi ver."""
+SYSTEM = """You are the WhatsApp outreach specialist of Bostok.dev agency.
+You write short, genuine, natural WhatsApp messages.
+WhatsApp format: plain text, emoji-friendly, max 3 short paragraphs.
+Never look like spam — give the feel of a real person reaching out."""
 
 
 class WhatsAppAgent(BaseAgent):
@@ -148,25 +148,25 @@ class WhatsAppAgent(BaseAgent):
         owner = profile.get("owner", {})
 
         stage_map = {
-            "replied": "daha önce mail'imize yanıt verdi, ilgi gösterdi",
-            "followed_up2": "iki kez mail aldı, henüz yanıt vermedi",
-            "followed_up": "bir takip maili aldı",
-            "contacted": "bir kez mail aldı",
-            "new": "ilk kez iletişim kuruyoruz",
+            "replied": "previously replied to our email and showed interest",
+            "followed_up2": "received two emails, no reply yet",
+            "followed_up": "received one follow-up email",
+            "contacted": "received one email from us",
+            "new": "first time we're reaching out",
         }
-        context = stage_map.get(lead.stage, "potansiyel müşteri")
+        context = stage_map.get(lead.stage, "potential client")
 
         prompt = (
-            f"{lead.sector} sektöründeki \"{lead.name}\" işletmesine "
-            f"({lead.location}) Türkçe WhatsApp mesajı yaz.\n\n"
-            f"Durum: Bu kişi {context}. Web sitesi geliştirme hizmeti sunuyoruz.\n\n"
-            f"Kurallar:\n"
-            f"- Plain text, emoji kullan ama abartma\n"
-            f"- Max 3 kısa paragraf\n"
-            f"- Samimi, spam gibi görünme\n"
-            f"- Mail'den farklı, daha kişisel ve doğal bir ton\n"
-            f"- Sonuna link ekle: https://bostok.dev\n"
-            f"- İmza YAZMA, sona ekliyoruz"
+            f'Write a Turkish WhatsApp message for the business "{lead.name}" '
+            f"({lead.sector} sector, {lead.location}).\n\n"
+            f"Context: This person {context}. We offer web development services.\n\n"
+            f"Rules:\n"
+            f"- Plain text, use emoji but don't overdo it\n"
+            f"- Max 3 short paragraphs\n"
+            f"- Genuine, don't look like spam\n"
+            f"- More personal and natural tone than email\n"
+            f"- Include link at the end: https://bostok.dev\n"
+            f"- DO NOT write a sign-off, we add it separately"
         )
         result = await self.ask(prompt)
         signature = f"\n\n{owner.get('name', 'Kadir Sevinç')} — Bostok.dev\nhttps://bostok.dev"
@@ -181,23 +181,22 @@ class WhatsAppAgent(BaseAgent):
         has_site = getattr(lead, "has_website", False)
         if has_site:
             offer = (
-                f"Web siteleri var ama modernize edilebilir — "
-                f"mobil uyumluluk, hız, SEO konularında yardım sunmak istiyoruz."
+                "They have a website but it can be modernized — "
+                "we want to help with mobile compatibility, speed and SEO."
             )
         else:
-            offer = "Henüz web siteleri yok — sıfırdan profesyonel site yapıyoruz."
+            offer = "They have no website yet — we build professional sites from scratch."
 
         prompt = (
-            f"{lead.sector} sektöründeki \"{lead.name}\" işletmesine "
-            f"({lead.location}) {lang_name} dilinde WhatsApp mesajı yaz.\n\n"
-            f"Durum: {offer}\n\n"
-            f"Kurallar:\n"
-            f"- Plain text, emoji kullan ama abartma\n"
-            f"- Max 3 kısa paragraf\n"
-            f"- Samimi, spam gibi görünme\n"
-            f"- Sonuna link ekle: https://bostok.dev\n"
-            f"- İmza: {owner.get('name', 'Kadir')} — {owner.get('agency', 'Bostok.dev')}\n"
-            f"- İmza YAZMA, sona ekliyoruz"
+            f'Write a WhatsApp message in {lang_name} for the business "{lead.name}" '
+            f"({lead.sector} sector, {lead.location}).\n\n"
+            f"Situation: {offer}\n\n"
+            f"Rules:\n"
+            f"- Plain text, use emoji but don't overdo it\n"
+            f"- Max 3 short paragraphs\n"
+            f"- Genuine, don't look like spam\n"
+            f"- Include link at the end: https://bostok.dev\n"
+            f"- DO NOT write a sign-off, we add it separately"
         )
         result = await self.ask(prompt)
         signature = f"\n\n{owner.get('name', 'Kadir Sevinç')} — Bostok.dev\nhttps://bostok.dev"

@@ -76,6 +76,14 @@ async def write_proposal(
 
     demo_line = f"\nDemo siteniz: {demo_url}" if demo_url else ""
 
+    from config import settings as _cfg
+    if _cfg.calendly_url:
+        calendly_line = (
+            f"\nRandevu: Paketi 15 dakikalik ucretsiz gorüsmede konusabilirsiniz: {_cfg.calendly_url}"
+        )
+    else:
+        calendly_line = ""
+
     prompt = f"""
 {lang_name} dilinde "{lead_name}" isletmesine ({sector}, {location}) kisisellestirilmis web tasarim teklif maili yaz.
 
@@ -83,7 +91,7 @@ Musteri mesaji: {reply_body[:300]}
 
 Durum: {situation}
 Onerilmis paket: {pkg_name} — {pkg_price} ({pkg_desc})
-{demo_line}
+{demo_line}{calendly_line}
 
 Tum paketleri listele:
 - {b_name}: {b_price} — {b_desc}
@@ -123,7 +131,14 @@ MAIL:
         if len(body) < 30:
             return subject, ""
 
-        signature = "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev"
+        _sigs = {
+            "tr": "\n\nSaygılar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+            "en": "\n\nBest regards,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+            "de": "\n\nMit freundlichen Grüßen,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+            "nl": "\n\nMet vriendelijke groeten,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+            "fr": "\n\nCordialement,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+        }
+        signature = _sigs.get(lang, _sigs["en"])
         return subject, body + signature
 
     except Exception as e:

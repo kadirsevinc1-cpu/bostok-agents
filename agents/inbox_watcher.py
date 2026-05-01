@@ -94,14 +94,14 @@ class InboxWatcherAgent(BaseAgent):
                         pass
                     try:
                         from core.performance_tracker import record_bounce as perf_bounce
-                        si = reply.sent_info
+                        si = reply.sent_info or {}
                         perf_bounce(si.get("sector", ""), si.get("location", ""))
                     except Exception:
                         pass
                 logger.info(f"Bounce tespit edildi, blackliste eklendi: {original_to} (gonden: {reply.from_email})")
                 continue
 
-            sent = reply.sent_info
+            sent = reply.sent_info or {}
             sector = sent.get("sector", "")
             location = sent.get("location", "")
             lead_name = sent.get("name", "")
@@ -185,6 +185,21 @@ class InboxWatcherAgent(BaseAgent):
                         f"\n✏️ Düzenlemek için: <code>yanit {reply.reply_id} kendi mesajın</code>"
                     )
 
+            # Başarılı pattern'ı kristalleştir
+            if analysis.intent.value in ("ready", "meeting", "interested"):
+                try:
+                    from core.skills.skill_crystallizer import record_success
+                    record_success(
+                        sector=sector,
+                        location=location,
+                        lang=sent.get("lang", "tr"),
+                        intent=analysis.intent.value,
+                        has_website=bool(sent.get("has_website", False)),
+                        subject=sent.get("subject", ""),
+                    )
+                except Exception:
+                    pass
+
             # Yüksek niyet → otomatik teklif gönder
             proposal_hint = ""
             if analysis.intent.value in ("ready", "meeting", "interested"):
@@ -233,6 +248,11 @@ class InboxWatcherAgent(BaseAgent):
                     logger.error(f"Otomatik teklif hatasi: {_pe}")
                     proposal_hint = f"\n\n⚠️ Teklif hatası: {_pe}"
 
+            from config import settings as _cfg
+            meeting_line = ""
+            if analysis.intent.value == "meeting" and _cfg.calendly_url:
+                meeting_line = f"\n\n📅 <b>Toplanti istiyor!</b> Takvim linki: {_cfg.calendly_url}"
+
             notify = (
                 f"{intent_emoji} <b>Yeni Yanit!</b> [ID: {reply.reply_id}]\n"
                 f"<b>Niyet:</b> {analysis.summary}\n"
@@ -247,6 +267,7 @@ class InboxWatcherAgent(BaseAgent):
             notify += f"\n<b>Mesaj:</b>\n{reply.body[:400]}"
             if len(reply.body) > 400:
                 notify += "..."
+            notify += meeting_line
             notify += draft_hint
             notify += proposal_hint
             if not draft_hint and not proposal_hint:
