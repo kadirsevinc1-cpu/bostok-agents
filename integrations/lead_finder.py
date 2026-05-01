@@ -152,30 +152,72 @@ async def find_leads(sector: str, location: str, api_key: str = "") -> list[Lead
     leads: list[Lead] = []
     seen_names: set[str] = set()
 
+    def _merge(new_leads):
+        for lead in new_leads:
+            key = lead.name.lower().strip()
+            if key not in seen_names:
+                seen_names.add(key)
+                leads.append(lead)
+
+    # 1. Google Maps (primary — if key works)
     if api_key:
         for sub_loc in sub_locations:
-            sub_leads = await _maps_leads(sector, sub_loc, api_key)
-            for lead in sub_leads:
-                key = lead.name.lower().strip()
-                if key not in seen_names:
-                    seen_names.add(key)
-                    leads.append(lead)
+            _merge(await _maps_leads(sector, sub_loc, api_key))
         if len(sub_locations) > 1:
-            logger.info(f"Ilce aramasi: {len(sub_locations)} bolge -> {len(leads)} benzersiz lead ({sector}/{location})")
+            logger.info(f"Ilce aramasi: {len(sub_locations)} bolge -> {len(leads)} lead ({sector}/{location})")
 
+    # 2. Overpass API / OpenStreetMap (free, no key)
+    try:
+        from integrations.overpass_finder import find_osm_leads
+        osm_leads = await find_osm_leads(sector, location, limit=50)
+        new_osm: list[tuple] = []  # (OsmLead,)
+        for ol in osm_leads:
+            key = ol.name.lower().strip()
+            if key not in seen_names:
+                seen_names.add(key)
+                new_osm.append(ol)
+
+        if new_osm:
+            async with aiohttp.ClientSession() as session:
+                for ol in new_osm:
+                    email = ol.email
+                    website = ol.website
+
+                    if not email and website:
+                        email = await _scrape_email(session, website)
+
+                    if not email and not website:
+                        # Domain guessing: "Harbiye Restaurant" → harbiyerestaurant.com.tr
+                        email, website = await _guess_email_from_name(session, ol.name)
+
+                    lead = Lead(
+                        name=ol.name, location=ol.location, sector=ol.sector,
+                        phone=ol.phone, email=email,
+                        has_website=bool(website or ol.website),
+                        website=website or ol.website,
+                    )
+                    leads.append(lead)
+                    await asyncio.sleep(0.3)
+
+            found_emails = sum(1 for l in leads if l.email)
+            logger.info(f"Overpass {len(new_osm)} firma ekledi — toplam: {len(leads)}, emailli: {found_emails} ({sector}/{location})")
+    except Exception as e:
+        logger.debug(f"Overpass atlandi: {e}")
+
+    # 3. Chamber / directory scraper (firmarehberi, yell, yellowpages…)
     try:
         from integrations.chamber_scraper import scrape_directory
         chamber_leads = await scrape_directory(sector, location)
-        for cl in chamber_leads:
-            key = cl.name.lower().strip()
-            if key not in seen_names:
-                seen_names.add(key)
-                leads.append(cl)
+        _merge(chamber_leads)
         if chamber_leads:
             logger.info(f"Dizin scraper {len(chamber_leads)} firma ekledi — toplam: {len(leads)}")
     except Exception as e:
         logger.debug(f"Chamber scraper atlandi: {e}")
 
+    logger.info(
+        f"find_leads toplam: {len(leads)} lead, "
+        f"{sum(1 for l in leads if l.email)} emailli — {sector}/{location}"
+    )
     if leads:
         _set_cached_leads(sector, location, leads)
     return leads
@@ -304,6 +346,48 @@ def _guess_domain_emails(website: str) -> list[str]:
         return [f"{p}@{domain}" for p in COMMON_PREFIXES]
     except Exception:
         return []
+
+
+def _name_to_domain_slug(name: str) -> str:
+    """'Harbiye Restaurant' → 'harbiyerestaurant'"""
+    import unicodedata
+    tr_map = str.maketrans("çğıöşüÇĞİÖŞÜ", "cgiosucgiosu")
+    slug = name.lower().translate(tr_map)
+    slug = unicodedata.normalize("NFD", slug)
+    slug = "".join(c for c in slug if c.isalnum())
+    return slug[:30]
+
+
+async def _guess_email_from_name(session: aiohttp.ClientSession, name: str) -> tuple[str, str]:
+    """
+    İşletme adından domain tahmin et, MX kaydı varsa email üret.
+    Returns (email, website) — both may be empty.
+    """
+    slug = _name_to_domain_slug(name)
+    if len(slug) < 3:
+        return "", ""
+
+    candidates = [
+        f"https://www.{slug}.com.tr",
+        f"https://www.{slug}.com",
+        f"https://{slug}.com.tr",
+    ]
+
+    for url in candidates:
+        domain = url.split("//", 1)[1].lstrip("www.")
+        if not await _has_mx(domain):
+            continue
+        # MX var — siteyi çekip email bulmayı dene
+        try:
+            scraped = await _scrape_email(session, url)
+            if scraped:
+                return scraped, url
+        except Exception:
+            pass
+        # Scrape olmadı ama MX var → info@ tahmin et
+        return f"info@{domain}", url
+
+    return "", ""
 
 
 async def _search_email(session: aiohttp.ClientSession, name: str, location: str) -> str:
