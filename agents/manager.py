@@ -46,6 +46,8 @@ class ManagerAgent(BaseAgent):
         self._current_project_name: str = ""
         self._marketing_paused: bool = False
         self._mail_limit_hit_today: bool = False
+        self._qa_retries: int = 0
+        self._qa_max_retries: int = 2
 
     async def run(self):
         """BaseAgent.run() + arka planda kampanya scheduler başlat."""
@@ -223,11 +225,26 @@ class ManagerAgent(BaseAgent):
                 has_critical = msg.metadata.get("has_critical_errors", False)
                 site_dir = msg.metadata.get("site_dir", self._current_site_dir)
                 project_name = msg.metadata.get("project_name", self._current_project_name)
+                file_path = msg.metadata.get("file_path", "")
 
                 if has_critical:
-                    await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
-                                    f"QA kritik hata buldu, deploy durduruldu:\n\n{result[:500]}")
+                    if self._qa_retries < self._qa_max_retries:
+                        self._qa_retries += 1
+                        logger.info(f"QA kritik hata — otomatik duzeltme denemesi {self._qa_retries}/{self._qa_max_retries}")
+                        await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
+                                        f"⚠️ QA {self._qa_retries}. hata buldu, Developer otomatik düzeltiyor...\n\n{result[:300]}")
+                        await self.send(
+                            AgentName.DEVELOPER, MessageType.TASK,
+                            f"QA found these critical errors — fix them all:\n\n{result}",
+                            {"revision": True, "site_dir": site_dir,
+                             "project_name": project_name, "file_path": file_path},
+                        )
+                    else:
+                        self._qa_retries = 0
+                        await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
+                                        f"❌ QA {self._qa_max_retries} denemede düzeltilemedi, deploy durduruldu:\n\n{result[:500]}")
                 else:
+                    self._qa_retries = 0
                     await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
                                     f"QA tamamlandi, site yukleniyor...\n\n{result[:300]}")
                     await self.send(
