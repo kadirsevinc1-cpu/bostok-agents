@@ -139,3 +139,13 @@ Write in English. Be specific to the {sector} sector in {country}."""
 
         await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY, header + body + tail)
         logger.info(f"CompetitorAnalyst: concept delivered for {sector}/{country}")
+
+        # Demo mode: forward concept directly to Developer for site build
+        if meta.get("demo_mode"):
+            await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
+                            f"🔨 <b>Demo site inşa ediliyor:</b> {sector}...")
+            await self.send(
+                AgentName.DEVELOPER, MessageType.TASK,
+                concept,
+                {"demo_build": True, "sector": sector, "country": country},
+            )

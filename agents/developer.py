@@ -39,9 +39,14 @@ class DeveloperAgent(BaseAgent):
         from core import memory
 
         is_revision = msg.metadata.get("revision", False)
+        is_demo = msg.metadata.get("demo_build", False)
 
         if is_revision:
             await self._handle_revision(msg)
+            return
+
+        if is_demo:
+            await self._handle_demo(msg)
             return
 
         from core.knowledge import get_template, detect_template, log_error
@@ -96,6 +101,45 @@ class DeveloperAgent(BaseAgent):
         result = f"✅ Kod yazıldı!\nDosya: {output_file}\nSatır sayısı: {len(html.splitlines())}"
         await self.send(AgentName.MANAGER, MessageType.RESULT, result,
                        {"file_path": str(output_file), "project_name": project_name})
+
+    async def _handle_demo(self, msg: Message):
+        from loguru import logger
+
+        sector  = msg.metadata.get("sector", "demo")
+        country = msg.metadata.get("country", "")
+        concept = msg.content
+
+        logger.info(f"Demo site yazılıyor: {sector} / {country}")
+
+        slug = sector.lower().replace(" ", "_").replace("/", "_")
+        demo_dir = OUTPUT_DIR.parent / "demos" / slug
+        demo_dir.mkdir(parents=True, exist_ok=True)
+
+        code = await self.ask(
+            f"Website concept for a {sector} business ({country}):\n\n{concept}\n\n"
+            "Build a complete, stunning index.html based on this concept. "
+            "Use Tailwind CSS CDN. Fill with realistic placeholder content for this sector. "
+            "The site must look like a real, polished business website — not a template. "
+            "Return HTML code only."
+        )
+
+        html = self._extract_html(code)
+        if not html:
+            html = code
+
+        output_file = demo_dir / "index.html"
+        output_file.write_text(html, encoding="utf-8")
+        logger.info(f"Demo site kaydedildi: {output_file}")
+
+        self.save_observation(f"Demo site: {sector}", importance=7.0)
+        await self.send(
+            AgentName.MANAGER, MessageType.RESULT,
+            f"✅ <b>Demo site hazır!</b>\n"
+            f"Sektör: <b>{sector}</b>\n"
+            f"Dosya: <code>{output_file}</code>\n"
+            f"Satır: {len(html.splitlines())}",
+            {"file_path": str(output_file), "project_name": f"demo_{slug}"},
+        )
 
     async def _handle_revision(self, msg: Message):
         from loguru import logger

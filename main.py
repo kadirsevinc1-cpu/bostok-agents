@@ -499,6 +499,28 @@ async def handle_telegram_message(text: str):
                 await bot.send(f"❌ Alan bulunamadı veya desteklenmiyor: <code>{field_key}</code>")
         return
 
+    if cmd.startswith("/demo "):
+        parts = text[len("/demo "):].strip().rsplit(None, 1)
+        d_sector  = parts[0].strip()
+        d_country = parts[1].strip() if len(parts) > 1 else "Turkey"
+        if not d_sector:
+            if bot:
+                await bot.send("⚠️ Kullanım: <code>/demo {sektör} [{ülke}]</code>\nÖrnek: <code>/demo restoran Turkey</code>")
+            return
+        if bot:
+            await bot.send(
+                f"🎯 <b>Demo site üretimi başladı</b>\n"
+                f"Sektör: <b>{d_sector}</b> | Ülke: <b>{d_country}</b>\n"
+                f"Rakip analizi → site inşası... (2-4 dk)"
+            )
+        await bus.send(Message(
+            sender=AgentName.SYSTEM, receiver=AgentName.COMPETITOR_ANALYST,
+            type=MessageType.TASK,
+            content=f"{d_sector} / {d_country} demo site build",
+            metadata={"sector": d_sector, "country": d_country, "demo_mode": True},
+        ))
+        return
+
     if cmd.startswith("/hunt "):
         parts = text[len("/hunt "):].strip().rsplit(None, 1)
         if len(parts) < 2:
@@ -543,6 +565,7 @@ async def handle_telegram_message(text: str):
                 "/wp {sektör} {şehir} — WhatsApp kampanyası başlat\n"
                 "/wa-rapor — Aylık WA kampanya geçmişi\n"
                 "/dizin {sektör} {şehir} — Dizin scraper'ı manuel tetikle\n"
+                "/demo {sektör} [{ülke}] — Rakip analiz et + demo site üret\n"
                 "/hunt {sektör} {ülke} — Rakip site analizi + yeni site konsepti\n"
                 "/linkedin {sektör} {şehir} — LinkedIn profil bul + mesaj üret\n"
                 "/stats — Gönderilen email + başarılı pattern özeti\n"
