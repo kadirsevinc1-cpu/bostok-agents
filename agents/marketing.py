@@ -319,31 +319,30 @@ class MarketingAgent(BaseAgent):
                 except Exception:
                     pass
 
-            # Her dil için ayrı mail gönder (örn. Istanbul oteli → tr + en)
-            for lang in (languages or ["tr"]):
-                if not gmail.can_send():
-                    break
-                subject, body = await self._write_email(lead, lang, seo)
-                if not body:
-                    logger.warning(f"Mail uretimi basarisiz, atlandi: {lead.email} [{lang}]")
-                    skipped += 1
-                    continue
+            lang = (languages or ["tr"])[0]
+            if not gmail.can_send():
+                break
+            subject, body = await self._write_email(lead, lang, seo)
+            if not body:
+                logger.warning(f"Mail uretimi basarisiz, atlandi: {lead.email} [{lang}]")
+                skipped += 1
+                continue
 
-                ok = await gmail.send(lead.email, subject, body, lead_info={
-                    "name": lead.name, "sector": sector, "location": location, "lang": lang,
-                    "phone": getattr(lead, "phone", ""),
-                    "has_website": lead.has_website,
-                })
-                if ok:
-                    sent += 1
-                    try:
-                        from core.performance_tracker import record_sent as _perf_sent
-                        _perf_sent(sector, location)
-                    except Exception:
-                        pass
-                else:
-                    skipped += 1
-                await asyncio.sleep(45)  # spam önleme: mailler arası bekleme
+            ok = await gmail.send(lead.email, subject, body, lead_info={
+                "name": lead.name, "sector": sector, "location": location, "lang": lang,
+                "phone": getattr(lead, "phone", ""),
+                "has_website": lead.has_website,
+            })
+            if ok:
+                sent += 1
+                try:
+                    from core.performance_tracker import record_sent as _perf_sent
+                    _perf_sent(sector, location)
+                except Exception:
+                    pass
+            else:
+                skipped += 1
+            await asyncio.sleep(45)
 
         # Tüm leadler atlandıysa (sıfır yeni gönderim) → tükendi olarak işaretle
         if sent == 0 and (skipped > 0 or no_email > 0):
@@ -487,7 +486,7 @@ class MarketingAgent(BaseAgent):
             f"{demo_instruction}"
             f"{calendly_instruction}"
             f"STRICT LANGUAGE RULE: The ENTIRE email MUST be written in {lang_name} ONLY. "
-            f"Not a single word in Turkish or any other language. "
+            f"Not a single word in any other language. "
             f"Perfect grammar, spelling and punctuation for {lang_name}. "
             f"No spam trigger words, no ALL CAPS. "
             f"Use the business name naturally. Mention bostok.dev and include https://bostok.dev link. "
