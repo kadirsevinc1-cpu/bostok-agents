@@ -105,6 +105,10 @@ class ManagerAgent(BaseAgent):
             )
 
             sent_count = 0
+            import datetime as _dt
+            from core.timezone_utils import is_business_hours as _biz_hours
+            _now = _dt.datetime.utcnow()
+
             for loc_idx, location in enumerate(campaign["locations"], 1):
                 if not self.running:
                     return
@@ -112,6 +116,10 @@ class ManagerAgent(BaseAgent):
                     break
                 if is_exhausted(campaign["sector"], location):
                     logger.debug(f"  [{loc_idx}/{total}] Atlandi (tukendi): {campaign['sector']}/{location}")
+                    continue
+                # Mesai saati dışındaysa kuyruğa alma — döngüyü hızlı geç
+                if not _biz_hours(location, _now):
+                    logger.debug(f"  [{loc_idx}/{total}] Atlandi (mesai disi): {campaign['sector']}/{location}")
                     continue
 
                 logger.info(f"  [{loc_idx}/{total}] Gonderiliyor: {campaign['sector']} — {location}")
