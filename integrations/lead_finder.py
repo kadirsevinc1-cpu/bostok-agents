@@ -110,6 +110,17 @@ SKIP_WORDS = {"noreply", "no-reply", "example", "test@", "@sentry", "@privacy",
               "wix.com", "wordpress", "squarespace", "schema", "w3.org",
               "@2x", "@3x", "placeholder", "domain.com", "email.com"}
 
+# Sosyal medya ve platform domainleri — bunlara email üretme
+_PLATFORM_DOMAINS = {
+    "facebook.com", "instagram.com", "twitter.com", "x.com", "linkedin.com",
+    "youtube.com", "tiktok.com", "pinterest.com", "google.com", "gmail.com",
+    "hotmail.com", "outlook.com", "yahoo.com", "yandex.com", "yandex.ru",
+    "maps.google.com", "tripadvisor.com", "foursquare.com", "yelp.com",
+    "booking.com", "airbnb.com", "zomato.com", "ubereats.com", "getir.com",
+    "whatsapp.com", "t.me", "telegram.org", "apple.com", "microsoft.com",
+    "amazon.com", "shopify.com", "etsy.com", "ebay.com",
+}
+
 
 def _valid_email(email: str) -> bool:
     """Sahte email eşleşmelerini filtrele."""
@@ -416,6 +427,8 @@ async def _guess_email_from_name(session: aiohttp.ClientSession, name: str) -> t
 
     for url in candidates:
         domain = url.split("//", 1)[1].lstrip("www.")
+        if domain in _PLATFORM_DOMAINS:
+            continue
         if not await _has_mx(domain):
             continue
         # MX var — siteyi çekip email bulmayı dene
@@ -601,6 +614,15 @@ async def _find_email_no_website(session: aiohttp.ClientSession, name: str, loca
 
 async def _scrape_email(session: aiohttp.ClientSession, url: str) -> str:
     """Web sitesi olan işletmenin sayfalarından email çek; bulamazsa domain tahmini."""
+    # Platform domainlerini reddet — facebook.com, instagram.com vb.
+    try:
+        from urllib.parse import urlparse as _up
+        _d = _up(url).netloc.lstrip("www.")
+        if any(_d == p or _d.endswith("." + p) for p in _PLATFORM_DOMAINS):
+            return ""
+    except Exception:
+        pass
+
     contact_paths = ["", "/contact", "/iletisim", "/about", "/hakkimizda",
                      "/kontakt", "/impressum", "/bize-ulasin", "/en/contact"]
     for path in contact_paths:
