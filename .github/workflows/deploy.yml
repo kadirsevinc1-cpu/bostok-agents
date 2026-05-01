@@ -1,0 +1,24 @@
+name: Deploy to Google Cloud VM
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.GC_VM_IP }}
+          username: ${{ secrets.GC_VM_USER }}
+          key: ${{ secrets.GC_SSH_KEY }}
+          script: |
+            set -e
+            cd /opt/bostok_agents
+            git pull origin main
+            source .venv/bin/activate
+            pip install -r requirements.txt -q
+            sudo systemctl restart bostok
+            echo "Deploy OK — $(date)"
