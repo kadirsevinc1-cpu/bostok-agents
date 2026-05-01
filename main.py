@@ -25,7 +25,6 @@ from agents.whatsapp_agent import WhatsAppAgent
 from agents.lead_scout import LeadScoutAgent
 from agents.linkedin_agent import LinkedInAgent
 from agents.competitor_analyst import CompetitorAnalystAgent
-from core.campaigns import CAMPAIGNS
 from integrations.telegram import init_bot, get_bot
 from integrations.gmail import init_gmail
 from integrations.gmail_reader import init_reader
@@ -499,6 +498,38 @@ async def handle_telegram_message(text: str):
                 await bot.send(f"❌ Alan bulunamadı veya desteklenmiyor: <code>{field_key}</code>")
         return
 
+    if cmd == "/demolar":
+        import json
+        from pathlib import Path as _Path
+        demos_root = _Path("output/demos")
+        if not demos_root.exists():
+            if bot:
+                await bot.send("📂 Henüz demo site üretilmemiş.")
+            return
+        demos = sorted(
+            [d for d in demos_root.iterdir() if d.is_dir() and (d / "meta.json").exists()],
+            key=lambda d: d.name,
+        )
+        if not demos:
+            if bot:
+                await bot.send("📂 Henüz demo site üretilmemiş.")
+            return
+        lines = ["<b>📂 Demo Siteler</b>\n"]
+        for d in demos[-20:]:  # son 20
+            try:
+                meta = json.loads((d / "meta.json").read_text(encoding="utf-8"))
+                lines.append(
+                    f"<b>#{meta['num']}</b> {meta['sector']} / {meta['country']} "
+                    f"({meta['date']})\n"
+                    f"  <i>{meta['summary'][:70]}</i>\n"
+                    f"  📁 <code>{meta['folder']}/</code>"
+                )
+            except Exception:
+                lines.append(f"  {d.name}")
+        if bot:
+            await bot.send("\n\n".join(lines))
+        return
+
     if cmd.startswith("/demo "):
         parts = text[len("/demo "):].strip().rsplit(None, 1)
         d_sector  = parts[0].strip()
@@ -566,6 +597,7 @@ async def handle_telegram_message(text: str):
                 "/wa-rapor — Aylık WA kampanya geçmişi\n"
                 "/dizin {sektör} {şehir} — Dizin scraper'ı manuel tetikle\n"
                 "/demo {sektör} [{ülke}] — Rakip analiz et + demo site üret\n"
+                "/demolar — Üretilen tüm demo siteleri listele\n"
                 "/hunt {sektör} {ülke} — Rakip site analizi + yeni site konsepti\n"
                 "/linkedin {sektör} {şehir} — LinkedIn profil bul + mesaj üret\n"
                 "/stats — Gönderilen email + başarılı pattern özeti\n"

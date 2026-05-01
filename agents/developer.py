@@ -7,6 +7,26 @@ OUTPUT_DIR = Path(__file__).parent.parent / "output" / "sites"
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 
+def _cleanup_old_demos(demos_root: Path) -> None:
+    import json
+    import datetime as _dt
+    today = _dt.date.today()
+    for demo_dir in demos_root.iterdir():
+        if not demo_dir.is_dir():
+            continue
+        meta_file = demo_dir / "meta.json"
+        if not meta_file.exists():
+            continue
+        try:
+            meta = json.loads(meta_file.read_text(encoding="utf-8"))
+            expires = _dt.date.fromisoformat(meta.get("expires", ""))
+            if today > expires:
+                import shutil
+                shutil.rmtree(demo_dir, ignore_errors=True)
+        except Exception:
+            pass
+
+
 SYSTEM = """You are the Developer agent of Bostok.dev agency.
 
 Your job: Write fully working website code based on the design guide and content.
@@ -103,6 +123,8 @@ class DeveloperAgent(BaseAgent):
                        {"file_path": str(output_file), "project_name": project_name})
 
     async def _handle_demo(self, msg: Message):
+        import json
+        import datetime as _dt
         from loguru import logger
 
         sector  = msg.metadata.get("sector", "demo")
@@ -111,8 +133,24 @@ class DeveloperAgent(BaseAgent):
 
         logger.info(f"Demo site yazılıyor: {sector} / {country}")
 
+        demos_root = OUTPUT_DIR.parent / "demos"
+        demos_root.mkdir(parents=True, exist_ok=True)
+
+        # 1-year cleanup: remove demos older than 365 days
+        _cleanup_old_demos(demos_root)
+
+        # Sequential number from existing folders
+        existing = sorted(
+            [d for d in demos_root.iterdir() if d.is_dir() and d.name[0].isdigit()],
+            key=lambda d: d.name,
+        )
+        num = len(existing) + 1
+
         slug = sector.lower().replace(" ", "_").replace("/", "_")
-        demo_dir = OUTPUT_DIR.parent / "demos" / slug
+        country_slug = country.lower().replace(" ", "_")[:12]
+        date_str = _dt.date.today().isoformat()
+        folder_name = f"{num:03d}_{slug}_{country_slug}_{date_str}"
+        demo_dir = demos_root / folder_name
         demo_dir.mkdir(parents=True, exist_ok=True)
 
         code = await self.ask(
@@ -129,16 +167,37 @@ class DeveloperAgent(BaseAgent):
 
         output_file = demo_dir / "index.html"
         output_file.write_text(html, encoding="utf-8")
-        logger.info(f"Demo site kaydedildi: {output_file}")
 
-        self.save_observation(f"Demo site: {sector}", importance=7.0)
+        # Save meta.json alongside
+        # Extract first meaningful line of concept as short summary
+        summary_lines = [l.strip() for l in concept.splitlines() if l.strip() and not l.startswith("#")]
+        summary = summary_lines[0][:120] if summary_lines else f"{sector} demo site"
+
+        meta = {
+            "num":     num,
+            "sector":  sector,
+            "country": country,
+            "date":    date_str,
+            "summary": summary,
+            "folder":  folder_name,
+            "lines":   len(html.splitlines()),
+            "expires": (_dt.date.today() + _dt.timedelta(days=365)).isoformat(),
+        }
+        (demo_dir / "meta.json").write_text(
+            json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+
+        logger.info(f"Demo site kaydedildi: {output_file}")
+        self.save_observation(f"Demo #{num}: {sector} / {country}", importance=7.0)
+
         await self.send(
             AgentName.MANAGER, MessageType.RESULT,
             f"✅ <b>Demo site hazır!</b>\n"
-            f"Sektör: <b>{sector}</b>\n"
-            f"Dosya: <code>{output_file}</code>\n"
-            f"Satır: {len(html.splitlines())}",
-            {"file_path": str(output_file), "project_name": f"demo_{slug}"},
+            f"<b>#{num}</b> — {sector} / {country}\n"
+            f"📁 <code>{folder_name}/</code>\n"
+            f"📝 {summary[:80]}\n"
+            f"📅 1 yıl saklanacak (son: {meta['expires']})",
+            {"file_path": str(output_file), "project_name": folder_name},
         )
 
     async def _handle_revision(self, msg: Message):
