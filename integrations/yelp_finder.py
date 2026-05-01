@@ -10,15 +10,16 @@ import aiohttp
 from loguru import logger
 
 YELP_SEARCH_URL = "https://api.yelp.com/v3/businesses/search"
-YELP_DETAIL_URL = "https://api.yelp.com/v3/businesses/{id}"
 
 # Sector name → Yelp category alias
 _SECTOR_MAP: dict[str, str] = {
     # Food & Drink
     "restoran":          "restaurants",
     "restaurant":        "restaurants",
+    "restaurants":       "restaurants",
     "kafe":              "cafes",
     "cafe":              "cafes",
+    "cafes":             "cafes",
     "pastane":           "bakeries",
     "bakery":            "bakeries",
     "bar":               "bars",
@@ -27,6 +28,7 @@ _SECTOR_MAP: dict[str, str] = {
     # Beauty & Wellness
     "berber":            "barbers",
     "barbershop":        "barbers",
+    "barbers":           "barbers",
     "guzellik salonu":   "beautysvc",
     "beauty salon":      "beautysvc",
     "spa":               "spas",
@@ -80,8 +82,9 @@ def _get_category(sector: str) -> str:
     s = sector.lower().strip()
     if s in _SECTOR_MAP:
         return _SECTOR_MAP[s]
+    # Partial match — only keys longer than 3 chars to avoid "bar"→"barbers" collisions
     for key, cat in _SECTOR_MAP.items():
-        if key in s or s in key:
+        if len(key) > 3 and (key in s or s in key):
             return cat
     return s  # pass raw term to Yelp as fallback
 
@@ -104,18 +107,17 @@ async def find_yelp_leads(
     location: str,
     api_key: str,
     limit: int = 50,
-    fetch_details_count: int = 20,
 ) -> list[YelpLead]:
     """
-    Search Yelp for businesses. Fetches website URL from details endpoint
-    for the top `fetch_details_count` results (saves API quota for the rest).
+    Search Yelp for businesses. Returns name + phone + rating — no detail
+    calls needed (Yelp API doesn't expose business website URLs).
+    Email finding happens in lead_finder via domain guess + scraping.
     """
     category = _get_category(sector)
     headers = {"Authorization": f"Bearer {api_key}"}
 
     try:
         async with aiohttp.ClientSession() as session:
-            # 1. Search
             params = {
                 "term": sector,
                 "location": location,
@@ -129,70 +131,36 @@ async def find_yelp_leads(
                 timeout=aiohttp.ClientTimeout(total=15),
             ) as resp:
                 if resp.status == 401:
-                    logger.warning("Yelp API: geçersiz API key")
+                    logger.warning("Yelp API: gecersiz API key")
                     return []
                 if resp.status == 429:
-                    logger.warning("Yelp API: rate limit (5000/gün doldu)")
+                    logger.warning("Yelp API: rate limit (5000/gun doldu)")
                     return []
                 if resp.status != 200:
                     logger.warning(f"Yelp API HTTP {resp.status} — {sector}/{location}")
                     return []
                 data = await resp.json()
 
-            businesses = data.get("businesses", [])
-            if not businesses:
-                logger.info(f"Yelp: sonuç yok — {sector}/{location} (category={category})")
-                return []
+        businesses = data.get("businesses", [])
+        if not businesses:
+            logger.info(f"Yelp: sonuc yok — {sector}/{location} (category={category})")
+            return []
 
-            leads: list[YelpLead] = []
-            with_details = businesses[:fetch_details_count]
-            without_details = businesses[fetch_details_count:]
+        leads = [
+            YelpLead(
+                name=biz.get("name", ""),
+                location=location,
+                sector=sector,
+                phone=biz.get("display_phone", "") or biz.get("phone", ""),
+                rating=float(biz.get("rating", 0) or 0),
+                review_count=int(biz.get("review_count", 0) or 0),
+                yelp_url=biz.get("url", ""),
+            )
+            for biz in businesses
+            if biz.get("name")
+        ]
 
-            # 2. Fetch website URL for top results
-            for biz in with_details:
-                biz_id = biz.get("id", "")
-                website = ""
-                if biz_id:
-                    try:
-                        async with session.get(
-                            YELP_DETAIL_URL.format(id=biz_id),
-                            headers=headers,
-                            timeout=aiohttp.ClientTimeout(total=10),
-                        ) as dr:
-                            if dr.status == 200:
-                                detail = await dr.json()
-                                website = detail.get("website", "") or ""
-                    except Exception:
-                        pass
-                    await asyncio.sleep(0.15)
-
-                leads.append(YelpLead(
-                    name=biz.get("name", ""),
-                    location=location,
-                    sector=sector,
-                    website=website,
-                    phone=biz.get("display_phone", "") or biz.get("phone", ""),
-                    rating=float(biz.get("rating", 0) or 0),
-                    review_count=int(biz.get("review_count", 0) or 0),
-                    yelp_url=biz.get("url", ""),
-                ))
-
-            # 3. Remaining results — no detail call (domain guess later)
-            for biz in without_details:
-                leads.append(YelpLead(
-                    name=biz.get("name", ""),
-                    location=location,
-                    sector=sector,
-                    phone=biz.get("display_phone", "") or biz.get("phone", ""),
-                    rating=float(biz.get("rating", 0) or 0),
-                    review_count=int(biz.get("review_count", 0) or 0),
-                    yelp_url=biz.get("url", ""),
-                ))
-
-        logger.info(
-            f"Yelp: {len(leads)} işletme bulundu — {sector}/{location} "
-            f"(category={category}, website_fetched={len(with_details)})"
-        )
+        logger.info(f"Yelp: {len(leads)} isletme bulundu — {sector}/{location} (category={category})")
         return leads
 
     except asyncio.TimeoutError:

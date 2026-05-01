@@ -210,7 +210,7 @@ async def find_leads(sector: str, location: str, api_key: str = "") -> list[Lead
         from config import settings as _cfg
         yelp_key = getattr(_cfg, "yelp_api_key", "")
         if yelp_key:
-            yelp_leads = await find_yelp_leads(sector, location, yelp_key, limit=50)
+            yelp_leads = await find_yelp_leads(sector, location, yelp_key)
             new_yelp = [yl for yl in yelp_leads if yl.name.lower().strip() not in seen_names]
             for yl in new_yelp:
                 seen_names.add(yl.name.lower().strip())
