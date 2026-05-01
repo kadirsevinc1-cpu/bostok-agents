@@ -23,7 +23,9 @@ class AgentName(str, Enum):
     FOLLOWUP   = "Takip"
     KNOWLEDGE  = "Bilgi"
     LEAD_SCOUT = "LeadScout"
-    SYSTEM     = "Sistem"
+    LINKEDIN            = "LinkedIn"
+    COMPETITOR_ANALYST  = "RakipAnalist"
+    SYSTEM              = "Sistem"
 
 
 class MessageType(str, Enum):

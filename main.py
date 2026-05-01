@@ -23,6 +23,8 @@ from agents.followup import FollowupAgent
 from agents.knowledge_agent import KnowledgeAgent
 from agents.whatsapp_agent import WhatsAppAgent
 from agents.lead_scout import LeadScoutAgent
+from agents.linkedin_agent import LinkedInAgent
+from agents.competitor_analyst import CompetitorAnalystAgent
 from core.campaigns import CAMPAIGNS
 from integrations.telegram import init_bot, get_bot
 from integrations.gmail import init_gmail
@@ -368,6 +370,48 @@ async def handle_telegram_message(text: str):
             await bot.send(gen_report(days=days))
         return
 
+    if cmd == "/stats":
+        lines = ["📊 <b>Sistem İstatistikleri</b>\n"]
+        # Decision log özeti
+        try:
+            import json
+            from pathlib import Path
+            dlog = Path("memory/decision_log.jsonl")
+            if dlog.exists():
+                entries = [json.loads(l) for l in dlog.read_text(encoding="utf-8").splitlines() if l.strip()]
+                by_lang: dict = {}
+                by_sector: dict = {}
+                for e in entries:
+                    lg = e.get("lang", "?"); by_lang[lg] = by_lang.get(lg, 0) + 1
+                    sc = e.get("sector", "?")[:20]; by_sector[sc] = by_sector.get(sc, 0) + 1
+                top_sectors = sorted(by_sector.items(), key=lambda x: -x[1])[:5]
+                lines.append(f"📬 <b>Gönderilen Email:</b> {len(entries)} toplam")
+                lines.append("  Dil: " + " | ".join(f"{k}:{v}" for k, v in sorted(by_lang.items(), key=lambda x: -x[1])))
+                lines.append("  Top sektörler: " + ", ".join(f"{s}({n})" for s, n in top_sectors))
+            else:
+                lines.append("📬 Henüz email gönderilmedi.")
+        except Exception as e:
+            lines.append(f"(decision log okunamadı: {e})")
+
+        # Skill crystallization özeti
+        try:
+            from core.skills.skill_crystallizer import get_stats
+            cs = get_stats()
+            if cs.get("total", 0) > 0:
+                lines.append(f"\n✨ <b>Kristalize Pattern:</b> {cs['total']} başarılı yanıt")
+                top_s = sorted(cs.get("by_sector", {}).items(), key=lambda x: -x[1])[:3]
+                top_l = sorted(cs.get("by_lang", {}).items(), key=lambda x: -x[1])[:3]
+                lines.append("  Sektör: " + ", ".join(f"{s}({n})" for s, n in top_s))
+                lines.append("  Dil: " + " | ".join(f"{l}:{n}" for l, n in top_l))
+            else:
+                lines.append("\n✨ Henüz kristalize pattern yok.")
+        except Exception:
+            pass
+
+        if bot:
+            await bot.send("\n".join(lines))
+        return
+
     if cmd.startswith("onayla "):
         _onayla_parts = text[len("onayla "):].strip().split()
         if not _onayla_parts:
@@ -455,6 +499,38 @@ async def handle_telegram_message(text: str):
                 await bot.send(f"❌ Alan bulunamadı veya desteklenmiyor: <code>{field_key}</code>")
         return
 
+    if cmd.startswith("/hunt "):
+        parts = text[len("/hunt "):].strip().rsplit(None, 1)
+        if len(parts) < 2:
+            if bot:
+                await bot.send("⚠️ Kullanım: <code>/hunt {sektör} {ülke}</code>\nÖrnek: <code>/hunt aluminium profile Germany</code>")
+            return
+        h_sector, h_country = parts[0].strip(), parts[1].strip()
+        await bus.send(Message(
+            sender=AgentName.SYSTEM, receiver=AgentName.COMPETITOR_ANALYST,
+            type=MessageType.TASK,
+            content=f"{h_sector} / {h_country} competitor analysis",
+            metadata={"sector": h_sector, "country": h_country},
+        ))
+        return
+
+    if cmd.startswith("/linkedin "):
+        parts = text[len("/linkedin "):].strip().split(None, 1)
+        if len(parts) < 2:
+            if bot:
+                await bot.send("⚠️ Kullanım: <code>/linkedin {sektör} {şehir}</code>\nÖrnek: <code>/linkedin restaurant Berlin</code>")
+            return
+        li_sector, li_location = parts[0], parts[1]
+        if bot:
+            await bot.send(f"🔗 LinkedIn taranıyor: <b>{li_sector}</b> / {li_location}...")
+        await bus.send(Message(
+            sender=AgentName.SYSTEM, receiver=AgentName.LINKEDIN,
+            type=MessageType.TASK,
+            content=f"{li_sector} {li_location} LinkedIn outreach",
+            metadata={"sector": li_sector, "location": li_location, "languages": ["en"]},
+        ))
+        return
+
     if cmd == "/yardim" or cmd == "/help":
         if bot:
             await bot.send(
@@ -467,6 +543,9 @@ async def handle_telegram_message(text: str):
                 "/wp {sektör} {şehir} — WhatsApp kampanyası başlat\n"
                 "/wa-rapor — Aylık WA kampanya geçmişi\n"
                 "/dizin {sektör} {şehir} — Dizin scraper'ı manuel tetikle\n"
+                "/hunt {sektör} {ülke} — Rakip site analizi + yeni site konsepti\n"
+                "/linkedin {sektör} {şehir} — LinkedIn profil bul + mesaj üret\n"
+                "/stats — Gönderilen email + başarılı pattern özeti\n"
                 "/agents — Tüm agent'ların sağlık durumu\n"
                 "/bilgi [sektör] — Sektör bilgi tabanı\n"
                 "/ogret [sektör]|[bilgi] — KB'ye bilgi ekle\n"
@@ -596,7 +675,8 @@ async def main():
         QuoteAgent(), ContentAgent(), DesignerAgent(),
         DeveloperAgent(), QAAgent(), DeployAgent(),
         InboxWatcherAgent(), FollowupAgent(), KnowledgeAgent(),
-        WhatsAppAgent(), LeadScoutAgent(),
+        WhatsAppAgent(), LeadScoutAgent(), LinkedInAgent(),
+        CompetitorAnalystAgent(),
     ]
     logger.info(f"{len(agents)} agent baslatildi")
 
