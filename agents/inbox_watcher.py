@@ -16,17 +16,19 @@ async def _generate_draft(body: str, from_name: str, lead_name: str,
     from core.llm_router import router
     from core.user_profile import get_context as profile_ctx
 
-    lang_names = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca",
-                  "nl": "Flemenkçe", "fr": "Fransızca"}
+    lang_names = {"tr": "Turkish", "en": "English", "de": "German",
+                  "nl": "Dutch", "fr": "French", "es": "Spanish",
+                  "pt": "Portuguese", "it": "Italian", "pl": "Polish",
+                  "ar": "Arabic", "sv": "Swedish"}
     lang_name = lang_names.get(lang, lang)
-    name = lead_name or from_name or "müşteri"
+    name = lead_name or from_name or "the client"
 
     prompt = (
         f"{profile_ctx('inbox')}\n\n"
-        f"Müşteri sorusu ({lang_name}):\n{body[:600]}\n\n"
-        f"Müşteri: {name} — {sector}/{location}\n\n"
-        f"Bostok.dev adına {lang_name} dilinde kısa, profesyonel yanıt yaz. "
-        f"Max 80 kelime. İmza YAZMA. Sadece mail metni."
+        f"Client question ({lang_name}):\n{body[:600]}\n\n"
+        f"Client: {name} — {sector}/{location}\n\n"
+        f"Write a short, professional reply in {lang_name} on behalf of Bostok.dev. "
+        f"Max 80 words. Do NOT write a sign-off. Email body only."
     )
     try:
         result = await router.chat(

@@ -101,15 +101,15 @@ class DesignerAgent(BaseAgent):
             logger.info("Görsel atlandı (sektör/brief'e göre gerekli değil)")
 
         design = await self.ask(
-            f"Proje içerikleri ve brief:\n{msg.content}\n\n"
+            f"Project content and brief:\n{msg.content}\n\n"
             f"{design_hint}\n\n"
             f"{inspiration.format_for_designer()}\n"
             f"{image_hint}"
-            "Bu proje için:\n"
-            "1. Yukarıdaki tasarım rehberi ve ilham verilerine uygun detaylı tasarım kararları yaz\n"
-            "2. Tailwind CSS kullanarak HTML iskeleti oluştur"
-            + (" — sağlanan görsel URL'lerini kullan\n" if image_hint else "\n")
-            + "3. Renk paleti ve font seçimlerini kısa gerekçelendir"
+            "For this project:\n"
+            "1. Write detailed design decisions based on the design guide and inspiration above\n"
+            "2. Build an HTML skeleton using Tailwind CSS"
+            + (" — use the provided image URLs\n" if image_hint else "\n")
+            + "3. Briefly justify the color palette and font choices"
         )
 
         self.save_observation(f"Tasarım: {design[:150]}", importance=7.5)

@@ -4,39 +4,35 @@ Email A/B Subject Skill — 2 konu satırı üretip LLM ile daha iyisini seçer.
 """
 from loguru import logger
 
-_LANG_NAMES = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca", "nl": "Flemenkçe", "fr": "Fransızca"}
+_LANG_NAMES = {"tr": "Turkish", "en": "English", "de": "German", "nl": "Dutch",
+               "fr": "French", "es": "Spanish", "pt": "Portuguese", "it": "Italian",
+               "pl": "Polish", "ar": "Arabic", "sv": "Swedish"}
 
 
 async def pick_better_subject(lead_name: str, sector: str, lang: str, body_preview: str) -> str:
-    """
-    İki konu satırı alternatifi yaz ve hangisi daha iyi seçsin.
-    Daha iyi konu satırını döndürür. Hata/timeout durumunda boş string döner.
-    """
+    """Returns the better of two generated subject lines. Returns empty string on error/timeout."""
     from core.llm_router import router
 
-    lang_name = _LANG_NAMES.get(lang, "İngilizce")
+    lang_name = _LANG_NAMES.get(lang, "English")
     prompt = (
-        f"{sector} sektöründeki \"{lead_name}\" işletmesi için {lang_name} e-posta.\n"
-        f"Mail özeti: {body_preview[:120]}\n\n"
-        f"2 farklı konu satırı yaz ve açılma oranı daha yüksek olanı seç.\n"
-        "Sadece şu formatta yanıt ver (başka hiçbir şey yazma):\n"
-        "SECİLEN: [seçilen konu satırı]"
+        f"Email in {lang_name} for the \"{lead_name}\" business ({sector} sector).\n"
+        f"Email summary: {body_preview[:120]}\n\n"
+        f"Write 2 different subject lines and select the one with the higher open rate.\n"
+        "Reply only in this format (nothing else):\n"
+        "SELECTED: [chosen subject line]"
     )
     messages = [
-        {"role": "system", "content": "Sen e-posta pazarlama uzmanısın. Kısa ve net yanıt verirsin."},
+        {"role": "system", "content": "You are an email marketing expert. Give short, direct answers."},
         {"role": "user", "content": prompt},
     ]
     try:
         result = (await router.chat(messages, max_tokens=100)).strip()
-        marker = "SECİLEN:"
         upper = result.upper()
-        if marker in upper or "SEC" in upper:
-            idx = upper.find("SEC")
-            after = result[idx:].split(":", 1)
-            if len(after) > 1:
-                subject = after[1].strip().split("\n")[0].strip()
-                if 10 < len(subject) < 100:
-                    return subject
+        if "SELECTED:" in upper:
+            idx = upper.find("SELECTED:")
+            subject = result[idx + 9:].strip().split("\n")[0].strip()
+            if 10 < len(subject) < 100:
+                return subject
     except Exception as e:
-        logger.warning(f"Email A/B hatası: {e}")
+        logger.warning(f"Email A/B error: {e}")
     return ""

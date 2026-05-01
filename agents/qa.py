@@ -76,15 +76,15 @@ class QAAgent(BaseAgent):
             )
 
             review_prompt = (
-                f"Otomatik araçların tespitleri:\n{skill_summary}\n\n"
-                "Bu bulgulara dayanarak detaylı QA raporu yaz. "
-                "Kritik hataları ❌, uyarıları ⚠️, geçenleri ✅ ile işaretle. "
-                "Sona 📊 Genel puan: X/10 ekle."
+                f"Automated tool findings:\n{skill_summary}\n\n"
+                "Write a detailed QA report based on these findings. "
+                "Mark critical errors with ❌, warnings with ⚠️, passes with ✅. "
+                "End with 📊 Overall score: X/10."
             )
         else:
             review_prompt = (
-                f"Geliştirici çıktısı:\n{msg.content}\n\n"
-                "Kalite kontrolden geçir ve detaylı rapor yaz."
+                f"Developer output:\n{msg.content}\n\n"
+                "Run quality control and write a detailed report."
             )
 
         report = await self.ask(review_prompt)

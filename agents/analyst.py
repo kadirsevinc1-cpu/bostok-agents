@@ -40,9 +40,9 @@ class AnalystAgent(BaseAgent):
         kb_ctx = get_sector_context(sector)
 
         brief = await self.ask(
-            f"Müşteri talebi:\n{msg.content}\n\n"
+            f"Client request:\n{msg.content}\n\n"
             + (f"{kb_ctx}\n\n" if kb_ctx else "")
-            + "Bu talep için detaylı proje brief'i hazırla."
+            + "Prepare a detailed project brief for this request."
         )
 
         import re, uuid

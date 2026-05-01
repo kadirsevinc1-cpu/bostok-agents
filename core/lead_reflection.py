@@ -53,16 +53,16 @@ async def maybe_reflect(email: str) -> str | None:
         for e in rec.events[-10:]
     )
     prompt = (
-        f"Lead: {rec.name or email}, Sektör: {rec.sector}, Konum: {rec.location}\n"
-        f"Mevcut aşama: {rec.stage}\n\n"
-        f"Son eventler:\n{events_text}\n\n"
-        "Bu lead hakkında 1-2 cümlelik içgörü yaz: neden bu aşamada, "
-        "bir sonraki mail için ne önerilir? Sadece içgörüyü yaz."
+        f"Lead: {rec.name or email}, Sector: {rec.sector}, Location: {rec.location}\n"
+        f"Current stage: {rec.stage}\n\n"
+        f"Recent events:\n{events_text}\n\n"
+        "Write a 1-2 sentence insight about this lead: why they are at this stage and "
+        "what is recommended for the next email. Write only the insight."
     )
     try:
         from core.llm_router import router
         insight = await router.chat([
-            {"role": "system", "content": "B2B satış danışmanısın. Kısa ve net içgörüler üretirsin."},
+            {"role": "system", "content": "You are a B2B sales consultant. Provide short, actionable insights."},
             {"role": "user", "content": prompt},
         ], max_tokens=150)
 

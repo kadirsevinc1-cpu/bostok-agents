@@ -125,9 +125,9 @@ async def analyze_reply_with_llm(body: str, subject: str = "") -> ReplyAnalysis:
     from core.llm_router import router
     snippet = (subject + "\n" + body)[:400]
     prompt = (
-        f"Bu e-posta yanitinin amacini tek kelimeyle belirle:\n\n{snippet}\n\n"
-        "Secenekler: interested / meeting / ready / unsubscribe / negative / question / spam / unknown\n"
-        "Sadece kelimeyi yaz."
+        f"Classify the intent of this email reply in one word:\n\n{snippet}\n\n"
+        "Options: interested / meeting / ready / unsubscribe / negative / question / spam / unknown\n"
+        "Reply with the single word only."
     )
     try:
         raw = (await router.chat(

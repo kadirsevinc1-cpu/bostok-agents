@@ -54,29 +54,27 @@ class DeveloperAgent(BaseAgent):
         # Şablonu seç
         template_name = detect_template(msg.content)
         template = get_template(template_name)
-        template_hint = f"\n\nŞablon ({template_name}):\n{template[:2000]}" if template else ""
+        template_hint = f"\n\nTemplate ({template_name}):\n{template[:2000]}" if template else ""
 
-        # Arka plan videosu bulmayı dene (Pexels)
         video_hint = ""
         if sector:
             video = await find_video(sector)
             if video.found:
                 video_hint = (
-                    f"\n\n[Arka Plan Videosu — Pexels]\n"
-                    f"Hero section'da kullan:\n{video.html_snippet}\n"
-                    f"(Video üstüne koyu overlay + beyaz metin koy)"
+                    f"\n\n[Background Video — Pexels]\n"
+                    f"Use in hero section:\n{video.html_snippet}\n"
+                    f"(Add dark overlay + white text on top of video)"
                 )
                 logger.info(f"Video bulundu ve HTML'e ekleniyor: {sector}")
             else:
-                # CSS animasyon fallback
                 css_anim = get_css_fallback_animation(sector)
-                video_hint = f"\n\n[Hero Arka Plan — CSS Animasyon]\n{css_anim}"
+                video_hint = f"\n\n[Hero Background — CSS Animation]\n{css_anim}"
 
         code = await self.ask(
-            f"Tasarım ve içerik:\n{msg.content}{template_hint}{video_hint}\n\n"
-            "Şablonu referans alarak tam çalışan index.html yaz. "
-            "Tüm {{PLACEHOLDER}}'ları gerçek içerikle doldur. "
-            "Tailwind CSS CDN kullan. Sadece HTML kodu döndür."
+            f"Design and content:\n{msg.content}{template_hint}{video_hint}\n\n"
+            "Using the template as reference, write a fully working index.html. "
+            "Replace all {{PLACEHOLDER}} tags with real content. "
+            "Use Tailwind CSS CDN. Return HTML code only."
         )
 
         # HTML kodunu çıkar
@@ -120,10 +118,10 @@ class DeveloperAgent(BaseAgent):
             return
 
         code = await self.ask(
-            f"Aşağıdaki HTML sitesine şu değişiklikleri uygula:\n\n"
-            f"DEĞİŞİKLİK TALEBİ: {revision}\n\n"
-            f"MEVCUT HTML ({len(existing_html)} karakter):\n{existing_html[:6000]}\n\n"
-            "Değişikliği uygula ve tam HTML dosyasını döndür. Sadece HTML kodu yaz."
+            f"Apply the following revision to the HTML site below:\n\n"
+            f"REVISION REQUEST: {revision}\n\n"
+            f"CURRENT HTML ({len(existing_html)} chars):\n{existing_html[:6000]}\n\n"
+            "Apply the change and return the complete HTML file. Return HTML code only."
         )
 
         html = self._extract_html(code)

@@ -39,39 +39,39 @@ class CouncilDecision:
 
 _MEMBERS = [
     {
-        "name": "Kapsam Uzmanı",
+        "name": "Scope Expert",
         "system": (
-            "Sen bir web ajansının kapsam ve gereksinim uzmanısın. "
-            "Proje brieflerini hızlı ve net değerlendirirsin. Tek satırda yanıt verirsin."
+            "You are the scope and requirements expert of a web agency. "
+            "You evaluate project briefs quickly and clearly. Reply in a single line."
         ),
         "question": (
-            "Proje brief özeti:\n{brief}\n\n"
-            "Kapsam açık mı? Kritik eksik bilgi var mı? Devam edilebilir mi?\n"
-            "Yanıt (sadece bu format, tek satır): ONAY: [kısa gerekçe] VEYA RET: [kısa gerekçe]"
+            "Project brief summary:\n{brief}\n\n"
+            "Is the scope clear? Any critical missing information? Can we proceed?\n"
+            "Reply (this format only, single line): APPROVE: [short reason] OR REJECT: [short reason]"
         ),
     },
     {
-        "name": "Fizibilite Uzmanı",
+        "name": "Feasibility Expert",
         "system": (
-            "Sen bir web ajansının bütçe ve fizibilite uzmanısın. "
-            "Projelerin süre ve teknik uygunluğunu değerlendirirsin. Tek satırda yanıt verirsin."
+            "You are the budget and feasibility expert of a web agency. "
+            "You assess project timelines and technical suitability. Reply in a single line."
         ),
         "question": (
-            "Proje brief özeti:\n{brief}\n\n"
-            "Süre ve kapsam makul mu? Teknik zorluk kabul edilebilir mi?\n"
-            "Yanıt (sadece bu format, tek satır): ONAY: [kısa gerekçe] VEYA RET: [kısa gerekçe]"
+            "Project brief summary:\n{brief}\n\n"
+            "Are the timeline and scope reasonable? Is the technical complexity acceptable?\n"
+            "Reply (this format only, single line): APPROVE: [short reason] OR REJECT: [short reason]"
         ),
     },
     {
-        "name": "Kalite & Risk Uzmanı",
+        "name": "Quality & Risk Expert",
         "system": (
-            "Sen bir web ajansının kalite kontrol ve risk uzmanısın. "
-            "Projelerin risklerini ve belirsizliklerini tespit edersin. Tek satırda yanıt verirsin."
+            "You are the quality control and risk expert of a web agency. "
+            "You identify risks and ambiguities in projects. Reply in a single line."
         ),
         "question": (
-            "Proje brief özeti:\n{brief}\n\n"
-            "Üretim riskler? Belirsiz gereksinimler? Pipeline'ı durduracak kritik eksik var mı?\n"
-            "Yanıt (sadece bu format, tek satır): ONAY: [kısa gerekçe] VEYA RET: [kısa gerekçe]"
+            "Project brief summary:\n{brief}\n\n"
+            "Production risks? Ambiguous requirements? Any critical gaps that should stop the pipeline?\n"
+            "Reply (this format only, single line): APPROVE: [short reason] OR REJECT: [short reason]"
         ),
     },
 ]
@@ -86,12 +86,12 @@ async def _ask_member(member: dict, brief_snippet: str) -> Vote:
     try:
         result = (await router.chat(messages, max_tokens=150)).strip()
         upper = result.upper()
-        approved = upper.startswith("ONAY")
+        approved = upper.startswith("APPROVE")
         note = result.split(":", 1)[1].strip() if ":" in result else result
         return Vote(member=member["name"], approved=approved, note=note[:120])
     except Exception as e:
-        logger.warning(f"Konsey uye hatasi [{member['name']}]: {e}")
-        return Vote(member=member["name"], approved=True, note="Degerlendirilemedi, varsayilan onay.")
+        logger.warning(f"Council member error [{member['name']}]: {e}")
+        return Vote(member=member["name"], approved=True, note="Could not evaluate, default approval.")
 
 
 async def hold_meeting(brief: str) -> CouncilDecision:

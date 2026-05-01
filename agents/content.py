@@ -44,10 +44,10 @@ class ContentAgent(BaseAgent):
         kb_ctx = get_sector_context(sector)
 
         content = await self.ask(
-            f"Proje brief'i:\n{msg.content}\n\n"
+            f"Project brief:\n{msg.content}\n\n"
             + (f"{kb_ctx}\n\n" if kb_ctx else "")
-            + "Bu proje için tüm sayfa içeriklerini yaz. "
-            "Her sayfa için başlık ve içerik bölümlerini net ayır."
+            + "Write all page content for this project. "
+            "Use clear headings and content sections for each page."
         )
 
         self.save_observation(f"İçerik yazıldı: {content[:150]}", importance=7.0)

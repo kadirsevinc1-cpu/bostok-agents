@@ -96,14 +96,14 @@ class KnowledgeAgent(BaseAgent):
         for sector in pending:
             try:
                 context = await self.ask(
-                    f"'{sector}' sektöründeki Türkiye'deki küçük/orta işletmelere "
-                    f"web sitesi satışı için 5 maddelik özet yaz:\n"
-                    f"1) Kim karar verir (unvan/rol)\n"
-                    f"2) En büyük 2 ağrı noktası (web sitesi yok/kötü olunca ne kaybediyorlar)\n"
-                    f"3) Web sitesinden ne beklerler (somut özellikler)\n"
-                    f"4) En etkili mesaj tonu (örnek: 'resmi', 'samimi', 'ROI odaklı')\n"
-                    f"5) Kaçınılması gereken 2 ifade veya yaklaşım\n"
-                    f"Sadece maddeler, max 100 kelime."
+                    f"Write a 5-point summary for selling websites to small/medium businesses "
+                    f"in the '{sector}' sector:\n"
+                    f"1) Who makes the decision (title/role)\n"
+                    f"2) Top 2 pain points (what they lose without a website or with a bad one)\n"
+                    f"3) What they expect from a website (concrete features)\n"
+                    f"4) Most effective message tone (e.g. 'formal', 'friendly', 'ROI-focused')\n"
+                    f"5) 2 phrases or approaches to avoid\n"
+                    f"Bullet points only, max 100 words."
                 )
                 if context and len(context.strip()) > 40:
                     kb.mark_seeded(sector, context.strip())
@@ -126,8 +126,8 @@ class KnowledgeAgent(BaseAgent):
 
         try:
             reflection = await self.ask(
-                f"B2B web sitesi satış kampanyasından bugüne kadar öğrenilenler:\n{summary}\n\n"
-                f"Bunları 2-3 cümleyle özetle ve en önemli 1 somut öneri ver."
+                f"Lessons learned from the B2B website sales campaign so far:\n{summary}\n\n"
+                f"Summarize in 2-3 sentences and give the single most important concrete recommendation."
             )
             self.save_observation(f"Haftalık yansıma: {reflection[:300]}", importance=9.0)
             logger.info("KnowledgeAgent: periyodik yansıma tamamlandı")
@@ -139,8 +139,8 @@ class KnowledgeAgent(BaseAgent):
         summary = kb.get_summary()
         try:
             analysis = await self.ask(
-                f"Kampanya verileri:\n{summary}\n\n"
-                f"3 cümle özet + 1 somut öneri."
+                f"Campaign data:\n{summary}\n\n"
+                f"3-sentence summary + 1 concrete recommendation."
             )
             return f"{summary}\n\n💡 <b>Analiz:</b>\n{analysis}"
         except Exception:

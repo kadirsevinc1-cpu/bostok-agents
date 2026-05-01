@@ -282,8 +282,8 @@ class ManagerAgent(BaseAgent):
             note = msg.content
             self.save_observation(f"Kullanici {note_type}: {note}", importance=9.0)
             response = await self.ask(
-                f"Kullanicidan '{note_type}' notu geldi: {note}\n"
-                "Bu notu mevcut is akisina nasil yansitacagini acikla ve gerekli adimi at."
+                f"A '{note_type}' note received from the user: {note}\n"
+                "Explain how to incorporate this into the current workflow and take the necessary action."
             )
             await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY, response)
 

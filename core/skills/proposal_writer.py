@@ -65,64 +65,66 @@ async def write_proposal(
     s_name, s_price, s_desc = pricing["standard"]
     p_name, p_price, p_desc = pricing["premium"]
 
-    lang_names = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca",
-                  "nl": "Flemenkçe", "fr": "Fransızca"}
-    lang_name = lang_names.get(lang, "İngilizce")
+    lang_names = {"tr": "Turkish", "en": "English", "de": "German",
+                  "nl": "Dutch", "fr": "French", "es": "Spanish",
+                  "pt": "Portuguese", "it": "Italian", "pl": "Polish",
+                  "ar": "Arabic", "sv": "Swedish"}
+    lang_name = lang_names.get(lang, "English")
 
     situation = (
-        "mevcut web sitelerini modernize etmek" if has_website
-        else "sıfırdan profesyonel bir web sitesi kurmak"
+        "modernize their existing website" if has_website
+        else "build a professional website from scratch"
     )
 
-    demo_line = f"\nDemo siteniz: {demo_url}" if demo_url else ""
+    demo_line = f"\nDemo site: {demo_url}" if demo_url else ""
 
     from config import settings as _cfg
     if _cfg.calendly_url:
         calendly_line = (
-            f"\nRandevu: Paketi 15 dakikalik ucretsiz gorüsmede konusabilirsiniz: {_cfg.calendly_url}"
+            f"\nBook a call: discuss the package in a free 15-min call: {_cfg.calendly_url}"
         )
     else:
         calendly_line = ""
 
     prompt = f"""
-{lang_name} dilinde "{lead_name}" isletmesine ({sector}, {location}) kisisellestirilmis web tasarim teklif maili yaz.
+Write a personalized web design proposal email in {lang_name} for the business "{lead_name}" ({sector}, {location}).
 
-Musteri mesaji: {reply_body[:300]}
+Client message: {reply_body[:300]}
 
-Durum: {situation}
-Onerilmis paket: {pkg_name} — {pkg_price} ({pkg_desc})
+Situation: {situation}
+Recommended package: {pkg_name} — {pkg_price} ({pkg_desc})
 {demo_line}{calendly_line}
 
-Tum paketleri listele:
+List all packages:
 - {b_name}: {b_price} — {b_desc}
 - {s_name}: {s_price} — {s_desc}
 - {p_name}: {p_price} — {p_desc}
 
-Kuralllar:
-- Musterinin mesajina dogrudan yanit ver, onceki yazismaya atif yap
-- Onerilmis paketi one cikar ama digerleri de sunulabilir
-- Teslimat suresi: Basic 5 is gunu, Standard 10 is gunu, Premium 15 is gunu
-- %20 pesinat, teslimatta kalan odeme
-- Profesyonel ve samimi ton — satis baskisi yapma
-- Max 200 kelime, imza YAZMA
-- Sadece mail metnini yaz, konu satiri ayri:
-KONU: [konu satiri]
-MAIL:
-[mail metni]
+Rules:
+- Reply directly to the client's message, reference the previous exchange
+- Highlight the recommended package but mention others are available
+- Delivery: Basic 5 business days, Standard 10 business days, Premium 15 business days
+- 20% upfront, remainder on delivery
+- Professional and genuine tone — no hard sell
+- Max 200 words, do NOT write a sign-off
+- Write only the email body with subject line on a separate line:
+SUBJECT: [subject line]
+BODY:
+[email body]
 """
 
     try:
         result = await router.chat([{"role": "user", "content": prompt}], max_tokens=500)
-        subject = f"Teklif: Web Sitesi — {lead_name}"
+        subject = f"Proposal: Website — {lead_name}"
         body = result
 
         lines = result.strip().splitlines()
         mail_start = None
         for i, line in enumerate(lines):
             u = line.strip().upper()
-            if u.startswith("KONU:"):
-                subject = line.strip()[5:].strip()
-            elif u.startswith("MAIL:"):
+            if u.startswith("SUBJECT:"):
+                subject = line.strip()[8:].strip()
+            elif u.startswith("BODY:"):
                 mail_start = i + 1
 
         if mail_start is not None:

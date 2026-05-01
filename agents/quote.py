@@ -51,16 +51,16 @@ class QuoteAgent(BaseAgent):
         est      = estimate_price(region, stype, sector, features)
 
         price_hint = (
-            f"[Fiyat Hesaplama — Formül Tahmini]\n"
+            f"[Pricing Calculation — Formula Estimate]\n"
             f"{est.summary()}\n"
-            f"(Bu tahmini referans al, brief'e göre ince ayar yap)"
+            f"(Use this estimate as a reference, adjust based on brief details)"
         )
 
         quote = await self.ask(
-            f"Proje brief'i:\n{msg.content}\n\n"
+            f"Project brief:\n{msg.content}\n\n"
             f"{price_hint}\n\n"
-            "Bu proje için detaylı, profesyonel teklif hazırla. "
-            "Formül tahminini rehber olarak kullan ama brief'teki detaylara göre gerekirse ayarla."
+            "Prepare a detailed, professional quote for this project. "
+            "Use the formula estimate as a guide but adjust based on the specific brief details."
         )
 
         self.save_observation(f"Teklif: {quote[:200]}", importance=8.5)
