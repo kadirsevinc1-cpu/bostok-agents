@@ -146,22 +146,31 @@ async def find_leads(sector: str, location: str, api_key: str = "") -> list[Lead
         logger.info(f"Leads cache hit: {len(cached)} lead — {sector}/{location}")
         return cached
 
+    from core.location_expander import expand_location
+    sub_locations = expand_location(location)
+
     leads: list[Lead] = []
+    seen_names: set[str] = set()
 
-    # Kaynak 1: Google Maps API
     if api_key:
-        maps_leads = await _maps_leads(sector, location, api_key)
-        leads.extend(maps_leads)
+        for sub_loc in sub_locations:
+            sub_leads = await _maps_leads(sector, sub_loc, api_key)
+            for lead in sub_leads:
+                key = lead.name.lower().strip()
+                if key not in seen_names:
+                    seen_names.add(key)
+                    leads.append(lead)
+        if len(sub_locations) > 1:
+            logger.info(f"Ilce aramasi: {len(sub_locations)} bolge -> {len(leads)} benzersiz lead ({sector}/{location})")
 
-    # Kaynak 2: Dizin scraper (her zaman çalışır — Maps API olmasa bile)
     try:
         from integrations.chamber_scraper import scrape_directory
         chamber_leads = await scrape_directory(sector, location)
-        existing_names = {l.name.lower() for l in leads}
         for cl in chamber_leads:
-            if cl.name.lower() not in existing_names:
+            key = cl.name.lower().strip()
+            if key not in seen_names:
+                seen_names.add(key)
                 leads.append(cl)
-                existing_names.add(cl.name.lower())
         if chamber_leads:
             logger.info(f"Dizin scraper {len(chamber_leads)} firma ekledi — toplam: {len(leads)}")
     except Exception as e:
@@ -191,7 +200,20 @@ async def _maps_leads(sector: str, location: str, api_key: str) -> list[Lead]:
                 logger.warning(f"Maps API durumu: {status}")
                 return []
 
-            places = data.get("results", [])[:15]
+            places = list(data.get("results", []))
+
+            # Pagination — 2. sayfa (Maps API 2 sn bekleme zorunlu)
+            next_token = data.get("next_page_token")
+            if next_token and len(places) >= 20:
+                await asyncio.sleep(2)
+                async with session.get(
+                    MAPS_SEARCH_URL,
+                    params={"pagetoken": next_token, "key": api_key},
+                    timeout=aiohttp.ClientTimeout(total=15),
+                ) as resp2:
+                    data2 = await resp2.json()
+                places.extend(data2.get("results", []))
+            places = places[:40]
 
             # 2. Her yer için Place Details — website + telefon al
             for place in places:

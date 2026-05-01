@@ -267,4 +267,113 @@ CAMPAIGNS = [
     {"sector": "dental clinic",    "locations": ["Singapore", "Kuala Lumpur", "Bangkok"],                         "langs": ["en"]},
     {"sector": "beauty salon",     "locations": ["Singapore", "Kuala Lumpur", "Bangkok"],                         "langs": ["en"]},
     {"sector": "manufacturing",    "locations": ["Singapore", "Kuala Lumpur", "Jakarta", "Bangkok"],              "langs": ["en"]},
+
+    # ── Türkiye — Eksik İller ──────────────────────────────────────
+    {"sector": "restoran",       "locations": ["Balikesir", "Manisa", "Aydin", "Kutahya", "Afyon", "Usak", "Isparta", "Burdur", "Bilecik", "Yalova", "Karaman", "Nevsehir", "Aksaray", "Yozgat", "Kirikkale", "Karabuk", "Zonguldak", "Bartin", "Kastamonu", "Sinop", "Bolu", "Giresun", "Gumushane", "Bayburt", "Erzincan", "Tunceli", "Bingol", "Mus", "Bitlis", "Siirt", "Batman", "Sirnak", "Agri", "Kars", "Ardahan", "Igdir", "Hakkari"], "langs": ["tr"]},
+    {"sector": "kafe",           "locations": ["Balikesir", "Manisa", "Aydin", "Kutahya", "Afyon", "Isparta", "Karaman", "Nevsehir", "Karabuk", "Zonguldak", "Kastamonu", "Bolu", "Giresun"], "langs": ["tr"]},
+    {"sector": "dis hekimi",     "locations": ["Balikesir", "Manisa", "Aydin", "Kutahya", "Afyon", "Usak", "Isparta", "Burdur", "Bilecik", "Yalova", "Karabuk", "Zonguldak", "Kastamonu", "Bolu", "Giresun"], "langs": ["tr"]},
+    {"sector": "avukat",         "locations": ["Balikesir", "Manisa", "Aydin", "Isparta", "Yalova", "Karabuk", "Zonguldak", "Bolu", "Giresun"], "langs": ["tr"]},
+    {"sector": "guzellik salonu","locations": ["Balikesir", "Manisa", "Aydin", "Kutahya", "Afyon", "Isparta", "Yalova", "Zonguldak", "Bolu", "Giresun"], "langs": ["tr"]},
+    {"sector": "oto servis",     "locations": ["Balikesir", "Manisa", "Kutahya", "Afyon", "Bilecik", "Karaman", "Karabuk", "Zonguldak", "Bolu", "Giresun"], "langs": ["tr"]},
+
+    # ── ABD ─────────────────────────────────────────────────────
+    {"sector": "restaurant",     "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Philadelphia", "San Antonio", "San Diego", "Dallas", "San Jose", "Austin", "Jacksonville", "Fort Worth", "Columbus", "Charlotte", "Indianapolis", "San Francisco", "Seattle", "Denver", "Nashville", "Las Vegas", "Louisville", "Memphis", "Portland", "Baltimore", "Milwaukee", "Albuquerque", "Fresno", "Atlanta", "Miami", "Boston"], "langs": ["en"]},
+    {"sector": "dental clinic",  "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Dallas", "San Francisco", "Seattle", "Denver", "Atlanta", "Miami", "Boston", "Las Vegas", "Nashville", "Portland"], "langs": ["en"]},
+    {"sector": "beauty salon",   "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Miami", "Atlanta", "Dallas", "Phoenix", "San Francisco", "Seattle", "Denver", "Boston", "Las Vegas"], "langs": ["en"]},
+    {"sector": "gym",            "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Miami", "Dallas", "San Francisco", "Seattle", "Denver", "Atlanta", "Phoenix", "Boston"], "langs": ["en"]},
+    {"sector": "law firm",       "locations": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix", "Dallas", "Miami", "Atlanta", "San Francisco", "Boston", "Seattle", "Denver"], "langs": ["en"]},
+    {"sector": "real estate",    "locations": ["New York", "Los Angeles", "Miami", "Chicago", "Dallas", "Houston", "San Francisco", "Las Vegas", "Phoenix", "Atlanta", "Seattle", "Denver"], "langs": ["en"]},
+    {"sector": "accounting firm","locations": ["New York", "Los Angeles", "Chicago", "Houston", "Miami", "Dallas", "Atlanta", "Phoenix", "San Francisco", "Seattle"], "langs": ["en"]},
+
+    # ── İngiltere ─────────────────────────────────────────────────
+    {"sector": "restaurant",     "locations": ["London", "Manchester", "Birmingham", "Leeds", "Glasgow", "Liverpool", "Sheffield", "Bristol", "Newcastle", "Nottingham", "Leicester", "Edinburgh", "Cardiff", "Oxford", "Cambridge", "Brighton", "Portsmouth", "Southampton", "Reading", "Coventry", "Belfast"], "langs": ["en"]},
+    {"sector": "dental clinic",  "locations": ["London", "Manchester", "Birmingham", "Leeds", "Liverpool", "Bristol", "Newcastle", "Edinburgh", "Cardiff", "Leicester", "Nottingham"], "langs": ["en"]},
+    {"sector": "beauty salon",   "locations": ["London", "Manchester", "Birmingham", "Leeds", "Liverpool", "Bristol", "Newcastle", "Edinburgh", "Cardiff"], "langs": ["en"]},
+    {"sector": "accounting firm","locations": ["London", "Manchester", "Birmingham", "Leeds", "Liverpool", "Bristol", "Edinburgh"], "langs": ["en"]},
+
+    # ── Kanada ────────────────────────────────────────────────────
+    {"sector": "restaurant",     "locations": ["Toronto", "Vancouver", "Montreal", "Calgary", "Edmonton", "Ottawa", "Winnipeg", "Quebec City", "Hamilton", "Kitchener", "London Ontario", "Halifax", "Victoria", "Saskatoon", "Regina"], "langs": ["en"]},
+    {"sector": "dental clinic",  "locations": ["Toronto", "Vancouver", "Calgary", "Edmonton", "Ottawa", "Montreal", "Winnipeg", "Halifax"], "langs": ["en"]},
+    {"sector": "beauty salon",   "locations": ["Toronto", "Vancouver", "Calgary", "Edmonton", "Ottawa", "Montreal"], "langs": ["en"]},
+
+    # ── Avustralya ────────────────────────────────────────────────
+    {"sector": "restaurant",     "locations": ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Gold Coast", "Newcastle", "Canberra", "Wollongong", "Hobart", "Geelong", "Townsville", "Cairns", "Darwin"], "langs": ["en"]},
+    {"sector": "dental clinic",  "locations": ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Gold Coast", "Canberra", "Hobart"], "langs": ["en"]},
+    {"sector": "beauty salon",   "locations": ["Sydney", "Melbourne", "Brisbane", "Perth", "Adelaide", "Gold Coast"], "langs": ["en"]},
+
+    # ── İrlanda / Yeni Zelanda ────────────────────────────────────
+    {"sector": "restaurant",     "locations": ["Dublin", "Cork", "Limerick", "Galway", "Waterford"], "langs": ["en"]},
+    {"sector": "restaurant",     "locations": ["Auckland", "Wellington", "Christchurch", "Hamilton", "Tauranga", "Dunedin"], "langs": ["en"]},
+
+    # ── Portekiz ──────────────────────────────────────────────────
+    {"sector": "restaurante",    "locations": ["Lisbon", "Porto", "Braga", "Coimbra", "Faro", "Setubal", "Funchal"], "langs": ["pt"]},
+    {"sector": "clinica dentaria","locations": ["Lisbon", "Porto", "Braga", "Coimbra", "Faro"], "langs": ["pt"]},
+    {"sector": "salao de beleza","locations": ["Lisbon", "Porto", "Braga", "Coimbra"], "langs": ["pt"]},
+
+    # ── İspanya ───────────────────────────────────────────────────
+    {"sector": "restaurante",    "locations": ["Madrid", "Barcelona", "Valencia", "Seville", "Zaragoza", "Malaga", "Murcia", "Palma", "Las Palmas", "Bilbao", "Alicante", "Cordoba", "Valladolid", "Vigo", "Granada", "Alicante", "Santander", "Pamplona", "San Sebastian", "Salamanca"], "langs": ["es"]},
+    {"sector": "clinica dental", "locations": ["Madrid", "Barcelona", "Valencia", "Seville", "Malaga", "Bilbao", "Alicante", "Murcia", "Zaragoza", "Palma"], "langs": ["es"]},
+    {"sector": "salon de belleza","locations": ["Madrid", "Barcelona", "Valencia", "Seville", "Malaga", "Bilbao", "Zaragoza"], "langs": ["es"]},
+    {"sector": "gimnasio",       "locations": ["Madrid", "Barcelona", "Valencia", "Seville", "Bilbao", "Malaga"], "langs": ["es"]},
+
+    # ── İtalya ────────────────────────────────────────────────────
+    {"sector": "ristorante",     "locations": ["Rome", "Milan", "Naples", "Turin", "Palermo", "Genoa", "Bologna", "Florence", "Bari", "Venice", "Messina", "Verona", "Padua", "Trieste", "Catania", "Brescia", "Reggio Calabria", "Modena", "Livorno", "Cagliari"], "langs": ["it"]},
+    {"sector": "studio dentistico","locations": ["Rome", "Milan", "Naples", "Turin", "Florence", "Bologna", "Venice", "Genoa", "Bari", "Palermo"], "langs": ["it"]},
+    {"sector": "parrucchiere",   "locations": ["Rome", "Milan", "Naples", "Turin", "Florence", "Bologna", "Venice"], "langs": ["it"]},
+
+    # ── Brezilya ──────────────────────────────────────────────────
+    {"sector": "restaurante",    "locations": ["Sao Paulo", "Rio de Janeiro", "Belo Horizonte", "Brasilia", "Salvador", "Fortaleza", "Manaus", "Curitiba", "Recife", "Porto Alegre", "Belem", "Goiania", "Campinas", "Sao Luis", "Natal", "Teresina", "Campo Grande", "Maceio", "Joao Pessoa", "Florianopolis"], "langs": ["pt"]},
+    {"sector": "clinica odontologica","locations": ["Sao Paulo", "Rio de Janeiro", "Belo Horizonte", "Brasilia", "Salvador", "Curitiba", "Porto Alegre", "Fortaleza", "Recife"], "langs": ["pt"]},
+    {"sector": "salao de beleza","locations": ["Sao Paulo", "Rio de Janeiro", "Belo Horizonte", "Brasilia", "Curitiba", "Porto Alegre", "Salvador"], "langs": ["pt"]},
+    {"sector": "academia",       "locations": ["Sao Paulo", "Rio de Janeiro", "Belo Horizonte", "Brasilia", "Curitiba", "Porto Alegre"], "langs": ["pt"]},
+
+    # ── Meksika ───────────────────────────────────────────────────
+    {"sector": "restaurante",    "locations": ["Mexico City", "Guadalajara", "Monterrey", "Puebla", "Tijuana", "Leon", "Juarez", "Torreon", "Queretaro", "Merida", "San Luis Potosi", "Aguascalientes", "Culiacan", "Hermosillo", "Cancun", "Mexicali", "Acapulco", "Morelia", "Veracruz"], "langs": ["es"]},
+    {"sector": "clinica dental", "locations": ["Mexico City", "Guadalajara", "Monterrey", "Puebla", "Tijuana", "Queretaro", "Merida", "Cancun"], "langs": ["es"]},
+    {"sector": "salon de belleza","locations": ["Mexico City", "Guadalajara", "Monterrey", "Puebla", "Tijuana", "Queretaro", "Merida"], "langs": ["es"]},
+
+    # ── Kolombiya / Arjantin / Şili / Peru ────────────────────────
+    {"sector": "restaurante",    "locations": ["Bogota", "Medellin", "Cali", "Barranquilla", "Cartagena", "Bucaramanga", "Pereira", "Santa Marta", "Manizales", "Ibague"], "langs": ["es"]},
+    {"sector": "restaurante",    "locations": ["Buenos Aires", "Cordoba", "Rosario", "Mendoza", "La Plata", "Tucuman", "Mar del Plata", "Salta", "Santa Fe", "San Juan"], "langs": ["es"]},
+    {"sector": "restaurante",    "locations": ["Santiago", "Valparaiso", "Concepcion", "La Serena", "Antofagasta", "Temuco", "Rancagua", "Talca", "Arica"], "langs": ["es"]},
+    {"sector": "restaurante",    "locations": ["Lima", "Arequipa", "Trujillo", "Chiclayo", "Piura", "Iquitos", "Cusco"], "langs": ["es"]},
+
+    # ── Güneydoğu Asya ────────────────────────────────────────────
+    {"sector": "restaurant",     "locations": ["Bangkok", "Chiang Mai", "Phuket", "Pattaya", "Hua Hin", "Krabi", "Koh Samui"], "langs": ["en"]},
+    {"sector": "dental clinic",  "locations": ["Bangkok", "Chiang Mai", "Phuket"], "langs": ["en"]},
+    {"sector": "restaurant",     "locations": ["Kuala Lumpur", "George Town", "Johor Bahru", "Ipoh", "Shah Alam", "Petaling Jaya", "Kota Kinabalu", "Kuching"], "langs": ["en"]},
+    {"sector": "restaurant",     "locations": ["Singapore"], "langs": ["en"]},
+    {"sector": "restaurant",     "locations": ["Manila", "Cebu City", "Davao", "Quezon City", "Makati", "Pasig", "Taguig", "Antipolo", "Cagayan de Oro", "Zamboanga"], "langs": ["en"]},
+    {"sector": "dental clinic",  "locations": ["Manila", "Cebu City", "Makati"], "langs": ["en"]},
+    {"sector": "restaurant",     "locations": ["Jakarta", "Surabaya", "Bandung", "Medan", "Bekasi", "Denpasar", "Makassar", "Semarang", "Palembang", "Tangerang"], "langs": ["en"]},
+    {"sector": "restaurant",     "locations": ["Ho Chi Minh City", "Hanoi", "Da Nang", "Hoi An", "Nha Trang", "Hue", "Can Tho"], "langs": ["en"]},
+    {"sector": "dental clinic",  "locations": ["Ho Chi Minh City", "Hanoi", "Da Nang"], "langs": ["en"]},
+
+    # ── Hindistan ─────────────────────────────────────────────────
+    {"sector": "restaurant",     "locations": ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Pune", "Ahmedabad", "Jaipur", "Surat", "Lucknow", "Kanpur", "Nagpur", "Indore", "Bhopal", "Patna", "Vadodara", "Goa", "Kochi", "Coimbatore", "Agra", "Visakhapatnam", "Ludhiana", "Madurai", "Nashik", "Faridabad", "Meerut", "Rajkot", "Varanasi", "Srinagar"], "langs": ["en"]},
+    {"sector": "dental clinic",  "locations": ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Pune", "Ahmedabad", "Kochi", "Kolkata", "Jaipur"], "langs": ["en"]},
+    {"sector": "beauty salon",   "locations": ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Pune", "Ahmedabad", "Kolkata", "Jaipur"], "langs": ["en"]},
+    {"sector": "gym",            "locations": ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Pune", "Ahmedabad"], "langs": ["en"]},
+
+    # ── Orta Doğu — Genişletilmiş ─────────────────────────────────
+    {"sector": "restaurant",     "locations": ["Kuwait City", "Doha", "Manama", "Muscat", "Amman", "Beirut", "Baghdad", "Cairo", "Alexandria", "Riyadh", "Jeddah", "Dammam", "Mecca", "Medina", "Khobar", "Tabuk", "Yanbu", "Abha", "Najran"], "langs": ["en"]},
+    {"sector": "dental clinic",  "locations": ["Dubai", "Abu Dhabi", "Kuwait City", "Doha", "Muscat", "Amman", "Riyadh", "Jeddah", "Sharjah", "Ajman"], "langs": ["en"]},
+    {"sector": "beauty salon",   "locations": ["Dubai", "Abu Dhabi", "Kuwait City", "Doha", "Muscat", "Riyadh", "Jeddah"], "langs": ["en"]},
+
+    # ── Afrika ────────────────────────────────────────────────────
+    {"sector": "restaurant",     "locations": ["Lagos", "Abuja", "Ibadan", "Kano", "Port Harcourt", "Nairobi", "Mombasa", "Dar es Salaam", "Accra", "Cape Town", "Johannesburg", "Durban", "Pretoria", "Casablanca", "Marrakech", "Tunis", "Algiers", "Addis Ababa", "Kampala", "Kigali", "Dakar", "Abidjan", "Douala"], "langs": ["en"]},
+    {"sector": "dental clinic",  "locations": ["Lagos", "Nairobi", "Cape Town", "Johannesburg", "Accra", "Casablanca", "Abuja", "Dar es Salaam"], "langs": ["en"]},
+
+    # ── İskandinav ────────────────────────────────────────────────
+    {"sector": "restaurant",     "locations": ["Stockholm", "Gothenburg", "Malmo", "Uppsala", "Vasteras", "Orebro", "Oslo", "Bergen", "Stavanger", "Trondheim", "Drammen", "Copenhagen", "Aarhus", "Odense", "Aalborg", "Helsinki", "Tampere", "Turku", "Oulu"], "langs": ["en"]},
+    {"sector": "dental clinic",  "locations": ["Stockholm", "Gothenburg", "Oslo", "Bergen", "Copenhagen", "Helsinki", "Tampere"], "langs": ["en"]},
+
+    # ── Doğu Avrupa ───────────────────────────────────────────────
+    {"sector": "restaurant",     "locations": ["Prague", "Brno", "Ostrava", "Pilsen", "Bucharest", "Cluj-Napoca", "Timisoara", "Iasi", "Budapest", "Debrecen", "Miskolc", "Pecs", "Sofia", "Plovdiv", "Varna", "Burgas", "Belgrade", "Novi Sad", "Zagreb", "Split", "Dubrovnik", "Rijeka", "Sarajevo", "Ljubljana", "Maribor", "Bratislava", "Kosice", "Warsaw", "Krakow", "Gdansk", "Wroclaw", "Poznan", "Lodz", "Vilnius", "Riga", "Tallinn"], "langs": ["en"]},
+    {"sector": "dental clinic",  "locations": ["Prague", "Bucharest", "Budapest", "Warsaw", "Belgrade", "Sofia", "Zagreb", "Bratislava", "Vilnius", "Riga", "Tallinn"], "langs": ["en"]},
+
+    # ── Japonya / Güney Kore / Çin ────────────────────────────────
+    {"sector": "restaurant",     "locations": ["Tokyo", "Osaka", "Yokohama", "Nagoya", "Sapporo", "Fukuoka", "Kobe", "Kyoto", "Kawasaki", "Saitama", "Hiroshima", "Sendai", "Kitakyushu", "Chiba"], "langs": ["en"]},
+    {"sector": "restaurant",     "locations": ["Seoul", "Busan", "Incheon", "Daegu", "Daejeon", "Gwangju", "Suwon", "Ulsan", "Changwon", "Goyang"], "langs": ["en"]},
+    {"sector": "restaurant",     "locations": ["Shanghai", "Beijing", "Shenzhen", "Guangzhou", "Chengdu", "Hangzhou", "Wuhan", "Chongqing", "Hong Kong", "Macau", "Nanjing", "Tianjin", "Xi'an", "Suzhou"], "langs": ["en"]},
 ]

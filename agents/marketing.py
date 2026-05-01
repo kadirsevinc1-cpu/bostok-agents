@@ -25,7 +25,12 @@ Rules:
 
 SYSTEM = _build_system()
 
-LANG_NAMES = {"tr": "Türkçe", "en": "İngilizce", "de": "Almanca", "nl": "Flemenkçe", "fr": "Fransızca"}
+LANG_NAMES = {
+    "tr": "Turkish", "en": "English", "de": "German",
+    "nl": "Dutch",   "fr": "French",  "es": "Spanish",
+    "pt": "Portuguese", "it": "Italian", "pl": "Polish",
+    "ar": "Arabic",  "sv": "Swedish",
+}
 
 # Her dil için doğru kapanış ifadesi
 SIGNATURES = {
@@ -34,15 +39,27 @@ SIGNATURES = {
     "de": "\n\nMit freundlichen Grüßen,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
     "nl": "\n\nMet vriendelijke groeten,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
     "fr": "\n\nCordialement,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "es": "\n\nAtentamente,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "pt": "\n\nAtenciosamente,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "it": "\n\nCordiali saluti,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "pl": "\n\nZ powazaniem,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "ar": "\n\nMaa al-tahiyya,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "sv": "\n\nMed vanliga halsningar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
 }
 
-# Demo link için dile göre hazır cümle (model "çevir" demek yerine direkt kullanır)
+# Demo link için dile göre hazır cümle
 _DEMO_PHRASES = {
     "tr": ("Sizin için özel bir demo hazırladım", "Nasıl görünebileceğinizi buradan görebilirsiniz"),
     "en": ("I've prepared a demo site just for you", "See how your website could look"),
     "de": ("Ich habe eine Demo speziell für Sie vorbereitet", "Sehen Sie hier, wie Ihre Website aussehen könnte"),
     "nl": ("Ik heb een demo speciaal voor u gemaakt", "Zie hier hoe uw website eruit zou kunnen zien"),
     "fr": ("J'ai préparé une démo spécialement pour vous", "Voyez ici comment votre site pourrait ressembler"),
+    "es": ("He preparado una demo especial para usted", "Vea cómo podría verse su sitio web"),
+    "pt": ("Preparei uma demo especial para você", "Veja como seu site poderia ficar"),
+    "it": ("Ho preparato una demo appositamente per voi", "Vedete come potrebbe apparire il vostro sito"),
+    "pl": ("Przygotowalem demo specjalnie dla panstwa", "Zobaczcie jak mogloby wygladac panstwa strona"),
+    "ar": ("I've prepared a demo site just for you", "See how your website could look"),
+    "sv": ("Jag har forberett en demo speciellt for er", "Se hur er webbplats kan se ut"),
 }
 
 # Calendly için dile göre hazır cümle
@@ -52,6 +69,12 @@ _CALENDLY_PHRASES = {
     "de": "Kostenloses 15-Minuten-Gespräch vereinbaren",
     "nl": "Plan een gratis gesprek van 15 minuten",
     "fr": "Planifier un appel gratuit de 15 minutes",
+    "es": "Agende una llamada gratuita de 15 minutos",
+    "pt": "Agende uma chamada gratuita de 15 minutos",
+    "it": "Prenota una chiamata gratuita di 15 minuti",
+    "pl": "Zaplanuj bezplatna rozmowe 15-minutowa",
+    "ar": "Schedule a free 15-minute call",
+    "sv": "Boka ett gratis 15-minuterssamtal",
 }
 
 # Hizmet özeti her dilde hazır
@@ -61,6 +84,12 @@ _SERVICE_LINES = {
     "de": "Webdesign, SEO-Optimierung, E-Commerce-Lösungen und Corporate-Identity-Services auf bostok.dev",
     "nl": "Webdesign, SEO-optimalisatie, e-commerceoplossingen en huisstijldiensten op bostok.dev",
     "fr": "Conception web, optimisation SEO, solutions e-commerce et identité visuelle sur bostok.dev",
+    "es": "Diseño web, optimización SEO, soluciones e-commerce e identidad corporativa en bostok.dev",
+    "pt": "Design web, otimizacao SEO, solucoes e-commerce e identidade corporativa em bostok.dev",
+    "it": "Web design, ottimizzazione SEO, soluzioni e-commerce e identita aziendale su bostok.dev",
+    "pl": "Projektowanie stron, SEO, rozwiazania e-commerce i identyfikacja wizualna w bostok.dev",
+    "ar": "Web design, SEO optimization, e-commerce solutions and branding services at bostok.dev",
+    "sv": "Webbdesign, SEO-optimering, e-handelslosningar och varumarke pa bostok.dev",
 }
 
 import re as _re

@@ -29,6 +29,12 @@ SIGNATURES = {
     "de": "\n\nMit freundlichen Grüßen,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
     "nl": "\n\nMet vriendelijke groeten,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
     "fr": "\n\nCordialement,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "es": "\n\nAtentamente,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "pt": "\n\nAtenciosamente,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "it": "\n\nCordiali saluti,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "pl": "\n\nZ powazaniem,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "ar": "\n\nMaa al-tahiyya,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
+    "sv": "\n\nMed vanliga halsningar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
 }
 
 
@@ -150,7 +156,9 @@ class FollowupAgent(BaseAgent):
     def _lang_name(self, lang: str) -> str:
         return {
             "tr": "Turkish", "en": "English", "de": "German",
-            "nl": "Dutch",   "fr": "French",
+            "nl": "Dutch",   "fr": "French",  "es": "Spanish",
+            "pt": "Portuguese", "it": "Italian", "pl": "Polish",
+            "ar": "Arabic",  "sv": "Swedish",
         }.get(lang, "English")
 
     async def _send_followup(self, gmail, to: str, info: dict, original_msg_id: str, stage: int) -> bool:
