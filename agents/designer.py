@@ -64,7 +64,19 @@ Design guide must include:
    - CTA button copy and style
    - Any background treatment (overlay, pattern, image)
 
-5. LAYOUT & SECTIONS — ordered list with purpose of each section
+5. LAYOUT & SECTIONS — use the blueprint for the site type, then adapt:
+
+   SECTION BLUEPRINTS (follow this order):
+   • SaaS / App:      Hero → Features → How It Works → Pricing → Testimonials → CTA → Footer
+   • Restaurant/Cafe: Hero → Menu Highlights → Gallery → About → Reservations → Location → Footer
+   • Service/Local:   Hero → Services → Why Us → Team → Testimonials → Contact → Footer
+   • Portfolio:       Hero → About → Projects → Skills → Process → Contact → Footer
+   • E-commerce:      Hero → Featured Products → Categories → Benefits → Reviews → Newsletter → Footer
+   • Medical/Clinic:  Hero → Services → Team → Process → FAQ → Appointment → Footer
+   • Hotel/Tourism:   Hero → Rooms/Tours → Gallery → Amenities → Testimonials → Booking → Footer
+   • Real Estate:     Hero → Featured Listings → Services → About → Testimonials → Contact → Footer
+
+   Every section must have a unique id matching a nav link. Never skip a section — adapt content instead.
 
 6. COMPONENTS — exact specs:
    - Nav: sticky/transparent? logo left or center? CTA button in nav?
