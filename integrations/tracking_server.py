@@ -347,15 +347,18 @@ async def sites_gallery():
 
 @app.get("/site/{folder:path}", response_class=HTMLResponse)
 async def serve_site(folder: str):
-    """Serve a generated site HTML file."""
-    for root in [Path("output/sites"), Path("output/demos")]:
-        candidate = root / folder
-        if candidate.is_file() and candidate.suffix == ".html":
-            return HTMLResponse(content=candidate.read_text(encoding="utf-8"))
-        # folder might be just the dir name — serve index.html
-        index = candidate / "index.html"
-        if index.exists():
-            return HTMLResponse(content=index.read_text(encoding="utf-8"))
+    """Serve a generated site. URL: /site/sites/{dir} or /site/demos/{dir}"""
+    parts = folder.split("/", 1)
+    if len(parts) < 2:
+        return HTMLResponse("<h2>Site bulunamadı</h2>", status_code=404)
+    root_name, sub = parts[0], parts[1]
+    root_map = {"sites": Path("output/sites"), "demos": Path("output/demos")}
+    root = root_map.get(root_name)
+    if not root:
+        return HTMLResponse("<h2>Site bulunamadı</h2>", status_code=404)
+    index = root / sub / "index.html"
+    if index.exists():
+        return HTMLResponse(content=index.read_text(encoding="utf-8"))
     return HTMLResponse("<h2>Site bulunamadı</h2>", status_code=404)
 
 
