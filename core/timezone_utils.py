@@ -230,8 +230,8 @@ def is_business_hours(location: str, utc_now: datetime.datetime | None = None) -
     """Hedef lokasyonun yerel saatine göre Pzt-Cum 09:00-18:00 mi?"""
     if utc_now is None:
         utc_now = datetime.datetime.utcnow()
-    if utc_now.weekday() >= 5:
-        return False
     offset = get_utc_offset(location)
-    local_hour = (utc_now.hour + offset) % 24
-    return 9 <= local_hour < 18
+    local_dt = utc_now + datetime.timedelta(hours=offset)
+    if local_dt.weekday() >= 5:   # lokasyonun YEREL günü (UTC değil)
+        return False
+    return 9 <= local_dt.hour < 18

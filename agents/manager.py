@@ -63,9 +63,10 @@ class ManagerAgent(BaseAgent):
     # ── Kampanya Scheduler ────────────────────────────────────────
 
     async def _campaign_scheduler(self):
-        """main.py'den taşındı — Manager kampanyaları kendisi yönetir."""
+        """Şu an mesai saatinde olan kampanyaları önceliklendir — bölge fark etmez."""
         from core.campaigns import CAMPAIGNS
         from core.campaign_state import is_exhausted
+        from core.timezone_utils import is_business_hours as _biz_hours
         import datetime as _dt
 
         await asyncio.sleep(50)  # Tüm agentler başlasın
@@ -73,13 +74,14 @@ class ManagerAgent(BaseAgent):
         campaign_idx = 0
         try:
             campaign_idx = int(_json.loads(_IDX_FILE.read_text(encoding="utf-8"))) if _IDX_FILE.exists() else 0
-            logger.info(f"Kampanya scheduler baslatildi — idx={campaign_idx} ({campaign_idx % len(CAMPAIGNS) + 1}/{len(CAMPAIGNS)})")
+            logger.info(f"Kampanya scheduler baslatildi — saved_idx={campaign_idx}")
         except Exception:
             logger.info("Kampanya scheduler baslatildi — idx=0")
 
         while self.running:
-            # Günlük limit sıfırlandı mı kontrol et
             _now = _dt.datetime.utcnow()
+
+            # Günlük limit sıfırla
             if _now.hour == 0 and self._mail_limit_hit_today:
                 self._mail_limit_hit_today = False
                 if self._marketing_paused:
@@ -89,9 +91,24 @@ class ManagerAgent(BaseAgent):
                 await asyncio.sleep(60)
                 continue
 
-            campaign = CAMPAIGNS[campaign_idx % len(CAMPAIGNS)]
+            # Şu an mesai saatinde olan lokasyonu bulunan kampanyaları topla
+            open_campaigns = []
+            for camp in CAMPAIGNS:
+                open_locs = [
+                    loc for loc in camp["locations"]
+                    if not is_exhausted(camp["sector"], loc) and _biz_hours(loc, _now)
+                ]
+                if open_locs:
+                    open_campaigns.append((camp, open_locs))
+
+            if not open_campaigns:
+                logger.debug("[Manager] Hic acik kampanya yok — 3 dk bekleniyor")
+                await asyncio.sleep(180)
+                continue
+
+            # Döngüsel seçim — campaign_idx tüm açık kampanyalar arasında döner
+            camp, open_locs = open_campaigns[campaign_idx % len(open_campaigns)]
             campaign_idx += 1
-            total = len(campaign["locations"])
 
             try:
                 _IDX_FILE.parent.mkdir(exist_ok=True)
@@ -100,47 +117,31 @@ class ManagerAgent(BaseAgent):
                 pass
 
             logger.info(
-                f"[Manager→Kampanya {campaign_idx}/{len(CAMPAIGNS)}] "
-                f"{campaign['sector'].upper()} — {total} lokasyon"
+                f"[Manager→Kampanya #{campaign_idx}] {camp['sector'].upper()} — "
+                f"{len(open_locs)} acik lokasyon "
+                f"({len(open_campaigns)} aktif kampanya havuzunda)"
             )
 
-            sent_count = 0
-            import datetime as _dt
-            from core.timezone_utils import is_business_hours as _biz_hours
-            _now = _dt.datetime.utcnow()
-
-            for loc_idx, location in enumerate(campaign["locations"], 1):
+            for loc_idx, location in enumerate(open_locs, 1):
                 if not self.running:
                     return
                 if self._marketing_paused:
                     break
-                if is_exhausted(campaign["sector"], location):
-                    logger.debug(f"  [{loc_idx}/{total}] Atlandi (tukendi): {campaign['sector']}/{location}")
-                    continue
-                # Mesai saati dışındaysa kuyruğa alma — döngüyü hızlı geç
-                if not _biz_hours(location, _now):
-                    logger.debug(f"  [{loc_idx}/{total}] Atlandi (mesai disi): {campaign['sector']}/{location}")
-                    continue
-
-                logger.info(f"  [{loc_idx}/{total}] Gonderiliyor: {campaign['sector']} — {location}")
+                logger.info(f"  [{loc_idx}/{len(open_locs)}] Gonderiliyor: {camp['sector']} — {location}")
                 await self.send(
                     AgentName.MARKETING, MessageType.TASK,
-                    f"{location}'daki {campaign['sector']} isletmelerine web sitesi teklifi hazirla",
+                    f"{location}'daki {camp['sector']} isletmelerine web sitesi teklifi hazirla",
                     {
-                        "sector": campaign["sector"],
+                        "sector": camp["sector"],
                         "location": location,
-                        "languages": campaign["langs"],
+                        "languages": camp["langs"],
                         "send_emails": True,
                     },
                 )
-                sent_count += 1
                 await asyncio.sleep(10)
 
-            if sent_count > 0:
-                logger.info(f"[Manager] {campaign['sector']} — {sent_count} lokasyon gonderildi, 10 dk bekleniyor")
-                await asyncio.sleep(600)
-            else:
-                await asyncio.sleep(2)
+            logger.info(f"[Manager] {camp['sector']} — {len(open_locs)} lokasyon gonderildi, 10 dk bekleniyor")
+            await asyncio.sleep(600)
 
     async def _pause_marketing(self, reason: str):
         if not self._marketing_paused:
