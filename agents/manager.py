@@ -253,8 +253,13 @@ class ManagerAgent(BaseAgent):
                                         f"❌ QA {self._qa_max_retries} denemede düzeltilemedi, deploy durduruldu:\n\n{result[:500]}")
                 else:
                     self._qa_retries = 0
+                    score = msg.metadata.get("score", 0)
+                    top_fixes = msg.metadata.get("top_fixes", [])
+                    score_line = f"📊 Skor: {score}/10" if score else ""
+                    fixes_line = "\n".join(f"• {f}" for f in top_fixes) if top_fixes else ""
+                    qa_summary = "\n".join(filter(None, [score_line, fixes_line]))
                     await self.send(AgentName.SYSTEM, MessageType.USER_NOTIFY,
-                                    f"QA tamamlandi, site yukleniyor...\n\n{result[:300]}")
+                                    f"✅ QA geçti, site yükleniyor...\n\n{qa_summary}")
                     await self.send(
                         AgentName.DEPLOY, MessageType.TASK,
                         result,

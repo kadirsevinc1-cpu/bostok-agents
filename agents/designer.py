@@ -69,14 +69,32 @@ Design guide must include:
    SECTION BLUEPRINTS (follow this order):
    • SaaS / App:      Hero → Features → How It Works → Pricing → Testimonials → CTA → Footer
    • Restaurant/Cafe: Hero → Menu Highlights → Gallery → About → Reservations → Location → Footer
+   • Bar / Nightclub: Hero → Atmosphere → Drinks Menu → Events → Gallery → Reservations → Footer
    • Service/Local:   Hero → Services → Why Us → Team → Testimonials → Contact → Footer
    • Portfolio:       Hero → About → Projects → Skills → Process → Contact → Footer
    • E-commerce:      Hero → Featured Products → Categories → Benefits → Reviews → Newsletter → Footer
    • Medical/Clinic:  Hero → Services → Team → Process → FAQ → Appointment → Footer
    • Hotel/Tourism:   Hero → Rooms/Tours → Gallery → Amenities → Testimonials → Booking → Footer
    • Real Estate:     Hero → Featured Listings → Services → About → Testimonials → Contact → Footer
+   • Law Firm:        Hero → Practice Areas → Why Us → Attorneys → Results/Stats → Consultation → Footer
+   • Auto/Car:        Hero → Inventory/Services → Why Us → Process → Reviews → Contact → Footer
+   • Education:       Hero → Programs → Benefits → Faculty → Success Stories → Enrollment → Footer
+   • Beauty/Spa:      Hero → Services → Gallery → Team → Packages → Booking → Footer
+   • Gym/Fitness:     Hero → Programs → Coaches → Pricing → Transformations → Trial → Footer
+   • Construction:    Hero → Services → Portfolio → Process → Team → Free Quote → Footer
+   • Dental:          Hero → Services → Technology → Team → Reviews → Appointment → Footer
+   • Accounting:      Hero → Services → Why Us → Process → Clients → Contact → Footer
+   • Insurance:       Hero → Coverage Types → Why Us → Process → Reviews → Quote → Footer
 
    Every section must have a unique id matching a nav link. Never skip a section — adapt content instead.
+
+8. CONVERSION OPTIMIZATION — mandatory on every site:
+   - Place the primary CTA button in the Hero AND in the nav bar
+   - Add a sticky "Book / Call / Quote" floating button on mobile (bottom-right)
+   - Social proof elements: star ratings, client count, years in business
+   - Trust badges near CTA: "Licensed", "Insured", "Free Consultation", "Same Day Response"
+   - Urgency/scarcity where appropriate: "Only 3 spots left this month"
+   - FAQ section or accordion addressing the top 3 objections customers have
 
 6. COMPONENTS — exact specs:
    - Nav: sticky/transparent? logo left or center? CTA button in nav?

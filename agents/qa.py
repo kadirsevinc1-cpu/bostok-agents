@@ -128,11 +128,31 @@ class QAAgent(BaseAgent):
 
         self.save_observation(f"QA raporu: {report[:150]}", importance=8.0)
 
-        has_critical = "❌" in report
+        has_critical = "❌ CRITICAL" in report or (report.count("❌") >= 2)
+        score = self._extract_score(report)
+        top_fixes = self._extract_top_fixes(report)
+
         metadata = {
             "file_path": file_path,
             "site_dir": msg.metadata.get("site_dir", ""),
             "project_name": msg.metadata.get("project_name", ""),
             "has_critical_errors": has_critical,
+            "score": score,
+            "top_fixes": top_fixes,
         }
         await self.send(AgentName.MANAGER, MessageType.RESULT, report, metadata)
+
+    @staticmethod
+    def _extract_score(report: str) -> int:
+        import re
+        m = re.search(r'Overall score[:\s]+(\d+)\s*/\s*10', report, re.IGNORECASE)
+        return int(m.group(1)) if m else 0
+
+    @staticmethod
+    def _extract_top_fixes(report: str) -> list[str]:
+        import re
+        m = re.search(r'Top 3 fixes[^\n]*\n((?:.+\n?){1,6})', report, re.IGNORECASE)
+        if not m:
+            return []
+        lines = [l.strip() for l in m.group(1).splitlines() if l.strip()]
+        return lines[:3]
