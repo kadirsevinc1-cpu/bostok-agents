@@ -145,14 +145,31 @@ class QAAgent(BaseAgent):
     @staticmethod
     def _extract_score(report: str) -> int:
         import re
-        m = re.search(r'Overall score[:\s]+(\d+)\s*/\s*10', report, re.IGNORECASE)
-        return int(m.group(1)) if m else 0
+        patterns = [
+            r'[Oo]verall\s+score[:\s]+(\d+)\s*/\s*10',
+            r'(\d+)\s*/\s*10',
+            r'(\d+)\s+out\s+of\s+10',
+            r'[Ss]core[:\s]+(\d+)',
+        ]
+        for pat in patterns:
+            m = re.search(pat, report)
+            if m:
+                val = int(m.group(1))
+                if 0 <= val <= 10:
+                    return val
+        return 0
 
     @staticmethod
     def _extract_top_fixes(report: str) -> list[str]:
         import re
-        m = re.search(r'Top 3 fixes[^\n]*\n((?:.+\n?){1,6})', report, re.IGNORECASE)
+        # LLM çeşitli başlıklar kullanabilir
+        m = re.search(
+            r'(?:Top \d+ fixes?|Fixes? needed|Önerilen düzeltmeler?)[^\n]*\n((?:[ \t]*[^\n]+\n?){1,8})',
+            report, re.IGNORECASE,
+        )
         if not m:
-            return []
+            # ❌ CRITICAL ile başlayan satırları topla
+            fixes = re.findall(r'❌[^\n]+', report)
+            return [f.strip() for f in fixes[:3]]
         lines = [l.strip() for l in m.group(1).splitlines() if l.strip()]
         return lines[:3]

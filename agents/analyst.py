@@ -45,10 +45,13 @@ class AnalystAgent(BaseAgent):
             + "Prepare a detailed project brief for this request."
         )
 
-        import re, uuid
-        name_match = re.search(r'Proje Ad[ıi]\s*[:\-]\s*(.+)', brief)
-        project_name = name_match.group(1).strip()[:40] if name_match else uuid.uuid4().hex[:8]
-        project_name = re.sub(r'[^\w\-]', '_', project_name)
+        import re, uuid, unicodedata
+        name_match = re.search(r'Proje Ad[ıi]\s*[:\-]\s*(.+)', brief, re.IGNORECASE)
+        raw_name = name_match.group(1).strip()[:40] if name_match else ""
+        # Unicode → ASCII (ş→s, ğ→g, ü→u ...) sonra dosya-güvenli slug
+        nfkd = unicodedata.normalize("NFKD", raw_name)
+        ascii_name = nfkd.encode("ascii", "ignore").decode("ascii")
+        project_name = re.sub(r'[^a-zA-Z0-9\-]', '_', ascii_name).strip('_') or uuid.uuid4().hex[:8]
 
         self.save_observation(f"Brief: {brief[:200]}", importance=8.0)
         await self.send(AgentName.MANAGER, MessageType.RESULT, brief,

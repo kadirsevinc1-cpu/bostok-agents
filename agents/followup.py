@@ -139,18 +139,32 @@ class FollowupAgent(BaseAgent):
 
     def _detect_lang(self, info: dict) -> str:
         """Lead bilgisinden dili tahmin et."""
-        lang = info.get("lang", "")
-        if lang:
-            return lang
+        lang = info.get("lang") or info.get("language") or info.get("languages", [""])[0] if isinstance(info.get("languages"), list) else info.get("languages", "")
+        if lang and len(lang) == 2:
+            return lang.lower()
         location = info.get("location", "").lower()
-        de_cities = {"berlin", "hamburg", "munich", "frankfurt", "cologne", "stuttgart",
-                     "dusseldorf", "vienna", "zurich", "bern", "graz"}
-        en_cities = {"london", "manchester", "birmingham", "new york", "los angeles",
-                     "chicago", "toronto", "sydney", "melbourne", "dubai", "amsterdam"}
-        if any(c in location for c in de_cities):
-            return "de"
-        if any(c in location for c in en_cities):
-            return "en"
+        _RULES = [
+            ({"berlin", "hamburg", "munich", "frankfurt", "cologne", "stuttgart",
+              "dusseldorf", "nuremberg", "vienna", "zurich", "bern", "graz",
+              "germany", "austria", "switzerland", "deutschland"}, "de"),
+            ({"london", "manchester", "birmingham", "glasgow", "edinburgh", "dublin",
+              "new york", "los angeles", "chicago", "houston", "miami", "boston",
+              "toronto", "vancouver", "montreal", "calgary",
+              "sydney", "melbourne", "brisbane", "perth",
+              "dubai", "abu dhabi", "doha", "singapore", "amsterdam",
+              "uk", "england", "ireland", "usa", "canada", "australia"}, "en"),
+            ({"paris", "lyon", "nice", "bordeaux", "marseille", "france"}, "fr"),
+            ({"madrid", "barcelona", "seville", "valencia", "spain"}, "es"),
+            ({"rome", "milan", "florence", "naples", "italy"}, "it"),
+            ({"rotterdam", "the hague", "netherlands", "belgium", "antwerp"}, "nl"),
+            ({"warsaw", "krakow", "gdansk", "wroclaw", "poland"}, "pl"),
+            ({"stockholm", "gothenburg", "oslo", "copenhagen", "helsinki"}, "sv"),
+            ({"riyadh", "jeddah", "mecca", "medina", "kuwait", "manama", "saudi"}, "ar"),
+            ({"sao paulo", "rio", "brasilia", "lisbon", "porto", "brazil", "portugal"}, "pt"),
+        ]
+        for keywords, lang_code in _RULES:
+            if any(kw in location for kw in keywords):
+                return lang_code
         return "tr"
 
     def _lang_name(self, lang: str) -> str:

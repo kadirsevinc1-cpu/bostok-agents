@@ -273,22 +273,28 @@ class DeveloperAgent(BaseAgent):
         await self.send(AgentName.MANAGER, MessageType.RESULT, result,
                        {"file_path": str(site_path), "project_name": project_name})
 
-    async def _fill_placeholders(self, html: str, context: str = "") -> str:
-        """If {{...}} placeholders remain, ask LLM to fill them and return fixed HTML."""
+    async def _fill_placeholders(self, html: str, context: str = "", _attempt: int = 1) -> str:
+        """If {{...}} placeholders remain, ask LLM to fill them. Max 2 attempts."""
         remaining = re.findall(r'\{\{[^}]+\}\}', html)
         if not remaining:
             return html
+        if _attempt > 2:
+            from loguru import logger
+            logger.warning(f"Placeholder doldurulamadi, {len(remaining)} tanesini sildim: {remaining[:5]}")
+            # Kalan placeholder'ları boş stringle temizle
+            return re.sub(r'\{\{[^}]+\}\}', '', html)
         from loguru import logger
-        logger.warning(f"Placeholder kaldı ({len(remaining)} adet): {remaining[:5]} — otomatik dolduruluyor")
+        logger.warning(f"Placeholder kaldı ({len(remaining)} adet, deneme {_attempt}/2): {remaining[:5]}")
         fixed = await self.ask(
             f"This HTML has unfilled placeholders: {', '.join(set(remaining))}\n"
             f"Context: {context}\n\n"
-            f"Replace every {'{{'} and {'}}'}  tag with realistic content. "
-            "Return the complete HTML with all placeholders filled. HTML code only."
+            f"Replace EVERY {'{{'} and {'}}'}  tag with realistic content. "
+            "Do NOT leave any placeholder. Return the complete HTML. HTML code only."
             f"\n\nHTML:\n{html[:7000]}"
         )
         result = self._extract_html(fixed)
-        return result if result else fixed
+        filled = result if result else fixed
+        return await self._fill_placeholders(filled, context, _attempt + 1)
 
     def _extract_html(self, text: str) -> str:
         # ```html ... ``` bloğunu çıkar

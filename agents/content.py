@@ -46,9 +46,19 @@ class ContentAgent(BaseAgent):
         content = await self.ask(
             f"Project brief:\n{msg.content}\n\n"
             + (f"{kb_ctx}\n\n" if kb_ctx else "")
-            + "Write all page content for this project. "
-            "Use clear headings and content sections for each page."
+            + "Write all page content for this project.\n"
+            "Requirements:\n"
+            "1. Clear headings and sections for each page (Home, About, Services, Contact)\n"
+            "2. Each page section: 1 H1 or H2 heading + 2-3 sentences + CTA\n"
+            "3. At the end, add a section called '=== SEO KEYWORDS ===' with:\n"
+            "   - Primary keyword (1-2 words, highest search intent)\n"
+            "   - Secondary keywords (3-5 phrases, long-tail)\n"
+            "   - Meta title (50-60 chars)\n"
+            "   - Meta description (140-160 chars)\n"
+            "   - Suggested URL slug\n"
+            "All keywords must be in the same language as the content."
         )
 
         self.save_observation(f"İçerik yazıldı: {content[:150]}", importance=7.0)
-        await self.send(AgentName.MANAGER, MessageType.RESULT, content)
+        await self.send(AgentName.MANAGER, MessageType.RESULT, content,
+                        {"sector": sector})
