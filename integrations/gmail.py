@@ -55,9 +55,12 @@ def load_bounced() -> set:
 
 class GmailSender:
     def __init__(self, user: str, app_password: str, daily_limit: int = 25,
-                 smtp_host: str = "smtp.gmail.com", smtp_port: int = 465, use_tls: bool = True):
+                 smtp_host: str = "smtp.gmail.com", smtp_port: int = 465, use_tls: bool = True,
+                 from_email: str = "", reply_to: str = ""):
         self._user = user
         self._password = app_password
+        self._from_email = from_email or user   # SMTP login'den farklı From adresi (Brevo için)
+        self._reply_to = reply_to or self._from_email
         self._limit = daily_limit
         self._smtp_host = smtp_host
         self._smtp_port = smtp_port
@@ -158,11 +161,11 @@ class GmailSender:
         try:
             msg_id = f"<{uuid.uuid4().hex}@bostok.dev>"
             msg = MIMEMultipart("alternative")
-            msg["From"] = f"Kadir Sevinç <{self._user}>"
+            msg["From"] = f"Kadir Sevinç <{self._from_email}>"
             msg["To"] = to
             msg["Subject"] = subject
             msg["Message-ID"] = msg_id
-            msg["Reply-To"] = self._user
+            msg["Reply-To"] = self._reply_to
             msg["List-Unsubscribe"] = f"<mailto:{self._user}?subject=unsubscribe>"
             msg["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
 
@@ -296,9 +299,8 @@ class GmailPool:
         self._idx = 0
 
     def _next(self) -> GmailSender | None:
-        for _ in range(len(self._senders)):
-            s = self._senders[self._idx % len(self._senders)]
-            self._idx += 1
+        # Sırayla dene — ilk gönderebilen (Brevo önce listede) kullanılır
+        for s in self._senders:
             if s.can_send():
                 return s
         return None
@@ -359,6 +361,22 @@ def init_gmail() -> GmailSender | GmailPool | None:
                 senders.append(s)
                 warmup_note = f" [ısınma: {effective}/{limit}]" if effective < limit else ""
                 logger.info(f"Gmail hazir: {user} (limit: {effective}{warmup_note})")
+
+        # Brevo SMTP (kadir@bostok.dev'den gönderir — spam sorunu yok)
+        brevo_user = getattr(settings, "brevo_smtp_user", "")
+        brevo_key  = getattr(settings, "brevo_smtp_key", "")
+        brevo_from = getattr(settings, "brevo_from_email", "")
+        brevo_limit = int(getattr(settings, "brevo_daily_limit", 300))
+        if brevo_user and brevo_key:
+            s = GmailSender(
+                user=brevo_user, app_password=brevo_key,
+                daily_limit=brevo_limit,
+                smtp_host="smtp-relay.brevo.com", smtp_port=587, use_tls=False,
+                from_email=brevo_from or brevo_user,
+                reply_to=getattr(settings, "gmail_user", "") or brevo_from,
+            )
+            senders.insert(0, s)  # Brevo önce gelsin
+            logger.info(f"Brevo hazir: {brevo_from or brevo_user} (limit: {brevo_limit}/gun)")
 
         # Outlook hesapları
         outlook_accounts = [

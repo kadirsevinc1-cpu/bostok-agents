@@ -39,6 +39,12 @@ class Settings(BaseSettings):
     gmail_daily_limit_3:      int = Field(500, env="GMAIL_DAILY_LIMIT_3")
     gmail_account_age_days_3: int = Field(365, env="GMAIL_ACCOUNT_AGE_DAYS_3")
 
+    # Brevo SMTP (spam'den kurtulmak için — kadir@bostok.dev'den gönderir)
+    brevo_smtp_user:      str = Field("", env="BREVO_SMTP_USER")
+    brevo_smtp_key:       str = Field("", env="BREVO_SMTP_KEY")
+    brevo_from_email:     str = Field("", env="BREVO_FROM_EMAIL")
+    brevo_daily_limit:    int = Field(300, env="BREVO_DAILY_LIMIT")
+
     # Outlook — 2 hesaba kadar desteklenir
     outlook_user:             str = Field("", env="OUTLOOK_USER")
     outlook_app_password:     str = Field("", env="OUTLOOK_APP_PASSWORD")
