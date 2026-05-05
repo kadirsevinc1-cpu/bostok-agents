@@ -94,7 +94,7 @@ class FollowupAgent(BaseAgent):
             days_since = (now - sent_at).days
             log_entry = followup_log.get(to, {})
 
-            if days_since >= 7 and not log_entry.get("f1_sent"):
+            if days_since >= 3 and not log_entry.get("f1_sent"):
                 if not gmail.can_send():
                     break
                 ok = await self._send_followup(gmail, to, info, msg_id, stage=1)
@@ -105,19 +105,19 @@ class FollowupAgent(BaseAgent):
                     sent_count += 1
                     try:
                         from core.lead_state import get_tracker, LeadStage
-                        get_tracker().update(to, LeadStage.FOLLOWED_UP, "7. gün takip maili")
+                        get_tracker().update(to, LeadStage.FOLLOWED_UP, "3. gun takip maili")
                     except Exception:
                         pass
                     await self._notify(to, info, stage=1)
                     await asyncio.sleep(10)
 
-            elif days_since >= 14 and log_entry.get("f1_sent") and not log_entry.get("f2_sent"):
+            elif days_since >= 7 and log_entry.get("f1_sent") and not log_entry.get("f2_sent"):
                 try:
                     f1_date = datetime.fromisoformat(log_entry["f1_sent"])
                 except Exception:
                     continue
-                if (now - f1_date).days < 7:
-                    continue  # F1'den bu yana henüz 7 gün geçmemiş
+                if (now - f1_date).days < 4:
+                    continue  # F1'den bu yana henüz 4 gün geçmemiş
                 if not gmail.can_send():
                     break
                 ok = await self._send_followup(gmail, to, info, msg_id, stage=2)
@@ -128,7 +128,7 @@ class FollowupAgent(BaseAgent):
                     sent_count += 1
                     try:
                         from core.lead_state import get_tracker, LeadStage
-                        get_tracker().update(to, LeadStage.FOLLOWED_UP2, "14. gün kapanış maili")
+                        get_tracker().update(to, LeadStage.FOLLOWED_UP2, "7. gun kapanis maili")
                     except Exception:
                         pass
                     await self._notify(to, info, stage=2)
