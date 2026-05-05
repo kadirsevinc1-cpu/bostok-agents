@@ -102,6 +102,18 @@ async def _has_mx(domain: str) -> bool:
     except Exception:
         return False
 
+
+async def _async_whois_email(domain: str) -> str:
+    """WHOIS aramasını thread executor'da çalıştır — event loop'u bloklamaz."""
+    try:
+        loop = asyncio.get_running_loop()
+        return await asyncio.wait_for(
+            loop.run_in_executor(None, _whois_email, domain),
+            timeout=8.0,
+        )
+    except Exception:
+        return ""
+
 MAPS_SEARCH_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json"
 MAPS_DETAIL_URL = "https://maps.googleapis.com/maps/api/place/details/json"
 EMAIL_RE = re.compile(r'\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,6}\b')
@@ -194,12 +206,19 @@ async def find_leads(sector: str, location: str, api_key: str = "") -> list[Lead
                     email = ol.email
                     website = ol.website
 
-                    if not email and website:
-                        email = await _scrape_email(session, website)
+                    try:
+                        if not email and website:
+                            email = await asyncio.wait_for(
+                                _scrape_email(session, website), timeout=20.0
+                            )
 
-                    if not email and not website:
-                        # Domain guessing: "Harbiye Restaurant" → harbiyerestaurant.com.tr
-                        email, website = await _guess_email_from_name(session, ol.name)
+                        if not email and not website:
+                            # Domain guessing: "Harbiye Restaurant" → harbiyerestaurant.com.tr
+                            email, website = await asyncio.wait_for(
+                                _guess_email_from_name(session, ol.name), timeout=15.0
+                            )
+                    except asyncio.TimeoutError:
+                        pass
 
                     lead = Lead(
                         name=ol.name, location=ol.location, sector=ol.sector,
@@ -232,11 +251,18 @@ async def find_leads(sector: str, location: str, api_key: str = "") -> list[Lead
                         email = yl.email
                         website = yl.website
 
-                        if not email and website:
-                            email = await _scrape_email(session, website)
+                        try:
+                            if not email and website:
+                                email = await asyncio.wait_for(
+                                    _scrape_email(session, website), timeout=20.0
+                                )
 
-                        if not email and not website:
-                            email, website = await _guess_email_from_name(session, yl.name)
+                            if not email and not website:
+                                email, website = await asyncio.wait_for(
+                                    _guess_email_from_name(session, yl.name), timeout=15.0
+                                )
+                        except asyncio.TimeoutError:
+                            pass
 
                         lead = Lead(
                             name=yl.name, location=yl.location, sector=yl.sector,
@@ -603,7 +629,7 @@ async def _find_email_no_website(session: aiohttp.ClientSession, name: str, loca
         loc_slug = _re.sub(r"[^a-z]", "", location.lower())[:8]
         for candidate in [f"{slug}.com", f"{slug}.de", f"{slug}.nl",
                           f"{slug}{loc_slug}.com", f"{slug}.co.uk"]:
-            w_email = _whois_email(candidate)
+            w_email = await _async_whois_email(candidate)
             if w_email:
                 logger.debug(f"WHOIS (tahmini domain) email buldu: {w_email} [{candidate}]")
                 return w_email
@@ -648,7 +674,7 @@ async def _scrape_email(session: aiohttp.ClientSession, url: str) -> str:
         from urllib.parse import urlparse as _up
         domain = _up(url).netloc.lstrip("www.")
         if domain:
-            whois_email = _whois_email(domain)
+            whois_email = await _async_whois_email(domain)
             if whois_email:
                 logger.debug(f"WHOIS email buldu: {whois_email} [{domain}]")
                 return whois_email

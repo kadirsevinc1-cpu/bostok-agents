@@ -174,27 +174,18 @@ def _ascii_param(s: str) -> str:
 
 
 def _get_demo_base() -> str:
-    """Sırayla: Vercel cache → Netlify cache → Worker URL."""
+    """Sırayla: Vercel cache → Netlify cache → Worker URL. Senkron HTTP yok."""
     global _DEMO_URL_CACHE
     if _DEMO_URL_CACHE:
         return _DEMO_URL_CACHE
 
     from pathlib import Path
-    import urllib.request
 
-    def _reachable(url: str) -> bool:
-        try:
-            req = urllib.request.Request(url, method="HEAD")
-            with urllib.request.urlopen(req, timeout=4) as r:
-                return r.status < 400
-        except Exception:
-            return False
-
-    # 1. Vercel (öncelikli — çok güvenilir)
+    # 1. Vercel (öncelikli)
     vercel_cache = Path("memory/vercel_site_url.txt")
     if vercel_cache.exists():
         url = vercel_cache.read_text(encoding="utf-8").strip()
-        if url and _reachable(url):
+        if url:
             _DEMO_URL_CACHE = url
             return url
 
@@ -202,7 +193,7 @@ def _get_demo_base() -> str:
     netlify_cache = Path("memory/demo_site_url.txt")
     if netlify_cache.exists():
         url = netlify_cache.read_text(encoding="utf-8").strip()
-        if url and _reachable(url):
+        if url:
             _DEMO_URL_CACHE = url
             return url
 
