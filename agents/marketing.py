@@ -380,8 +380,10 @@ class MarketingAgent(BaseAgent):
             self.last_heartbeat = _dt.datetime.now()
             await asyncio.sleep(20)
 
-        # Tüm leadler atlandıysa (sıfır yeni gönderim) → tükendi olarak işaretle
-        if sent == 0 and (skipped > 0 or no_email > 0):
+        # Gerçekten lead bulunamadıysa (0 lead döndü) → tükendi
+        # NOT: "hepsi zaten gönderilmiş" (skipped>0) durumunda işaretleme —
+        # lead cache dolduğunda yeni işletmeler bulunabilir
+        if sent == 0 and skipped == 0 and no_email == 0 and len(leads) == 0:
             try:
                 from core.campaign_state import mark_exhausted
                 mark_exhausted(sector, location)

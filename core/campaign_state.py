@@ -6,7 +6,7 @@ from pathlib import Path
 from loguru import logger
 
 _STATE_FILE = Path("memory/campaign_exhausted.json")
-_REVISIT_DAYS = 90  # 90 gün sonra tekrar dene (yeni işletmeler açılmış olabilir)
+_REVISIT_DAYS = 14  # 14 gün sonra tekrar dene (lead cache TTL ile uyumlu)
 
 
 def _load() -> dict:

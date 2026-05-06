@@ -294,6 +294,18 @@ async def handle_telegram_message(text: str):
             await bot.send(perf_report())
         return
 
+    if cmd == "/reset_kampanya":
+        from core.campaign_state import reset, exhausted_count
+        before = exhausted_count()
+        reset()
+        if bot:
+            await bot.send(
+                f"♻️ <b>Kampanya durumları sıfırlandı!</b>\n\n"
+                f"{before} tükenmiş kampanya temizlendi.\n"
+                f"Tüm sektör/şehir kombinasyonları yeniden çalışacak."
+            )
+        return
+
     if cmd.startswith("/wp "):
         parts = text[len("/wp "):].strip().split(None, 1)
         if not parts:
