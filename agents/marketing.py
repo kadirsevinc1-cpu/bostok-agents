@@ -3,6 +3,7 @@ Pazarlama Agent — potansiyel müşteri bulur, çok dilde kişiselleştirilmiş
 Gmail yapılandırılmışsa gerçek mail atar; değilse şablon üretir.
 """
 import asyncio
+import datetime as _dt
 from agents.base import BaseAgent
 from core.message_bus import AgentName, MessageType, Message
 
@@ -241,8 +242,15 @@ class MarketingAgent(BaseAgent):
         languages = metadata.get("languages", ["tr", "en"])
         send_emails = metadata.get("send_emails", False)
 
-        # Lead bul (Google Maps API varsa gerçek, yoksa boş)
-        leads = await self._find_leads(sector, location)
+        # Lead bul (Google Maps API varsa gerçek, yoksa boş) — max 3 dk timeout
+        try:
+            leads = await asyncio.wait_for(
+                self._find_leads(sector, location), timeout=180.0
+            )
+        except asyncio.TimeoutError:
+            from loguru import logger
+            logger.warning(f"find_leads timeout (>3dk) [{sector}/{location}], atlaniyor")
+            leads = []
 
         # Otomatik onay: eşik altında ise send_emails'i otomatik aç
         if not send_emails and leads:
@@ -250,6 +258,13 @@ class MarketingAgent(BaseAgent):
             if len(leads) <= auto_approve_threshold():
                 logger.info(f"Otomatik onay: {len(leads)} lead ≤ eşik, kampanya başlatılıyor")
                 send_emails = True
+
+        # Batch sınırı: tek seferde max 15 lead — kuyruğun dolmasını önler
+        MAX_BATCH = 15
+        if len(leads) > MAX_BATCH:
+            from loguru import logger
+            logger.info(f"Batch siniri: {len(leads)} lead → ilk {MAX_BATCH} alindi [{sector}/{location}]")
+            leads = leads[:MAX_BATCH]
 
         if send_emails and leads:
             result = await self._run_campaign(leads, sector, location, languages)
@@ -362,7 +377,8 @@ class MarketingAgent(BaseAgent):
                     pass
             else:
                 skipped += 1
-            await asyncio.sleep(45)
+            self.last_heartbeat = _dt.datetime.now()
+            await asyncio.sleep(20)
 
         # Tüm leadler atlandıysa (sıfır yeni gönderim) → tükendi olarak işaretle
         if sent == 0 and (skipped > 0 or no_email > 0):

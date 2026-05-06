@@ -374,11 +374,21 @@ async def _maps_leads(sector: str, location: str, api_key: str) -> list[Lead]:
                 if not website:
                     # Web sitesi yok → asıl hedef kitle
                     # Email bulmaya çalış: Facebook veya Google arama
-                    lead.email = await _find_email_no_website(session, name, location)
+                    try:
+                        lead.email = await asyncio.wait_for(
+                            _find_email_no_website(session, name, location), timeout=25.0
+                        )
+                    except asyncio.TimeoutError:
+                        pass
                     no_site_leads.append(lead)
                 else:
                     # Web sitesi var ama eski/kötü olabilir → ikincil hedef
-                    lead.email = await _scrape_email(session, website)
+                    try:
+                        lead.email = await asyncio.wait_for(
+                            _scrape_email(session, website), timeout=20.0
+                        )
+                    except asyncio.TimeoutError:
+                        pass
                     if lead.email:
                         has_site_leads.append(lead)
 
