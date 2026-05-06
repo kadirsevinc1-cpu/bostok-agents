@@ -36,7 +36,7 @@ def _domain_reachable(domain: str) -> bool:
         _domain_cache[domain] = True
         return True
     except socket.gaierror:
-        _domain_cache[domain] = False
+        # Negatifi cache'leme — geçici DNS hatası sonraki oturumu kalıcı bloklar
         logger.debug(f"Email validator: domain DNS yok — {domain}")
         return False
     except Exception:

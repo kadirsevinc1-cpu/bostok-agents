@@ -137,9 +137,21 @@ async def handle_telegram_message(text: str):
 
             try:
                 from core.campaign_state import exhausted_count
+                from core.campaigns import CAMPAIGNS
+                from core.timezone_utils import is_business_hours as _biz
+                import datetime as _dt2
+                _now2 = _dt2.datetime.utcnow()
                 exhausted = exhausted_count()
+                open_now = sum(
+                    1 for c in CAMPAIGNS for loc in c["locations"]
+                    if _biz(loc, _now2)
+                )
             except Exception:
                 exhausted = 0
+                open_now = 0
+
+            cache_file = Path("memory/leads_cache.json")
+            cache_keys = len(json.loads(cache_file.read_text(encoding="utf-8"))) if cache_file.exists() else 0
 
             msg = (
                 f"<b>Sistem Durumu</b>\n\n"
@@ -150,7 +162,10 @@ async def handle_telegram_message(text: str):
                 f"  • Gelen yanıt: {inbox}\n"
                 f"  • Bounce (geçersiz): {bounced}\n\n"
                 f"<b>Lead Aşamaları:</b>\n{lead_lines}\n\n"
-                f"<b>Kampanya:</b> 201 kombinasyon, {exhausted} tükendi (90g atlanacak)\n\n"
+                f"<b>Kampanya:</b>\n"
+                f"  • Şu an açık: {open_now} lokasyon (mesai saati)\n"
+                f"  • Tükenmiş: {exhausted} (14g atlanacak) {'⚠️ /reset_kampanya ile sıfırla' if exhausted > 10 else ''}\n"
+                f"  • Lead cache: {cache_keys} kombinasyon (/temizle_cache ile yenile)\n\n"
                 f"<b>Demo site:</b> {demo_src}\n{demo[:60]}"
             )
             await bot.send(msg)
@@ -303,6 +318,30 @@ async def handle_telegram_message(text: str):
                 f"♻️ <b>Kampanya durumları sıfırlandı!</b>\n\n"
                 f"{before} tükenmiş kampanya temizlendi.\n"
                 f"Tüm sektör/şehir kombinasyonları yeniden çalışacak."
+            )
+        return
+
+    if cmd == "/temizle_cache":
+        deleted = 0
+        try:
+            cache_path = Path("memory/leads_cache.json")
+            if cache_path.exists():
+                data = json.loads(cache_path.read_text(encoding="utf-8"))
+                deleted = len(data)
+                cache_path.unlink()
+            exhausted_path = Path("memory/campaign_exhausted.json")
+            if exhausted_path.exists():
+                exhausted_path.unlink()
+        except Exception as e:
+            if bot:
+                await bot.send(f"❌ Cache temizleme hatası: {e}")
+            return
+        if bot:
+            await bot.send(
+                f"🧹 <b>Cache temizlendi!</b>\n\n"
+                f"Lead cache: {deleted} kombinasyon silindi\n"
+                f"Kampanya durumları: sıfırlandı\n\n"
+                f"Sistem artık yeni lead arayacak."
             )
         return
 
