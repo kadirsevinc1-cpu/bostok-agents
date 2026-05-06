@@ -299,11 +299,10 @@ class GmailPool:
         self._idx = 0
 
     def _next(self) -> GmailSender | None:
-        # Sırayla dene — ilk gönderebilen (Brevo önce listede) kullanılır
-        for s in self._senders:
-            if s.can_send():
-                return s
-        return None
+        # smtp.gmail.com Google Cloud'da bloklu (525) — Brevo/Outlook varsa Gmail'i atla
+        non_gmail = [s for s in self._senders if s._smtp_host != "smtp.gmail.com"]
+        pool = non_gmail if non_gmail else self._senders
+        return next((s for s in pool if s.can_send()), None)
 
     def can_send(self) -> bool:
         return any(s.can_send() for s in self._senders)
@@ -326,7 +325,11 @@ class GmailPool:
         return await s.send(to, subject, body, lead_info)
 
     async def send_reply(self, to: str, subject: str, body: str, in_reply_to: str = "") -> bool:
-        s = self._next() or (self._senders[0] if self._senders else None)
+        s = self._next()
+        if not s:
+            non_gmail = [x for x in self._senders if x._smtp_host != "smtp.gmail.com"]
+            pool = non_gmail if non_gmail else self._senders
+            s = pool[0] if pool else None
         if not s:
             return False
         return await s.send_reply(to, subject, body, in_reply_to)
