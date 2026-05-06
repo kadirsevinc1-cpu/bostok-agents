@@ -25,6 +25,7 @@ from agents.whatsapp_agent import WhatsAppAgent
 from agents.lead_scout import LeadScoutAgent
 from agents.linkedin_agent import LinkedInAgent
 from agents.competitor_analyst import CompetitorAnalystAgent
+from agents.instagram_agent import InstagramAgent
 from integrations.telegram import init_bot, get_bot
 from integrations.gmail import init_gmail
 from integrations.gmail_reader import init_reader
@@ -784,7 +785,7 @@ async def main():
         DeveloperAgent(), QAAgent(), DeployAgent(),
         InboxWatcherAgent(), FollowupAgent(), KnowledgeAgent(),
         WhatsAppAgent(), LeadScoutAgent(), LinkedInAgent(),
-        CompetitorAnalystAgent(),
+        CompetitorAnalystAgent(), InstagramAgent(),
     ]
     logger.info(f"{len(agents)} agent baslatildi")
 

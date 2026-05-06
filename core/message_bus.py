@@ -24,6 +24,7 @@ class AgentName(str, Enum):
     KNOWLEDGE  = "Bilgi"
     LEAD_SCOUT = "LeadScout"
     LINKEDIN            = "LinkedIn"
+    INSTAGRAM           = "Instagram"
     COMPETITOR_ANALYST  = "RakipAnalist"
     SYSTEM              = "Sistem"
 

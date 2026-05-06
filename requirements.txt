@@ -8,3 +8,4 @@ pydantic>=2.0
 pydantic-settings>=2.0
 fastapi>=0.110.0
 uvicorn>=0.29.0
+instagrapi>=2.0
