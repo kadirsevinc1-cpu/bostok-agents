@@ -322,14 +322,16 @@ async def handle_telegram_message(text: str):
         return
 
     if cmd == "/temizle_cache":
+        import json as _json
+        from pathlib import Path as _Path
         deleted = 0
         try:
-            cache_path = Path("memory/leads_cache.json")
+            cache_path = _Path("memory/leads_cache.json")
             if cache_path.exists():
-                data = json.loads(cache_path.read_text(encoding="utf-8"))
+                data = _json.loads(cache_path.read_text(encoding="utf-8"))
                 deleted = len(data)
                 cache_path.unlink()
-            exhausted_path = Path("memory/campaign_exhausted.json")
+            exhausted_path = _Path("memory/campaign_exhausted.json")
             if exhausted_path.exists():
                 exhausted_path.unlink()
         except Exception as e:
