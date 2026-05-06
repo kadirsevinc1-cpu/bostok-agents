@@ -98,6 +98,7 @@ class FollowupAgent(BaseAgent):
                 if not gmail.can_send():
                     break
                 ok = await self._send_followup(gmail, to, info, msg_id, stage=1)
+                self.last_heartbeat = datetime.now()
                 if ok:
                     log_entry["f1_sent"] = now.isoformat()
                     followup_log[to] = log_entry
@@ -121,6 +122,7 @@ class FollowupAgent(BaseAgent):
                 if not gmail.can_send():
                     break
                 ok = await self._send_followup(gmail, to, info, msg_id, stage=2)
+                self.last_heartbeat = datetime.now()
                 if ok:
                     log_entry["f2_sent"] = now.isoformat()
                     followup_log[to] = log_entry
