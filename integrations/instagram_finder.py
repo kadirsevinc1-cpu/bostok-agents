@@ -23,12 +23,13 @@ def _get_client():
         cl = Client()
         cl.delay_range = [3, 8]  # İnsan gibi gecikme (saniye)
         if _SESSION_FILE.exists():
+            cl.load_settings(_SESSION_FILE)
             try:
-                cl.load_settings(_SESSION_FILE)
-                cl.login(settings.instagram_user, settings.instagram_password)
-                logger.info("Instagram: mevcut oturum yüklendi")
+                # Şifreli login IP'den bloklanabilir — sadece session ile dene
+                cl.get_timeline_feed()
+                logger.info("Instagram: session aktif")
             except Exception:
-                _SESSION_FILE.unlink(missing_ok=True)
+                # Session geçersizse şifreli login dene
                 cl.login(settings.instagram_user, settings.instagram_password)
                 cl.dump_settings(_SESSION_FILE)
                 logger.info("Instagram: yeni oturum oluşturuldu")
