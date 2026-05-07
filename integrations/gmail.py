@@ -317,22 +317,31 @@ class GmailPool:
             for s in self._senders
         )
 
+    def _candidates(self) -> list["GmailSender"]:
+        """smtp.gmail.com'u filtrele; yoksa tüm liste."""
+        non_gmail = [s for s in self._senders if s._smtp_host != "smtp.gmail.com"]
+        return non_gmail if non_gmail else self._senders
+
     async def send(self, to: str, subject: str, body: str, lead_info: dict = None) -> bool:
-        s = self._next()
-        if not s:
-            logger.warning("Tüm Gmail hesapları limitinde")
-            return False
-        return await s.send(to, subject, body, lead_info)
+        for s in self._candidates():
+            if not s.can_send():
+                continue
+            ok = await s.send(to, subject, body, lead_info)
+            if ok:
+                return True
+            # SMTP bağlantı hatası — sonraki göndericiyi dene
+        logger.warning("Tüm hesaplar limitinde veya bağlantı hatası")
+        return False
 
     async def send_reply(self, to: str, subject: str, body: str, in_reply_to: str = "") -> bool:
-        s = self._next()
-        if not s:
-            non_gmail = [x for x in self._senders if x._smtp_host != "smtp.gmail.com"]
-            pool = non_gmail if non_gmail else self._senders
-            s = pool[0] if pool else None
-        if not s:
-            return False
-        return await s.send_reply(to, subject, body, in_reply_to)
+        for s in self._candidates():
+            if not s.can_send():
+                continue
+            ok = await s.send_reply(to, subject, body, in_reply_to)
+            if ok:
+                return True
+        logger.warning("send_reply: tüm hesaplar başarısız")
+        return False
 
 
 _sender: GmailSender | GmailPool | None = None
