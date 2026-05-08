@@ -70,6 +70,11 @@ class Settings(BaseSettings):
     # Calendly randevu linki (opsiyonel — maile ve teklife eklenir)
     calendly_url:        str = Field("", env="CALENDLY_URL")
 
+    # Resend.com (IP kısıtlaması yok — ana gönderici)
+    resend_api_key:      str = Field("", env="RESEND_API_KEY")
+    resend_from_email:   str = Field("kadir@bostok.dev", env="RESEND_FROM_EMAIL")
+    resend_daily_limit:  int = Field(100, env="RESEND_DAILY_LIMIT")
+
     # Instagram scraping (opsiyonel — business lead bulma)
     instagram_user:      str = Field("", env="INSTAGRAM_USER")
     instagram_password:  str = Field("", env="INSTAGRAM_PASSWORD")
