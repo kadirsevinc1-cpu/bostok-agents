@@ -743,10 +743,13 @@ async def main():
     gmail = init_gmail()
     if gmail:
         logger.info(f"Gmail hazir: {gmail.stats}")
-        from integrations.gmail import GmailPool
-        _r_user = gmail._senders[0]._user if isinstance(gmail, GmailPool) else gmail._user
-        _r_pass = gmail._senders[0]._password if isinstance(gmail, GmailPool) else gmail._password
-        init_reader(_r_user, _r_pass)
+        from integrations.gmail import GmailPool, GmailSender
+        senders = gmail._senders if isinstance(gmail, GmailPool) else [gmail]
+        # IMAP okuyucu için Gmail sender bul (Brevo/Resend değil)
+        _imap = next((s for s in senders if isinstance(s, GmailSender) and "gmail.com" in getattr(s, "_smtp_host", "")), None) \
+             or next((s for s in senders if isinstance(s, GmailSender)), None)
+        if _imap:
+            init_reader(_imap._user, _imap._password)
         logger.info("Gmail inbox takibi aktif")
     else:
         logger.warning("Gmail bagli degil - sadece sablon modu")
