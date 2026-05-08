@@ -312,10 +312,10 @@ class GmailPool:
 
     @property
     def stats(self) -> str:
-        return " | ".join(
-            f"{s._user.split('@')[0]}: {s._today_count}/{s._limit}"
-            for s in self._senders
-        )
+        def _label(s):
+            user = getattr(s, "_user", None) or getattr(s, "_from_email", "?")
+            return f"{user.split('@')[0]}: {s._today_count}/{s._limit}"
+        return " | ".join(_label(s) for s in self._senders)
 
     def _candidates(self):
         """smtp.gmail.com'u filtrele; yoksa tüm liste."""
