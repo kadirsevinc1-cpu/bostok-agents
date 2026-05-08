@@ -399,14 +399,15 @@ class ResendSender:
         return email.strip().lower() in self._sent
 
     def _post(self, payload: dict) -> bool:
-        import urllib.request as _ur
-        data = json.dumps(payload, ensure_ascii=False).encode()
-        req = _ur.Request(
-            "https://api.resend.com/emails", data=data,
-            headers={"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"}
+        import requests as _req
+        r = _req.post(
+            "https://api.resend.com/emails",
+            headers={"Authorization": f"Bearer {self._api_key}", "Content-Type": "application/json"},
+            json=payload, timeout=20,
         )
-        resp = _ur.urlopen(req, timeout=20)
-        return resp.status == 200
+        if r.status_code != 200:
+            raise Exception(f"HTTP {r.status_code}: {r.text[:200]}")
+        return True
 
     async def send(self, to: str, subject: str, body: str, lead_info: dict = None) -> bool:
         self._reset_if_new_day()
