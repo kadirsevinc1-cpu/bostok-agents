@@ -335,7 +335,16 @@ class GmailPool:
         return False
 
     async def send_reply(self, to: str, subject: str, body: str, in_reply_to: str = "") -> bool:
+        # Resend önce — IP kısıtlaması yok, günlük limit aşılsa bile yanıt öncelikli
+        resend = next((s for s in self._senders if isinstance(s, ResendSender)), None)
+        if resend:
+            ok = await resend.send_reply(to, subject, body, in_reply_to)
+            if ok:
+                return True
+        # Fallback: Brevo ve diğerleri
         for s in self._candidates():
+            if isinstance(s, ResendSender):
+                continue  # zaten denendi
             if not s.can_send():
                 continue
             ok = await s.send_reply(to, subject, body, in_reply_to)
