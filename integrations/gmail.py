@@ -513,7 +513,7 @@ def init_gmail() -> GmailSender | GmailPool | None:
             s = GmailSender(
                 user=brevo_user, app_password=brevo_key,
                 daily_limit=brevo_limit,
-                smtp_host="smtp-relay.brevo.com", smtp_port=587, use_tls=False,
+                smtp_host="smtp.brevo.com", smtp_port=587, use_tls=False,
                 from_email=brevo_from or brevo_user,
                 reply_to=getattr(settings, "gmail_user", "") or brevo_from,
             )
