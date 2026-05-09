@@ -57,6 +57,12 @@ class Settings(BaseSettings):
     outlook_daily_limit_2:      int = Field(300, env="OUTLOOK_DAILY_LIMIT_2")
     outlook_account_age_days_2: int = Field(0, env="OUTLOOK_ACCOUNT_AGE_DAYS_2")
 
+    # Mailjet HTTP API (200/gün ücretsiz, IP kısıtlaması yok)
+    mailjet_api_key:    str = Field("", env="MAILJET_API_KEY")
+    mailjet_secret_key: str = Field("", env="MAILJET_SECRET_KEY")
+    mailjet_from_email: str = Field("kadir@bostok.dev", env="MAILJET_FROM_EMAIL")
+    mailjet_daily_limit: int = Field(200, env="MAILJET_DAILY_LIMIT")
+
     # Google Maps Places API (lead finder icin - opsiyonel)
     google_maps_api_key: str = Field("", env="GOOGLE_MAPS_API_KEY")
 

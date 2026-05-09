@@ -474,6 +474,131 @@ class ResendSender:
         return False
 
 
+class MailjetSender:
+    """Mailjet HTTP API ile mail gönderici — IP kısıtlaması yok, 200/gün ücretsiz."""
+
+    def __init__(self, api_key: str, secret_key: str, from_email: str, reply_to: str = "", daily_limit: int = 200):
+        self._api_key = api_key
+        self._secret_key = secret_key
+        self._from_email = from_email
+        self._reply_to = reply_to or from_email
+        self._limit = daily_limit
+        self._smtp_host = "api.mailjet.com"
+        self._count_file = Path("memory/mailjet_count.json")
+        self._today_count, self._last_date = self._load_count()
+        self._sent: set[str] = self._load_sent()
+
+    def _load_count(self) -> tuple[int, date]:
+        if self._count_file.exists():
+            try:
+                data = json.loads(self._count_file.read_text(encoding="utf-8"))
+                if date.fromisoformat(data["date"]) == date.today():
+                    return data["count"], date.today()
+            except Exception:
+                pass
+        return 0, date.today()
+
+    def _save_count(self):
+        self._count_file.parent.mkdir(exist_ok=True)
+        tmp = self._count_file.with_suffix(".tmp")
+        tmp.write_text(json.dumps({"date": self._last_date.isoformat(), "count": self._today_count}), encoding="utf-8")
+        os.replace(tmp, self._count_file)
+
+    def _load_sent(self) -> set[str]:
+        if SENT_LOG.exists():
+            return set(SENT_LOG.read_text(encoding="utf-8").splitlines())
+        return set()
+
+    def _record_sent(self, email: str):
+        SENT_LOG.parent.mkdir(exist_ok=True)
+        with SENT_LOG.open("a", encoding="utf-8") as f:
+            f.write(email + "\n")
+        self._sent.add(email)
+
+    def _reset_if_new_day(self):
+        today = date.today()
+        if today != self._last_date:
+            self._today_count = 0
+            self._last_date = today
+            self._save_count()
+
+    def can_send(self) -> bool:
+        self._reset_if_new_day()
+        return self._today_count < self._limit
+
+    def is_sent(self, email: str) -> bool:
+        return email.strip().lower() in self._sent
+
+    def _post(self, payload: dict) -> bool:
+        import requests as _req
+        r = _req.post(
+            "https://api.mailjet.com/v3.1/send",
+            auth=(self._api_key, self._secret_key),
+            json=payload, timeout=20,
+        )
+        if r.status_code not in (200, 201):
+            raise Exception(f"HTTP {r.status_code}: {r.text[:200]}")
+        return True
+
+    def _build_payload(self, to: str, subject: str, body: str, in_reply_to: str = "") -> dict:
+        html = body.replace("\n", "<br>\n")
+        html = re.sub(r'(https?://[^\s<>"]+)', r'<a href="\1">\1</a>', html)
+        msg: dict = {
+            "From": {"Email": self._from_email, "Name": "Kadir Sevinç"},
+            "To": [{"Email": to}],
+            "Subject": subject,
+            "TextPart": body,
+            "HTMLPart": f"<html><body style='font-family:Arial,sans-serif;font-size:14px'>{html}</body></html>",
+            "ReplyTo": {"Email": self._reply_to},
+        }
+        if in_reply_to:
+            msg["Headers"] = {"In-Reply-To": in_reply_to}
+        return {"Messages": [msg]}
+
+    async def send(self, to: str, subject: str, body: str, lead_info: dict = None) -> bool:  # noqa: ARG002
+        self._reset_if_new_day()
+        to = to.strip().lower()
+        if to in self._sent or to in load_bounced() or not self.can_send():
+            return False
+        try:
+            from integrations.email_validator import is_valid as _ev
+            loop = asyncio.get_running_loop()
+            if not await loop.run_in_executor(None, _ev, to):
+                return False
+        except Exception:
+            pass
+        try:
+            payload = self._build_payload(to, subject, body)
+            loop = asyncio.get_running_loop()
+            ok = await loop.run_in_executor(None, self._post, payload)
+            if ok:
+                self._today_count += 1
+                self._save_count()
+                self._record_sent(to)
+                logger.info(f"Mailjet gonderildi: {to} ({self._today_count}/{self._limit})")
+                return True
+        except Exception as e:
+            logger.error(f"Mailjet hata [{to}]: {e}")
+        return False
+
+    async def send_reply(self, to: str, subject: str, body: str, in_reply_to: str = "") -> bool:
+        self._reset_if_new_day()
+        if not self.can_send():
+            return False
+        try:
+            payload = self._build_payload(to.strip(), subject, body, in_reply_to)
+            loop = asyncio.get_running_loop()
+            ok = await loop.run_in_executor(None, self._post, payload)
+            if ok:
+                self._today_count += 1
+                self._save_count()
+                logger.info(f"Mailjet yanit: {to} ({self._today_count}/{self._limit})")
+                return True
+        except Exception as e:
+            logger.error(f"Mailjet yanit hata [{to}]: {e}")
+        return False
+
+
 _sender: GmailSender | GmailPool | None = None
 
 
@@ -550,6 +675,18 @@ def init_gmail() -> GmailSender | GmailPool | None:
                               daily_limit=resend_limit)
             senders.insert(0, rs)  # Resend önce — en güvenilir
             logger.info(f"Resend hazir: {resend_from} (limit: {resend_limit}/gun)")
+
+        # Mailjet HTTP API (IP kısıtlaması yok, 200/gün ücretsiz)
+        mj_key    = getattr(settings, "mailjet_api_key", "")
+        mj_secret = getattr(settings, "mailjet_secret_key", "")
+        mj_from   = getattr(settings, "mailjet_from_email", "kadir@bostok.dev")
+        mj_limit  = int(getattr(settings, "mailjet_daily_limit", 200))
+        if mj_key and mj_secret:
+            mj = MailjetSender(mj_key, mj_secret, mj_from,
+                               reply_to=getattr(settings, "gmail_user", "") or mj_from,
+                               daily_limit=mj_limit)
+            senders.append(mj)
+            logger.info(f"Mailjet hazir: {mj_from} (limit: {mj_limit}/gun)")
 
         if not senders:
             return None
