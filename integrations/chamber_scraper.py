@@ -388,8 +388,30 @@ async def scrape_directory(sector: str, location: str) -> list:
         elif loc_lower in _US_CA_AU_CITIES:
             leads = await _scrape_yellowpages(session, sector, location)
         else:
-            # Varsayılan: Türkiye
-            leads = await _scrape_firmarehberi(session, sector, location)
+            # Türkiye — TSO oda scraper (PDF tabanlı, email kaliteli)
+            try:
+                from integrations.tso_scraper import get_tso_leads
+                tso_raw = await get_tso_leads(location)
+                if tso_raw:
+                    from integrations.lead_finder import Lead
+                    for item in tso_raw:
+                        if item.get("email"):
+                            leads.append(Lead(
+                                name=item.get("name", ""),
+                                location=item.get("location", location),
+                                sector=sector,
+                                phone=item.get("phone", ""),
+                                email=item.get("email", ""),
+                                has_website=False,
+                                website="",
+                                maps_url="",
+                            ))
+                    logger.info(f"TSO {len(leads)} lead verdi — {sector}/{location}")
+            except Exception as e:
+                logger.warning(f"TSO scraper hata: {e}")
+            # Fallback: firmarehberi (DNS bazen çalışıyor)
+            if not leads:
+                leads = await _scrape_firmarehberi(session, sector, location)
 
         # Sadece emaili olmayan leadleri zenginleştir (limit: 8 firma)
         leads_to_enrich = [l for l in leads if not l.email][:8]

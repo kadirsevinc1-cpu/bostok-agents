@@ -318,9 +318,10 @@ class GmailPool:
         return " | ".join(_label(s) for s in self._senders)
 
     def _candidates(self):
-        """smtp.gmail.com'u filtrele; yoksa tüm liste."""
-        non_gmail = [s for s in self._senders if getattr(s, "_smtp_host", "") != "smtp.gmail.com"]
-        return non_gmail if non_gmail else self._senders
+        """Gmail ve 535 veren Outlook'u filtrele; yoksa tüm liste."""
+        blocked = {"smtp.gmail.com", "smtp-mail.outlook.com"}
+        ok = [s for s in self._senders if getattr(s, "_smtp_host", "") not in blocked]
+        return ok if ok else self._senders
 
     async def send(self, to: str, subject: str, body: str, lead_info: dict = None) -> bool:
         for s in self._candidates():

@@ -61,14 +61,14 @@ def _build_providers() -> list[ProviderConfig]:
         providers.append(ProviderConfig(
             name="Sambanova", api_key=settings.sambanova_api_key,
             base_url="https://api.sambanova.ai/v1",
-            model="Meta-Llama-3.1-8B-Instruct", backend="openai",
+            model="Meta-Llama-3.3-70B-Instruct", backend="openai",
         ))
 
     if settings.openrouter_api_key:
         providers.append(ProviderConfig(
             name="OpenRouter", api_key=settings.openrouter_api_key,
             base_url="https://openrouter.ai/api/v1",
-            model="meta-llama/llama-3.1-8b-instruct:free", backend="openai",
+            model="meta-llama/llama-3.2-3b-instruct:free", backend="openai",
             headers={"HTTP-Referer": "https://bostok.dev", "X-Title": "Bostok Agents"},
         ))
 
