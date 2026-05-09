@@ -497,9 +497,11 @@ def get_tso_leads_sync(sehir: str = "") -> list[dict]:
         _set_cached(pdf_url, leads)
         all_leads.extend(leads)
 
-    # 2. SerpAPI ile yeni PDF'ler bul
+    # 2. SerpAPI ile yeni PDF'ler bul — max 5 yeni PDF per çağrı (bloke etmesin)
+    MAX_NEW_PDFS = 5
     try:
         serpapi_pdfs = _serpapi_discover_pdfs()
+        new_count = 0
         for pdf_url, oda_adi, oda_sehir in serpapi_pdfs:
             if any(pdf_url == known for known, _, _ in KNOWN_PDF_SOURCES):
                 continue
@@ -507,11 +509,15 @@ def get_tso_leads_sync(sehir: str = "") -> list[dict]:
             if cached_leads is not None:
                 all_leads.extend(cached_leads)
                 continue
+            if new_count >= MAX_NEW_PDFS:
+                continue  # Cache'lenmiş olanları al, yenileri sonraki çağrıya bırak
             logger.info(f"SerpAPI PDF işleniyor: {pdf_url} ({oda_adi})")
             pdf_bytes = _download_pdf(pdf_url)
             if not pdf_bytes:
+                new_count += 1
                 continue
             leads = _parse_pdf_bytes(pdf_bytes, oda_adi, oda_sehir)
+            new_count += 1
             if leads:
                 _set_cached(pdf_url, leads)
                 all_leads.extend(leads)
