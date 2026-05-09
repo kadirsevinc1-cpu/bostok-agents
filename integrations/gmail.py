@@ -318,8 +318,8 @@ class GmailPool:
         return " | ".join(_label(s) for s in self._senders)
 
     def _candidates(self):
-        """Gmail ve 535 veren Outlook'u filtrele; yoksa tüm liste."""
-        blocked = {"smtp.gmail.com", "smtp-mail.outlook.com"}
+        """Google Cloud'da smtp.gmail.com bloklu (525) — Gmail'i atla; yoksa tüm liste."""
+        blocked = {"smtp.gmail.com"}
         ok = [s for s in self._senders if getattr(s, "_smtp_host", "") not in blocked]
         return ok if ok else self._senders
 
