@@ -48,19 +48,19 @@ SIGNATURES = {
     "sv": "\n\nMed vanliga halsningar,\nKadir Sevinç - Bostok.dev\nhttps://bostok.dev",
 }
 
-# Demo link için dile göre hazır cümle
-_DEMO_PHRASES = {
-    "tr": ("Sizin için özel bir demo hazırladım", "Nasıl görünebileceğinizi buradan görebilirsiniz"),
-    "en": ("I've prepared a demo site just for you", "See how your website could look"),
-    "de": ("Ich habe eine Demo speziell für Sie vorbereitet", "Sehen Sie hier, wie Ihre Website aussehen könnte"),
-    "nl": ("Ik heb een demo speciaal voor u gemaakt", "Zie hier hoe uw website eruit zou kunnen zien"),
-    "fr": ("J'ai préparé une démo spécialement pour vous", "Voyez ici comment votre site pourrait ressembler"),
-    "es": ("He preparado una demo especial para usted", "Vea cómo podría verse su sitio web"),
-    "pt": ("Preparei uma demo especial para você", "Veja como seu site poderia ficar"),
-    "it": ("Ho preparato una demo appositamente per voi", "Vedete come potrebbe apparire il vostro sito"),
-    "pl": ("Przygotowalem demo specjalnie dla panstwa", "Zobaczcie jak mogloby wygladac panstwa strona"),
-    "ar": ("I've prepared a demo site just for you", "See how your website could look"),
-    "sv": ("Jag har forberett en demo speciellt for er", "Se hur er webbplats kan se ut"),
+# Yetenekler ve "ihtiyaçlarınızı anlatın" CTA — dile göre
+_CAPABILITIES_CTA = {
+    "tr": "Hizmetlerimiz: web tasarım, SEO optimizasyonu, e-ticaret, marka kimliği, mobil uyumluluk ve bakım. E-postanın sonuna şunu ekle: 'İhtiyaçlarınızı bize anlatın, size özel çözümler üretelim.'",
+    "en": "Our services: web design, SEO optimization, e-commerce, brand identity, mobile compatibility and maintenance. At the end add: 'Share your needs with us and we'll create custom solutions for you.'",
+    "de": "Unsere Leistungen: Webdesign, SEO, E-Commerce, Markenidentität, Mobile-Optimierung und Wartung. Am Ende hinzufügen: 'Teilen Sie uns Ihre Anforderungen mit – wir entwickeln maßgeschneiderte Lösungen für Sie.'",
+    "nl": "Onze diensten: webdesign, SEO, e-commerce, huisstijl, mobiele optimalisatie en onderhoud. Voeg toe: 'Vertel ons uw wensen en wij maken een op maat gemaakte oplossing voor u.'",
+    "fr": "Nos services : conception web, SEO, e-commerce, identité de marque, compatibilité mobile et maintenance. Ajouter : 'Partagez vos besoins avec nous et nous créerons des solutions sur mesure pour vous.'",
+    "es": "Nuestros servicios: diseño web, SEO, e-commerce, identidad de marca, compatibilidad móvil y mantenimiento. Añadir: 'Cuéntenos sus necesidades y crearemos soluciones personalizadas para usted.'",
+    "pt": "Nossos serviços: design web, SEO, e-commerce, identidade de marca, compatibilidade móvel e manutenção. Adicionar: 'Compartilhe suas necessidades conosco e criaremos soluções personalizadas para você.'",
+    "it": "I nostri servizi: web design, SEO, e-commerce, identità del marchio, compatibilità mobile e manutenzione. Aggiungere: 'Condividete le vostre esigenze con noi e creeremo soluzioni su misura per voi.'",
+    "pl": "Nasze usługi: projektowanie stron, SEO, e-commerce, tożsamość marki, responsywność i utrzymanie. Dodać: 'Podziel się swoimi potrzebami, a stworzymy dla Ciebie rozwiązania na miarę.'",
+    "ar": "Our services: web design, SEO, e-commerce, brand identity, mobile compatibility and maintenance. Add: 'Share your needs with us and we'll create custom solutions for you.'",
+    "sv": "Våra tjänster: webbdesign, SEO, e-handel, varumärkesidentitet, mobilanpassning och underhåll. Lägg till: 'Berätta vad du behöver så skapar vi skräddarsydda lösningar för dig.'",
 }
 
 # Calendly için dile göre hazır cümle
@@ -483,17 +483,7 @@ class MarketingAgent(BaseAgent):
                 "Tone: highlight the opportunity, warn they're falling behind competitors."
             )
 
-        demo_url = await self._make_demo_url(lead, lang)
-        demo_url = await self._verify_demo_url(demo_url)
-
-        demo_phrase_a, demo_phrase_b = _DEMO_PHRASES.get(lang, _DEMO_PHRASES["en"])
-        if demo_url:
-            demo_instruction = (
-                f'Important: Naturally include this demo link in the email: {demo_url}\n'
-                f'(e.g. "{demo_phrase_a}" or "{demo_phrase_b}")\n\n'
-            )
-        else:
-            demo_instruction = ""
+        capabilities_instruction = _CAPABILITIES_CTA.get(lang, _CAPABILITIES_CTA["en"]) + "\n\n"
 
         from config import settings as _cfg
         calendly_phrase = _CALENDLY_PHRASES.get(lang, _CALENDLY_PHRASES["en"])
@@ -521,7 +511,7 @@ class MarketingAgent(BaseAgent):
             f'"{lead.name}" ({lead.sector} sector, {lead.location}).\n\n'
             f"Situation: {offer}\n\n"
             f"{pattern_hint}"
-            f"{demo_instruction}"
+            f"{capabilities_instruction}"
             f"{calendly_instruction}"
             f"STRICT LANGUAGE RULE: The ENTIRE email MUST be written in {lang_name} ONLY. "
             f"Not a single word in any other language. "
