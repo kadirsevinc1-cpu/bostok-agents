@@ -18,32 +18,39 @@ class TelegramBot:
         self._pending_results: dict[str, str] = {}
 
     async def send(self, text: str, reply_markup: dict = None):
-        """Mesaj gönder. Ağ hatasında 3 kez retry yapar (2s, 8s, 20s)."""
+        """Mesaj gönder. Ağ hatasında 5 kez retry yapar (5s, 15s, 30s, 60s)."""
         chunks = [text[i:i+4000] for i in range(0, len(text), 4000)]
         for chunk in chunks:
             payload = {"chat_id": self.chat_id, "text": chunk, "parse_mode": "HTML"}
             if reply_markup and chunk == chunks[-1]:
                 import json
                 payload["reply_markup"] = json.dumps(reply_markup)
-            for attempt, delay in enumerate([0, 2, 8, 20]):
+            for attempt, delay in enumerate([0, 5, 15, 30, 60]):
                 if delay:
                     await asyncio.sleep(delay)
                 try:
                     async with aiohttp.ClientSession() as session:
                         async with session.post(
                             f"{self._base}/sendMessage", json=payload,
-                            timeout=aiohttp.ClientTimeout(total=10),
+                            timeout=aiohttp.ClientTimeout(total=30),
                         ) as resp:
-                            data = await resp.json()
+                            data = await resp.json(content_type=None)
                             if data.get("ok"):
                                 break
-                            logger.warning(f"Telegram send hatasi: {data}")
+                            err_code = data.get("error_code", "?")
+                            if err_code == 429:
+                                retry_after = data.get("parameters", {}).get("retry_after", 30)
+                                logger.warning(f"Telegram rate limit, {retry_after}s bekleniyor")
+                                await asyncio.sleep(retry_after)
+                                continue
+                            logger.warning(f"Telegram API hatasi: {data}")
                             break
                 except Exception as e:
-                    if attempt < 3:
-                        logger.debug(f"Telegram send retry {attempt+1}: {e}")
+                    etype = type(e).__name__
+                    if attempt < 4:
+                        logger.debug(f"Telegram send retry {attempt+1} ({etype}): {e}")
                     else:
-                        logger.warning(f"Telegram ulasılamıyor (3 deneme): {e}")
+                        logger.warning(f"Telegram ulasılamıyor (5 deneme) [{etype}]: {e}")
 
     async def request_approval(self, approval_id: str, message: str) -> bool:
         """Onay iste, kullanıcı /onayla veya /reddet yazana kadar bekle."""
