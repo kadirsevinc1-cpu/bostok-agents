@@ -677,16 +677,21 @@ def init_gmail() -> GmailSender | GmailPool | None:
             logger.info(f"Resend hazir: {resend_from} (limit: {resend_limit}/gun)")
 
         # Mailjet HTTP API (IP kısıtlaması yok, 200/gün ücretsiz)
+        # Mailjet SMTP relay (HTTP API GCP'den bloklu, SMTP çalışıyor)
         mj_key    = getattr(settings, "mailjet_api_key", "")
         mj_secret = getattr(settings, "mailjet_secret_key", "")
         mj_from   = getattr(settings, "mailjet_from_email", "kadir@bostok.dev")
         mj_limit  = int(getattr(settings, "mailjet_daily_limit", 200))
         if mj_key and mj_secret:
-            mj = MailjetSender(mj_key, mj_secret, mj_from,
-                               reply_to=getattr(settings, "gmail_user", "") or mj_from,
-                               daily_limit=mj_limit)
+            mj = GmailSender(
+                user=mj_key, app_password=mj_secret,
+                daily_limit=mj_limit,
+                smtp_host="in-v3.mailjet.com", smtp_port=587, use_tls=False,
+                from_email=mj_from,
+                reply_to=getattr(settings, "gmail_user", "") or mj_from,
+            )
             senders.append(mj)
-            logger.info(f"Mailjet hazir: {mj_from} (limit: {mj_limit}/gun)")
+            logger.info(f"Mailjet SMTP hazir: {mj_from} (limit: {mj_limit}/gun)")
 
         if not senders:
             return None
