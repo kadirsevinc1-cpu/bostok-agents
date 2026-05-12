@@ -57,6 +57,11 @@ class Settings(BaseSettings):
     outlook_daily_limit_2:      int = Field(300, env="OUTLOOK_DAILY_LIMIT_2")
     outlook_account_age_days_2: int = Field(0, env="OUTLOOK_ACCOUNT_AGE_DAYS_2")
 
+    # SendGrid HTTP API (100/gün ücretsiz, IP kısıtlaması yok)
+    sendgrid_api_key:    str = Field("", env="SENDGRID_API_KEY")
+    sendgrid_from_email: str = Field("kadir@bostok.dev", env="SENDGRID_FROM_EMAIL")
+    sendgrid_daily_limit: int = Field(100, env="SENDGRID_DAILY_LIMIT")
+
     # Mailjet HTTP API (200/gün ücretsiz, IP kısıtlaması yok)
     mailjet_api_key:    str = Field("", env="MAILJET_API_KEY")
     mailjet_secret_key: str = Field("", env="MAILJET_SECRET_KEY")
