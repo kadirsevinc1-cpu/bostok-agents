@@ -68,6 +68,11 @@ class Settings(BaseSettings):
     mailjet_from_email: str = Field("kadir@bostok.dev", env="MAILJET_FROM_EMAIL")
     mailjet_daily_limit: int = Field(200, env="MAILJET_DAILY_LIMIT")
 
+    # MailerSend HTTP API (3000/ay ücretsiz, IP kısıtlaması yok)
+    mailersend_api_key:    str = Field("", env="MAILERSEND_API_KEY")
+    mailersend_from_email: str = Field("kadir@bostok.dev", env="MAILERSEND_FROM_EMAIL")
+    mailersend_daily_limit: int = Field(100, env="MAILERSEND_DAILY_LIMIT")
+
     # Google Maps Places API (lead finder icin - opsiyonel)
     google_maps_api_key: str = Field("", env="GOOGLE_MAPS_API_KEY")
 
